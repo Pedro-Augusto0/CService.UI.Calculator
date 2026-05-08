@@ -1,0 +1,34 @@
+.add-page__card {
+  margin-bottom: 12px;
+}
+
+.add-page__section-title {
+  margin: 18px 0 10px;
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+
+.add-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.add-page__bc {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-page__rel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-page__other {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

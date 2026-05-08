@@ -1,0 +1,26 @@
+{
+  "name": "cservice-ui-calculator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~6.0.2",
+    "vite": "^5.4.11",
+    "vitest": "^3.0.9"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}

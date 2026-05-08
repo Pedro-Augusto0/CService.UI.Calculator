@@ -1,0 +1,72 @@
+@import '@fontsource/inter/latin.css';
+
+:root {
+  --color-primary: #0052ff;
+  --color-primary-soft: #e8f0ff;
+  --color-primary-hover: #0040cc;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
+  --shadow-md: 0 6px 24px rgb(15 23 42 / 8%);
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+.page-etapa__intro {
+  margin-bottom: 12px;
+}
+
+.page-etapa__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.page-etapa__lead {
+  margin: 0;
+  max-width: 620px;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}

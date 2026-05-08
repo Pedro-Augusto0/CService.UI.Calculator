@@ -1,0 +1,37 @@
+.escopo-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.escopo-page__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.escopo-page__ghost-link {
+  margin-top: 14px;
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 8px 0;
+}
+
+.escopo-page__ghost-link:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.escopo-page__hint {
+  font-weight: 500;
+  color: var(--color-muted);
+}

@@ -1,0 +1,45 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-shell__column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell__inner {
+  flex: 1;
+  padding: 12px 14px 18px;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-shell__stepper {
+  margin: 10px 0 12px;
+}
+
+.app-shell__body {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.app-shell__main {
+  flex: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+
+@media (max-width: 1100px) {
+  .app-shell__body {
+    flex-direction: column;
+  }
+
+  .app-shell__main {
+    padding-right: 0;
+  }
+}

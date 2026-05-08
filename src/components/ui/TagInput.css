@@ -1,0 +1,45 @@
+.tag-input__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.tag-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tag-input__chip-remove {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.tag-input__chip-remove:hover {
+  opacity: 1;
+}
+
+.tag-input__field {
+  flex: 1;
+  min-width: 100px;
+  border: none;
+  outline: none;
+  padding: 6px 4px;
+  font-size: 0.875rem;
+}
