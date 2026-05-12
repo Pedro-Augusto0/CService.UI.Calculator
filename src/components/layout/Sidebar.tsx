@@ -2,7 +2,6 @@ import {
   BookMarked,
   CirclePlus,
   Clock3,
-  FileSpreadsheet,
   FileText,
   HelpCircle,
   type LucideIcon,
@@ -60,10 +59,6 @@ export function Sidebar({
       icon: Settings,
       isActive: activeRoute === 'settings',
       onClick: () => onNavigate('settings'),
-    },
-    {
-      label: 'Tabela de preços',
-      icon: FileSpreadsheet,
     },
   ]
 

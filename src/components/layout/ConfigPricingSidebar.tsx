@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
 import {
   ChevronDown,
+  Clock3,
   FileBarChart,
-  Lightbulb,
+  Layers3,
+  Mail,
   Newspaper,
   RadioTower,
+  Wallet,
 } from 'lucide-react'
 import { MONITORING_LABELS, type Prices } from '../../domain/prices'
 import { MONITORING_SERVICE_KEYS } from '../../domain/types'
@@ -43,6 +46,98 @@ export function ConfigPricingSidebar({
     if (!vals.length) return { min: 0, max: 0 }
     return { min: Math.min(...vals), max: Math.max(...vals) }
   }, [prices.servicePrices])
+  const totalConfigFields =
+    1 +
+    2 +
+    MONITORING_SERVICE_KEYS.length +
+    Object.keys(prices.broadcast.tv).length +
+    Object.keys(prices.broadcast.radio).length +
+    Object.keys(prices.broadcast.relatorio).length +
+    Object.keys(prices.additionals).length
+  const summarySections = useMemo(
+    () => [
+      {
+        key: 'servicos',
+        label: 'Serviços por tipo',
+        icon: Layers3,
+        count: MONITORING_SERVICE_KEYS.length,
+        items: MONITORING_SERVICE_KEYS.map((k) => ({
+          label: MONITORING_LABELS[k],
+          value: formatCurrency(prices.servicePrices[k]),
+        })),
+      },
+      {
+        key: 'broadcast',
+        label: 'Broadcast fixo',
+        icon: RadioTower,
+        count:
+          Object.keys(prices.broadcast.tv).length +
+          Object.keys(prices.broadcast.radio).length,
+        items: [
+          { label: 'TV SP/RJ', value: formatCurrency(prices.broadcast.tv.sp_rj) },
+          { label: 'TV Nacional', value: formatCurrency(prices.broadcast.tv.nacional) },
+          { label: 'Rádio SP/RJ', value: formatCurrency(prices.broadcast.radio.sp_rj) },
+          { label: 'Rádio Nacional', value: formatCurrency(prices.broadcast.radio.nacional) },
+        ],
+      },
+      {
+        key: 'relatorios',
+        label: 'Relatórios',
+        icon: FileBarChart,
+        count: Object.keys(prices.broadcast.relatorio).length,
+        items: [
+          { label: 'Relatório mensal', value: formatCurrency(prices.broadcast.relatorio.mensal) },
+          { label: 'Relatório semanal', value: formatCurrency(prices.broadcast.relatorio.semanal) },
+        ],
+      },
+      {
+        key: 'additionals',
+        label: 'Adicionais e regras',
+        icon: Newspaper,
+        count: 6,
+        items: [
+          {
+            label: 'Mídias sociais · posts inclusos',
+            value: `${prices.additionals.midiasSociaisIncludedPosts}`,
+          },
+          {
+            label: `Passo excedente · ${prices.additionals.midiasSociaisExcessPostsStep} posts`,
+            value: formatCurrency(prices.additionals.midiasSociaisExcessPricePerStep),
+          },
+          {
+            label: 'Alertas web · envio extra',
+            value: formatCurrency(prices.additionals.alertasWebPricePerExtraEnvio),
+          },
+          { label: 'API', value: formatCurrency(prices.additionals.api) },
+          { label: 'Stories', value: formatCurrency(prices.additionals.stories) },
+          { label: 'Destaques da semana', value: formatCurrency(prices.additionals.destaques) },
+        ],
+      },
+    ],
+    [prices],
+  )
+  const referenceTotal = useMemo(() => {
+    const servicesTotal = Object.values(prices.servicePrices).reduce((sum, value) => sum + value, 0)
+    const broadcastTotal =
+      Object.values(prices.broadcast.tv).reduce((sum, value) => sum + value, 0) +
+      Object.values(prices.broadcast.radio).reduce((sum, value) => sum + value, 0) +
+      Object.values(prices.broadcast.relatorio).reduce((sum, value) => sum + value, 0)
+    const additionalsTotal =
+      prices.additionals.midiasSociaisExcessPricePerStep +
+      prices.additionals.alertasWebPricePerExtraEnvio +
+      prices.additionals.api +
+      prices.additionals.stories +
+      prices.additionals.destaques
+
+    return (
+      precoBaseMensal +
+      prices.volumePrice +
+      prices.destinatarioPrice +
+      servicesTotal +
+      broadcastTotal +
+      additionalsTotal
+    )
+  }, [precoBaseMensal, prices])
 
   function toggle(key: string) {
     setOpen((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -51,200 +146,89 @@ export function ConfigPricingSidebar({
   return (
     <aside className="config-summary-panel">
       <div className="config-summary-panel__meta">
-        <div className="config-summary-panel__meta-kicker">Última revisão nos preços</div>
+        <div className="config-summary-panel__meta-kicker">Última revisão</div>
         <div className="config-summary-panel__meta-time">{formatSavedAt(pricingSavedAt)}</div>
-        <button type="button" className="config-summary-panel__sync">
-          Últimas alterações salvas ›
-        </button>
+        <div className="config-summary-panel__meta-tags">
+          <span className="config-summary-panel__meta-tag">Tabela ativa</span>
+          <span className="config-summary-panel__meta-tag config-summary-panel__meta-tag--muted">
+            {totalConfigFields} campos
+          </span>
+        </div>
+     
       </div>
 
       <div className="config-summary-panel__card">
-        <h2 className="config-summary-panel__title">Resumo da tabela de preços</h2>
+        <div className="config-summary-panel__card-head">
+          <h2 className="config-summary-panel__title">Resumo da tabela de preços</h2>
+          <p className="config-summary-panel__subtitle">
+            Visualização rápida dos principais valores.
+          </p>
+        </div>
 
         <ul className="config-summary-panel__kv">
           <li>
-            <span>Preço base mensal</span>
+            <span>
+              <Wallet size={14} strokeWidth={2} aria-hidden />
+              Preço base mensal
+            </span>
             <strong>{formatCurrency(precoBaseMensal)}</strong>
           </li>
           <li>
-            <span>Preço por volume</span>
+            <span>
+              <Layers3 size={14} strokeWidth={2} aria-hidden />
+              Preço por volume
+            </span>
             <strong>{formatCurrency(prices.volumePrice)}</strong>
           </li>
           <li>
-            <span>Newsletter (envio/dia)</span>
+            <span>
+              <Mail size={14} strokeWidth={2} aria-hidden />
+              Newsletter (envio/dia)
+            </span>
             <strong>{formatCurrency(prices.destinatarioPrice)}</strong>
           </li>
         </ul>
 
         <div className="config-summary-panel__acc">
-          <div className={`config-acc${open.servicos ? ' config-acc--open' : ''}`}>
-            <button
-              type="button"
-              className="config-acc__head"
-              onClick={() => toggle('servicos')}
-              aria-expanded={open.servicos}
-            >
-              <span className="config-acc__head-main">
-                <span className="config-acc__icon" aria-hidden>
-                  <LayersGlyph />
+          {summarySections.map(({ key, label, icon: Icon, count, items }) => (
+            <div key={key} className={`config-acc${open[key] ? ' config-acc--open' : ''}`}>
+              <button
+                type="button"
+                className="config-acc__head"
+                onClick={() => toggle(key)}
+                aria-expanded={open[key]}
+              >
+                <span className="config-acc__head-main">
+                  <span className="config-acc__icon" aria-hidden>
+                    <Icon size={16} strokeWidth={2} />
+                  </span>
+                  <span className="config-acc__label">{label}</span>
+                  <span className="config-acc__count">{count} itens</span>
+                  <ChevronDown size={17} aria-hidden strokeWidth={2} className="config-acc__chev" />
                 </span>
-                <span className="config-acc__label">Serviços por tipo</span>
-                <ChevronDown size={17} aria-hidden strokeWidth={2} className="config-acc__chev" />
-              </span>
-              <span className="config-acc__sub">
-                mín <strong>{formatCurrency(serviceStats.min)}</strong>
-                {' · '}máx <strong>{formatCurrency(serviceStats.max)}</strong>
-              </span>
-            </button>
-            {open.servicos ? (
-              <div className="config-acc__body">
-                <ul className="config-acc__list">
-                  {MONITORING_SERVICE_KEYS.map((k) => (
-                    <li key={k}>
-                      <span>{MONITORING_LABELS[k]}</span>
-                      <span>{formatCurrency(prices.servicePrices[k])}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-
-          <div className={`config-acc${open.broadcast ? ' config-acc--open' : ''}`}>
-            <button
-              type="button"
-              className="config-acc__head"
-              onClick={() => toggle('broadcast')}
-              aria-expanded={open.broadcast}
-            >
-              <span className="config-acc__head-main">
-                <span className="config-acc__icon" aria-hidden>
-                  <RadioTower size={16} aria-hidden strokeWidth={2} />
-                </span>
-                <span className="config-acc__label">Broadcast fixo</span>
-                <ChevronDown size={17} aria-hidden strokeWidth={2} className="config-acc__chev" />
-              </span>
-            </button>
-            {open.broadcast ? (
-              <div className="config-acc__body">
-                <ul className="config-acc__list">
-                  <li>
-                    <span>TV SP/RJ</span>
-                    <span>{formatCurrency(prices.broadcast.tv.sp_rj)}</span>
-                  </li>
-                  <li>
-                    <span>TV Nacional</span>
-                    <span>{formatCurrency(prices.broadcast.tv.nacional)}</span>
-                  </li>
-                  <li>
-                    <span>Rádio SP/RJ</span>
-                    <span>{formatCurrency(prices.broadcast.radio.sp_rj)}</span>
-                  </li>
-                  <li>
-                    <span>Rádio Nacional</span>
-                    <span>{formatCurrency(prices.broadcast.radio.nacional)}</span>
-                  </li>
-                </ul>
-              </div>
-            ) : null}
-          </div>
-
-          <div className={`config-acc${open.relatorios ? ' config-acc--open' : ''}`}>
-            <button
-              type="button"
-              className="config-acc__head"
-              onClick={() => toggle('relatorios')}
-              aria-expanded={open.relatorios}
-            >
-              <span className="config-acc__head-main">
-                <span className="config-acc__icon" aria-hidden>
-                  <FileBarChart size={16} aria-hidden strokeWidth={2} />
-                </span>
-                <span className="config-acc__label">Relatórios</span>
-                <ChevronDown size={17} aria-hidden strokeWidth={2} className="config-acc__chev" />
-              </span>
-            </button>
-            {open.relatorios ? (
-              <div className="config-acc__body">
-                <ul className="config-acc__list">
-                  <li>
-                    <span>Relatório mensal</span>
-                    <span>{formatCurrency(prices.broadcast.relatorio.mensal)}</span>
-                  </li>
-                  <li>
-                    <span>Relatório semanal</span>
-                    <span>{formatCurrency(prices.broadcast.relatorio.semanal)}</span>
-                  </li>
-                </ul>
-              </div>
-            ) : null}
-          </div>
-
-          <div className={`config-acc${open.additionals ? ' config-acc--open' : ''}`}>
-            <button
-              type="button"
-              className="config-acc__head"
-              onClick={() => toggle('additionals')}
-              aria-expanded={open.additionals}
-            >
-              <span className="config-acc__head-main">
-                <span className="config-acc__icon" aria-hidden>
-                  <Newspaper size={16} aria-hidden strokeWidth={2} />
-                </span>
-                <span className="config-acc__label">Adicionais e regras</span>
-                <ChevronDown size={17} aria-hidden strokeWidth={2} className="config-acc__chev" />
-              </span>
-            </button>
-            {open.additionals ? (
-              <div className="config-acc__body">
-                <ul className="config-acc__list">
-                  <li>
-                    <span>Mídias sociais · posts inclusos</span>
-                    <span>{prices.additionals.midiasSociaisIncludedPosts}</span>
-                  </li>
-                  <li>
-                    <span>Passo excedente · preço/pass</span>
-                    <span>
-                      {formatCurrency(prices.additionals.midiasSociaisExcessPricePerStep)}
-                    </span>
-                  </li>
-                  <li>
-                    <span>API</span>
-                    <span>{formatCurrency(prices.additionals.api)}</span>
-                  </li>
-                  <li>
-                    <span>Stories</span>
-                    <span>{formatCurrency(prices.additionals.stories)}</span>
-                  </li>
-                  <li>
-                    <span>Destaques da semana</span>
-                    <span>{formatCurrency(prices.additionals.destaques)}</span>
-                  </li>
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div className="config-summary-panel__tip">
-        <Lightbulb size={18} aria-hidden strokeWidth={2} className="config-summary-panel__tip-icon" />
-        <div>
-          <strong>Dica:</strong> mantenha a tabela alinhada com a política comercial para evitar
-          retrabalho nas propostas em aberto.
+                {key === 'servicos' ? (
+                  <span className="config-acc__sub">
+                    mín <strong>{formatCurrency(serviceStats.min)}</strong>
+                    {' · '}máx <strong>{formatCurrency(serviceStats.max)}</strong>
+                  </span>
+                ) : null}
+              </button>
+              {open[key] ? (
+                <div className="config-acc__body">
+                  <ul className="config-acc__list">
+                    {items.map((item) => (
+                      <li key={item.label}>
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ))}
         </div>
       </div>
     </aside>
-  )
-}
-
-function LayersGlyph() {
-  return (
-    <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden fill="none">
-      <path
-        d="m12 3 8 4-8 4-8-4 8-4Zm0 13 8 4v-9l-2.5 1.25L12 12l-5.5-2.75L4 15v9l8-4Z"
-        fill="rgb(148 163 184)"
-      />
-    </svg>
   )
 }

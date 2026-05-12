@@ -61,6 +61,18 @@ function closeParentDetails(target: EventTarget | null) {
   }
 }
 
+function closeOpenMenus(except?: HTMLDetailsElement | null) {
+  document
+    .querySelectorAll<HTMLDetailsElement>(
+      '.saved-page__status-menu[open], .saved-page__actions-menu[open]',
+    )
+    .forEach((details) => {
+      if (details !== except) {
+        details.open = false
+      }
+    })
+}
+
 function collectExtraServices(record: SavedProposalRecord) {
   const labels = [
     record.state.additionals.midiasSociais ? 'Mídias Sociais' : null,
@@ -218,6 +230,34 @@ export function PropostasSalvas({
     }
   }, [isFilterModalOpen])
 
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof HTMLElement)) return
+
+      const currentMenu = event.target.closest(
+        '.saved-page__status-menu, .saved-page__actions-menu',
+      )
+
+      closeOpenMenus(
+        currentMenu instanceof HTMLDetailsElement ? currentMenu : null,
+      )
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeOpenMenus()
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   function resetAdvancedFilters() {
     setStatusFilter('todos')
     setClientFilter('todos')
@@ -324,6 +364,12 @@ export function PropostasSalvas({
   ) {
     updateSavedProposalStatus(recordId, status)
     closeParentDetails(event.currentTarget)
+  }
+
+  function handleMenuToggle(event: React.SyntheticEvent<HTMLDetailsElement>) {
+    if (event.currentTarget.open) {
+      closeOpenMenus(event.currentTarget)
+    }
   }
 
   return (
@@ -560,7 +606,7 @@ export function PropostasSalvas({
 
                   <div className="saved-page__status">
                     <span className="saved-page__cell-label">Status</span>
-                    <details className="saved-page__status-menu">
+                    <details className="saved-page__status-menu" onToggle={handleMenuToggle}>
                       <summary
                         className={`saved-page__status-badge saved-page__status-badge--${STATUS_TONE[row.record.status]}`}
                       >
@@ -588,7 +634,7 @@ export function PropostasSalvas({
                   </div>
 
                   <div className="saved-page__actions">
-                    <details className="saved-page__actions-menu">
+                    <details className="saved-page__actions-menu" onToggle={handleMenuToggle}>
                       <summary
                         className="saved-page__action-trigger"
                         aria-label="Abrir ações da proposta"
