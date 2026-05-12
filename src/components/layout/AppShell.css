@@ -18,8 +18,8 @@
 
 .app-shell__inner {
   flex: 1;
-  padding: 12px 14px 18px;
-  max-width: 1320px;
+  padding: 14px 18px 22px;
+  max-width: 1408px;
   min-height: 100%;
   width: 100%;
   margin: 0 auto;
@@ -28,13 +28,13 @@
 }
 
 .app-shell__stepper {
-  margin: 10px 0 12px;
+  margin: 12px 0 16px;
 }
 
 .app-shell__body {
   display: flex;
   align-items: stretch;
-  gap: 18px;
+  gap: 20px;
   flex: 1;
   min-height: 0;
   overflow: visible;

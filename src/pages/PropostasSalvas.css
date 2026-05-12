@@ -11,12 +11,8 @@
   align-items: flex-start;
   gap: 18px;
   padding: 20px 22px;
-  border: 1px solid var(--color-border);
   border-radius: calc(var(--radius) + 4px);
-  background:
-    radial-gradient(circle at top right, rgb(219 234 254 / 55%), transparent 34%),
-    linear-gradient(180deg, rgb(255 255 255), rgb(248 250 252));
-  box-shadow: var(--shadow-sm);
+ 
 }
 
 .saved-page__hero-actions {
@@ -57,9 +53,6 @@
 }
 
 .saved-page__filters {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   padding: 16px 18px;
   border: 1px solid var(--color-border);
   border-radius: calc(var(--radius) + 4px);
@@ -67,10 +60,17 @@
   box-shadow: var(--shadow-sm);
 }
 
+.saved-page__filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .saved-page__search {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--color-border);
@@ -92,11 +92,113 @@
   outline: none;
 }
 
+.saved-page__filter-toggle {
+  min-height: 44px;
+  padding-inline: 14px;
+  white-space: nowrap;
+}
+
+.saved-page__filter-popover {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.saved-page__filter-toggle--active {
+  border-color: rgb(147 197 253 / 65%);
+  background: rgb(239 246 255);
+  color: var(--color-primary);
+}
+
+.saved-page__filter-count {
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgb(0 82 255 / 12%);
+  color: inherit;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.saved-page__filter-modal {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  width: min(460px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--color-surface);
+  box-shadow: 0 18px 40px rgb(15 23 42 / 16%);
+}
+
+.saved-page__filter-modal::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 22px;
+  width: 14px;
+  height: 14px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  transform: rotate(45deg);
+}
+
+.saved-page__filter-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.saved-page__filter-modal-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.saved-page__filter-modal-text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.saved-page__filter-modal-close {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-muted);
+}
+
+.saved-page__filter-modal-close:focus-visible,
+.saved-page__filter-toggle:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(0 82 255 / 18%);
+}
+
 .saved-page__filter-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(150px, 180px)) auto;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: start;
 }
 
 .saved-page__filter {
@@ -119,6 +221,13 @@
   border-radius: var(--radius-sm);
   background: #fff;
   color: var(--color-text);
+}
+
+.saved-page__filter-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .saved-page__table {
@@ -564,7 +673,6 @@
     align-items: stretch;
   }
 
-  .saved-page__filter-grid,
   .saved-page__row {
     grid-template-columns: 1fr;
   }
@@ -575,5 +683,36 @@
 
   .saved-page__row>*:nth-child(n + 2) {
     border-top: 1px solid rgb(226 232 240 / 85%);
+  }
+}
+
+@media (max-width: 720px) {
+  .saved-page__filters-bar,
+  .saved-page__filter-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .saved-page__filter-popover {
+    width: 100%;
+  }
+
+  .saved-page__filter-toggle {
+    justify-content: center;
+  }
+
+  .saved-page__filter-modal {
+    position: static;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .saved-page__filter-modal::before {
+    display: none;
+  }
+
+  .saved-page__filter-modal-close {
+    width: 34px;
+    height: 34px;
   }
 }

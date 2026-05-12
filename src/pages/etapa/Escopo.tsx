@@ -49,7 +49,6 @@ export function Escopo() {
         </div>
         <div className="escopo-page__meta-grid">
           <TextField
-            dense
             label="Cliente"
             placeholder="Ex.: Petrobras"
             value={state.meta.clientName}
@@ -62,7 +61,6 @@ export function Escopo() {
             }
           />
           <TextField
-            dense
             label="Nome interno da proposta"
             placeholder="Ex.: Monitoramento institucional 2026"
             value={state.meta.proposalName}

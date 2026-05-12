@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Building2,
   Copy,
@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  X,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -122,6 +123,8 @@ export function PropostasSalvas({
   const [statusFilter, setStatusFilter] = useState<'todos' | SavedProposalStatus>('todos')
   const [clientFilter, setClientFilter] = useState('todos')
   const [sortOrder, setSortOrder] = useState<SortOrder>('recentes')
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const filterPopoverRef = useRef<HTMLDivElement | null>(null)
 
   const rows = useMemo(() => {
     return savedProposals.map((record) => {
@@ -183,8 +186,39 @@ export function PropostasSalvas({
     })
   }, [clientFilter, query, rows, sortOrder, statusFilter])
 
-  function resetFilters() {
-    setQuery('')
+  const activeAdvancedFilterCount = useMemo(
+    () =>
+      Number(statusFilter !== 'todos') +
+      Number(clientFilter !== 'todos') +
+      Number(sortOrder !== 'recentes'),
+    [clientFilter, sortOrder, statusFilter],
+  )
+
+  useEffect(() => {
+    if (!isFilterModalOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!filterPopoverRef.current?.contains(event.target as Node)) {
+        setIsFilterModalOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsFilterModalOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isFilterModalOpen])
+
+  function resetAdvancedFilters() {
     setStatusFilter('todos')
     setClientFilter('todos')
     setSortOrder('recentes')
@@ -319,68 +353,127 @@ export function PropostasSalvas({
         </div>
       </header>
 
-      <section className="saved-page__filters" aria-label="Filtros de propostas">
-        <label className="saved-page__search">
-          <Search size={16} strokeWidth={2} aria-hidden />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar por cliente, proposta ou numero"
-          />
-        </label>
-
-        <div className="saved-page__filter-grid">
-          <label className="saved-page__filter">
-            <span>Status</span>
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as 'todos' | SavedProposalStatus)
-              }
-            >
-              <option value="todos">Todos</option>
-              {SAVED_PROPOSAL_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
+      <section className="saved-page__filters" aria-label="Busca e filtros de propostas">
+        <div className="saved-page__filters-bar">
+          <label className="saved-page__search">
+            <Search size={16} strokeWidth={2} aria-hidden />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar por cliente, proposta ou numero"
+            />
           </label>
 
-          <label className="saved-page__filter">
-            <span>Cliente</span>
-            <select
-              value={clientFilter}
-              onChange={(event) => setClientFilter(event.target.value)}
+          <div className="saved-page__filter-popover" ref={filterPopoverRef}>
+            <Button
+              variant="secondary"
+              className={`saved-page__filter-toggle${
+                activeAdvancedFilterCount ? ' saved-page__filter-toggle--active' : ''
+              }`}
+              onClick={() => setIsFilterModalOpen((open) => !open)}
+              aria-haspopup="dialog"
+              aria-expanded={isFilterModalOpen}
+              aria-controls="saved-page-filters-popover"
             >
-              <option value="todos">Todos</option>
-              {clients.map((client) => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
-            </select>
-          </label>
+              <SlidersHorizontal size={16} strokeWidth={2} aria-hidden />
+              Filtros
+              {activeAdvancedFilterCount ? (
+                <span className="saved-page__filter-count">{activeAdvancedFilterCount}</span>
+              ) : null}
+            </Button>
 
-          <label className="saved-page__filter">
-            <span>Data de edição</span>
-            <select
-              value={sortOrder}
-              onChange={(event) => setSortOrder(event.target.value as SortOrder)}
-            >
-              <option value="recentes">Mais recentes</option>
-              <option value="antigas">Mais antigas</option>
-              <option value="maior-valor">Maior valor</option>
-              <option value="menor-valor">Menor valor</option>
-              <option value="cliente">Cliente A-Z</option>
-            </select>
-          </label>
+            {isFilterModalOpen ? (
+              <div
+                id="saved-page-filters-popover"
+                className="saved-page__filter-modal"
+                role="dialog"
+                aria-labelledby="saved-page-filters-title"
+                aria-modal="false"
+              >
+                <div className="saved-page__filter-modal-header">
+                  <div>
+                    <h2 id="saved-page-filters-title" className="saved-page__filter-modal-title">
+                      Filtros avançados
+                    </h2>
+                    <p className="saved-page__filter-modal-text">
+                      Refine por status, cliente e ordenação.
+                    </p>
+                  </div>
 
-          <Button variant="secondary" onClick={resetFilters}>
-            <SlidersHorizontal size={16} strokeWidth={2} aria-hidden />
-            Limpar filtros
-          </Button>
+                  <button
+                    type="button"
+                    className="saved-page__filter-modal-close"
+                    onClick={() => setIsFilterModalOpen(false)}
+                    aria-label="Fechar filtros"
+                  >
+                    <X size={18} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
+
+                <div className="saved-page__filter-grid">
+                  <label className="saved-page__filter">
+                    <span>Status</span>
+                    <select
+                      value={statusFilter}
+                      onChange={(event) =>
+                        setStatusFilter(event.target.value as 'todos' | SavedProposalStatus)
+                      }
+                    >
+                      <option value="todos">Todos</option>
+                      {SAVED_PROPOSAL_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {STATUS_LABELS[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="saved-page__filter">
+                    <span>Cliente</span>
+                    <select
+                      value={clientFilter}
+                      onChange={(event) => setClientFilter(event.target.value)}
+                    >
+                      <option value="todos">Todos</option>
+                      {clients.map((client) => (
+                        <option key={client} value={client}>
+                          {client}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="saved-page__filter">
+                    <span>Data de edição</span>
+                    <select
+                      value={sortOrder}
+                      onChange={(event) => setSortOrder(event.target.value as SortOrder)}
+                    >
+                      <option value="recentes">Mais recentes</option>
+                      <option value="antigas">Mais antigas</option>
+                      <option value="maior-valor">Maior valor</option>
+                      <option value="menor-valor">Menor valor</option>
+                      <option value="cliente">Cliente A-Z</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="saved-page__filter-modal-footer">
+                  <Button
+                    variant="secondary"
+                    onClick={resetAdvancedFilters}
+                    disabled={activeAdvancedFilterCount === 0}
+                  >
+                    Limpar filtros
+                  </Button>
+                  <Button variant="primary" onClick={() => setIsFilterModalOpen(false)}>
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
 

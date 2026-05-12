@@ -78,7 +78,6 @@ export function ScopeCategorySection({
           <FieldGroup
             label="Palavras-chave"
             hint="Digite e pressione Enter para criar cada termo."
-            dense
           >
             <TagInput
               tags={keywords}
@@ -87,7 +86,6 @@ export function ScopeCategorySection({
             />
           </FieldGroup>
           <TextField
-            dense
             id={`vol-${sectionKey}`}
             label="Volume estimado (notícias / mês)"
             type="number"
@@ -98,7 +96,7 @@ export function ScopeCategorySection({
               onVolumeChange(Number.parseInt(e.target.value, 10) || 0)
             }
           />
-          <FieldGroup label="Serviços aplicados" dense>
+          <FieldGroup label="Serviços aplicados">
             <ServiceToggleGrid
               variant="compact"
               selected={services}

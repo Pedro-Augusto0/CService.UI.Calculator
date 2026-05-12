@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   BookMarked,
   CirclePlus,
   Clock3,
@@ -11,6 +10,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
+import logoClipping from '../../assets/logo_clipping.png'
 import { Button } from '../ui/Button'
 import './Sidebar.css'
 
@@ -70,12 +70,9 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
-        <span className="sidebar__logo">
-          <BarChart3 size={22} strokeWidth={2} />
-        </span>
-        <div>
+        <div className="sidebar__brand-lockup">
+          <img className="sidebar__logo" src={logoClipping} alt="CService" />
           <div className="sidebar__title">Calculadora de Propostas</div>
-          <div className="sidebar__tagline">Monitoramento de Mídia</div>
         </div>
       </div>
 

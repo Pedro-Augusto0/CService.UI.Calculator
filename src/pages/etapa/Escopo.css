@@ -1,20 +1,20 @@
 .escopo-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .escopo-page__meta-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 18px;
+  padding: 18px 20px;
 }
 
 .escopo-page__meta-head {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
 }
 
 .escopo-page__meta-icon {
@@ -30,8 +30,8 @@
 }
 
 .escopo-page__meta-title {
-  margin: 0 0 4px;
-  font-size: 0.95rem;
+  margin: 0 0 6px;
+  font-size: 1rem;
 }
 
 .escopo-page__meta-text {
@@ -45,13 +45,13 @@
 .escopo-page__meta-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .escopo-page__stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .escopo-page__icon {

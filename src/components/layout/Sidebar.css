@@ -15,28 +15,33 @@
 
 .sidebar__brand {
   display: flex;
-  gap: 10px;
   align-items: flex-start;
   padding: 2px 8px 0;
 }
 
+.sidebar__brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .sidebar__logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--color-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
+  display: block;
+  width: min(100%, 160px);
+  height: auto;
+  object-fit: contain;
 }
 
 .sidebar__title {
   font-weight: 700;
-  font-size: 0.98rem;
-  line-height: 1.15;
-  color: #1f2a44;
+  font-size: 0.64rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5f7395;
+  padding-left: 50px;
+  margin-top: -2px;
 }
 
 .sidebar__tagline {
@@ -143,10 +148,6 @@ button.sidebar__link {
   border-color: #dbe7ff;
   background: rgb(255 255 255 / 92%);
   font-size: 0.78rem;
-}
-
-.sidebar__logo svg {
-  display: block;
 }
 
 .sidebar__link svg {
