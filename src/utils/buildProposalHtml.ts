@@ -45,6 +45,18 @@ interface FeatureItem {
   | 'phone'
 }
 
+interface InvestmentDetailItem {
+  label: string
+  value: string
+}
+
+interface InvestmentRowItem {
+  label: string
+  value: string
+  rowClass: string
+  details?: InvestmentDetailItem[]
+}
+
 function escapeHtml(s: string): string {
   return s
     .replaceAll('&', '&amp;')
@@ -99,6 +111,131 @@ function resolveScopeFocus(input: CalculationInput): string {
   if (activeLabels.length === 2) return `${activeLabels[0]} e ${activeLabels[1]}`
 
   return `${activeLabels.slice(0, -1).join(', ')} e ${activeLabels.at(-1)}`
+}
+
+function formatBroadcastRegion(
+  region: CalculationInput['broadcast']['tvRegion'],
+): string {
+  return region === 'sp_rj' ? 'São Paulo + Rio de Janeiro' : 'Nacional'
+}
+
+function formatReportFrequency(
+  frequency: CalculationInput['broadcast']['relatorioFreq'],
+): string {
+  return frequency === 'semanal' ? 'Relatório semanal' : 'Relatório mensal'
+}
+
+function buildMonitoringInvestmentDetails(
+  calc: CalculationResult,
+): InvestmentDetailItem[] {
+  const details: InvestmentDetailItem[] = []
+
+  if (calc.volumeMonetaryBase > 0) {
+    details.push({
+      label: 'Base por volume monitorado',
+      value: formatCurrency(calc.volumeMonetaryBase),
+    })
+  }
+
+  for (const key of MONITORING_SERVICE_KEYS) {
+    if (calc.serviceValues[key] <= 0) continue
+
+    details.push({
+      label: MONITORING_LABELS[key],
+      value: formatCurrency(calc.serviceValues[key]),
+    })
+  }
+
+  return details
+}
+
+function buildAdditionalInvestmentDetails(
+  input: CalculationInput,
+  calc: CalculationResult,
+): InvestmentDetailItem[] {
+  const details: InvestmentDetailItem[] = []
+
+  if (input.broadcast.tvEnabled && input.broadcast.tvRegion && calc.serviceValues.tv > 0) {
+    details.push({
+      label: `Broadcast TV (${formatBroadcastRegion(input.broadcast.tvRegion)})`,
+      value: formatCurrency(calc.serviceValues.tv),
+    })
+  }
+
+  if (
+    input.broadcast.radioEnabled &&
+    input.broadcast.radioRegion &&
+    calc.serviceValues.radio > 0
+  ) {
+    details.push({
+      label: `Broadcast Rádio (${formatBroadcastRegion(input.broadcast.radioRegion)})`,
+      value: formatCurrency(calc.serviceValues.radio),
+    })
+  }
+
+  if (calc.serviceValues.midias_sociais > 0) {
+    details.push({
+      label: 'Mídias sociais',
+      value: formatCurrency(calc.serviceValues.midias_sociais),
+    })
+  }
+
+  if (calc.serviceValues.alertas_web > 0) {
+    details.push({
+      label: 'Alertas de websites',
+      value: formatCurrency(calc.serviceValues.alertas_web),
+    })
+  }
+
+  if (calc.serviceValues.api > 0) {
+    details.push({
+      label: 'API de dados',
+      value: formatCurrency(calc.serviceValues.api),
+    })
+  }
+
+  if (calc.serviceValues.stories > 0) {
+    details.push({
+      label: 'Stories',
+      value: formatCurrency(calc.serviceValues.stories),
+    })
+  }
+
+  if (calc.serviceValues.destaques > 0) {
+    details.push({
+      label: 'Destaques da semana',
+      value: formatCurrency(calc.serviceValues.destaques),
+    })
+  }
+
+  if (calc.serviceValues.envios > 0) {
+    details.push({
+      label: 'Distribuição por destinatários',
+      value: formatCurrency(calc.serviceValues.envios),
+    })
+  }
+
+  return details
+}
+
+function buildReportInvestmentDetails(
+  input: CalculationInput,
+  calc: CalculationResult,
+): InvestmentDetailItem[] {
+  if (
+    input.broadcast.relatorioEnabled &&
+    input.broadcast.relatorioFreq &&
+    calc.serviceValues.relatorio > 0
+  ) {
+    return [
+      {
+        label: formatReportFrequency(input.broadcast.relatorioFreq),
+        value: formatCurrency(calc.serviceValues.relatorio),
+      },
+    ]
+  }
+
+  return []
 }
 
 function renderIcon(kind: FeatureItem['icon']): string {
@@ -398,7 +535,7 @@ export function buildProposalHtml(
     ? new Date(options.generatedAt)
     : new Date()
 
-  const investmentRows = [
+  const investmentRows: InvestmentRowItem[] = [
     {
       label: 'Preço base mensal',
       value: formatCurrency(calc.breakdownGroups.precoBaseMensal),
@@ -408,16 +545,19 @@ export function buildProposalHtml(
       label: 'Serviços de monitoramento',
       value: formatCurrency(calc.breakdownGroups.servicosMonitoramento),
       rowClass: '',
+      details: buildMonitoringInvestmentDetails(calc),
     },
     {
       label: 'Serviços adicionais',
       value: formatCurrency(calc.breakdownGroups.servicosAdicionais),
       rowClass: '',
+      details: buildAdditionalInvestmentDetails(input, calc),
     },
     {
       label: 'Relatório analítico',
       value: formatCurrency(calc.breakdownGroups.relatorioAnalitico),
       rowClass: '',
+      details: buildReportInvestmentDetails(input, calc),
     },
   ]
 
@@ -948,6 +1088,10 @@ export function buildProposalHtml(
       padding: 0;
     }
 
+    .investment-group {
+      display: block;
+    }
+
     .investment-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -962,6 +1106,48 @@ export function buildProposalHtml(
     .investment-row strong {
       color: #1d2d58;
       font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .investment-details {
+      position: relative;
+      margin: 2px 0 10px 8px;
+      padding-left: 18px;
+    }
+
+    .investment-details::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      bottom: 6px;
+      width: 1px;
+      background: #dbe2ee;
+    }
+
+    .investment-detail-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      padding: 5px 0 5px 14px;
+      font-size: 11px;
+      color: #6a7590;
+    }
+
+    .investment-detail-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 10px;
+      border-top: 1px solid #dbe2ee;
+    }
+
+    .investment-detail-row strong {
+      color: #46526c;
+      font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
 
@@ -1278,9 +1464,29 @@ export function buildProposalHtml(
                 ${investmentRows
       .map(
         (row) => `
-                      <div class="investment-row${row.rowClass}">
-                        <span>${escapeHtml(row.label)}</span>
-                        <strong>${escapeHtml(row.value)}</strong>
+                      <div class="investment-group">
+                        <div class="investment-row${row.rowClass}">
+                          <span>${escapeHtml(row.label)}</span>
+                          <strong>${escapeHtml(row.value)}</strong>
+                        </div>
+                        ${
+                          row.details?.length
+                            ? `
+                              <div class="investment-details">
+                                ${row.details
+                                  .map(
+                                    (detail) => `
+                                      <div class="investment-detail-row">
+                                        <span>${escapeHtml(detail.label)}</span>
+                                        <strong>${escapeHtml(detail.value)}</strong>
+                                      </div>
+                                    `,
+                                  )
+                                  .join('')}
+                              </div>
+                            `
+                            : ''
+                        }
                       </div>
                     `,
       )
