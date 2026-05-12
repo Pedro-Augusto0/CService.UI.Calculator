@@ -10,8 +10,8 @@
 }
 
 .preview-modal {
-  width: min(960px, 100%);
-  height: min(86vh, 900px);
+  width: min(75%, 100%);
+  height: min(92vh, 900px);
   background: var(--color-surface);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);

@@ -6,6 +6,8 @@ import {
   Eye,
   FileText,
   FolderOpen,
+  LayoutGrid,
+  List,
   MoreHorizontal,
   PencilLine,
   Plus,
@@ -37,6 +39,7 @@ interface PropostasSalvasProps {
 }
 
 type SortOrder = 'recentes' | 'antigas' | 'maior-valor' | 'menor-valor' | 'cliente'
+type ViewMode = 'list' | 'grid'
 
 const STATUS_LABELS: Record<SavedProposalStatus, string> = {
   rascunho: 'Rascunho',
@@ -136,6 +139,7 @@ export function PropostasSalvas({
   const [clientFilter, setClientFilter] = useState('todos')
   const [sortOrder, setSortOrder] = useState<SortOrder>('recentes')
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const filterPopoverRef = useRef<HTMLDivElement | null>(null)
 
   const rows = useMemo(() => {
@@ -520,6 +524,33 @@ export function PropostasSalvas({
               </div>
             ) : null}
           </div>
+
+          <div className="saved-page__view-toggle" role="group" aria-label="Modo de visualização">
+            <Button
+              variant="secondary"
+              className={`saved-page__view-button${
+                viewMode === 'list' ? ' saved-page__view-button--active' : ''
+              }`}
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              aria-label="Visualização em lista"
+            >
+              <List size={16} strokeWidth={2} aria-hidden />
+              Lista
+            </Button>
+            <Button
+              variant="secondary"
+              className={`saved-page__view-button${
+                viewMode === 'grid' ? ' saved-page__view-button--active' : ''
+              }`}
+              onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
+              aria-label="Visualização em grade"
+            >
+              <LayoutGrid size={16} strokeWidth={2} aria-hidden />
+              Grid
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -538,20 +569,28 @@ export function PropostasSalvas({
           </Button>
         </Card>
       ) : (
-        <section className="saved-page__table" aria-label="Lista de propostas salvas">
-          <div className="saved-page__table-head">
-            <span>Cliente</span>
-            <span>Volume monitorado</span>
-            <span>Serviços incluídos</span>
-            <span>Valor final</span>
-            <span>Status</span>
-            <span>Ações</span>
-          </div>
+        <section
+          className={`saved-page__table saved-page__table--${viewMode}`}
+          aria-label="Lista de propostas salvas"
+        >
+          {viewMode === 'list' ? (
+            <div className="saved-page__table-head">
+              <span>Cliente</span>
+              <span>Volume monitorado</span>
+              <span>Serviços incluídos</span>
+              <span>Valor final</span>
+              <span>Status</span>
+              <span>Ações</span>
+            </div>
+          ) : null}
 
-          <div className="saved-page__rows">
+          <div className={`saved-page__rows saved-page__rows--${viewMode}`}>
             {filteredRows.length ? (
               filteredRows.map((row) => (
-                <article key={row.record.id} className="saved-page__row">
+                <article
+                  key={row.record.id}
+                  className={`saved-page__row saved-page__row--${viewMode}`}
+                >
                   <div className="saved-page__company">
                     <span
                       className={`saved-page__company-icon saved-page__company-icon--${row.record.proposalNumber % 4}`}
