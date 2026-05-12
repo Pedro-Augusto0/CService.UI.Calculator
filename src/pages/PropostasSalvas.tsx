@@ -552,7 +552,7 @@ export function PropostasSalvas({
               <Card className="saved-page__empty-results">
                 <h2 className="saved-page__empty-results-title">Nenhum resultado encontrado</h2>
                 <p className="saved-page__empty-results-text">
-                  Ajuste os filtros ou limpe a busca para voltar a ver todas as propostas salvas.
+                   Ajuste os filtros ou limpe a busca para voltar a ver todas as propostas salvas.
                 </p>
               </Card>
             )}
