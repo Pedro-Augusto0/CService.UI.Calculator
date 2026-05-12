@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   Building2,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Download,
   Eye,
@@ -52,8 +50,6 @@ const STATUS_TONE: Record<SavedProposalStatus, string> = {
   aprovada: 'success',
   expirada: 'muted',
 }
-
-const PAGE_SIZE_OPTIONS = [5, 10, 20]
 
 function closeParentDetails(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return
@@ -112,19 +108,6 @@ function formatCalendarEdit(timestamp: number) {
   return `Editada em ${dateLabel} às ${timeLabel}`
 }
 
-function buildPagination(totalPages: number, currentPage: number) {
-  if (totalPages <= 5) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1)
-  }
-
-  if (currentPage <= 3) return [1, 2, 3, 'ellipsis', totalPages] as const
-  if (currentPage >= totalPages - 2) {
-    return [1, 'ellipsis', totalPages - 2, totalPages - 1, totalPages] as const
-  }
-
-  return [1, 'ellipsis', currentPage, 'ellipsis', totalPages] as const
-}
-
 export function PropostasSalvas({
   onNovaProposta,
   onOpenProposal,
@@ -139,8 +122,6 @@ export function PropostasSalvas({
   const [statusFilter, setStatusFilter] = useState<'todos' | SavedProposalStatus>('todos')
   const [clientFilter, setClientFilter] = useState('todos')
   const [sortOrder, setSortOrder] = useState<SortOrder>('recentes')
-  const [pageSize, setPageSize] = useState(5)
-  const [page, setPage] = useState(1)
 
   const rows = useMemo(() => {
     return savedProposals.map((record) => {
@@ -202,20 +183,11 @@ export function PropostasSalvas({
     })
   }, [clientFilter, query, rows, sortOrder, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const paginatedRows = filteredRows.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  )
-  const paginationItems = buildPagination(totalPages, currentPage)
-
   function resetFilters() {
     setQuery('')
     setStatusFilter('todos')
     setClientFilter('todos')
     setSortOrder('recentes')
-    setPage(1)
   }
 
   function handleExportList() {
@@ -353,10 +325,7 @@ export function PropostasSalvas({
           <input
             type="search"
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value)
-              setPage(1)
-            }}
+            onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar por cliente, proposta ou numero"
           />
         </label>
@@ -366,10 +335,9 @@ export function PropostasSalvas({
             <span>Status</span>
             <select
               value={statusFilter}
-              onChange={(event) => {
+              onChange={(event) =>
                 setStatusFilter(event.target.value as 'todos' | SavedProposalStatus)
-                setPage(1)
-              }}
+              }
             >
               <option value="todos">Todos</option>
               {SAVED_PROPOSAL_STATUSES.map((status) => (
@@ -384,10 +352,7 @@ export function PropostasSalvas({
             <span>Cliente</span>
             <select
               value={clientFilter}
-              onChange={(event) => {
-                setClientFilter(event.target.value)
-                setPage(1)
-              }}
+              onChange={(event) => setClientFilter(event.target.value)}
             >
               <option value="todos">Todos</option>
               {clients.map((client) => (
@@ -445,8 +410,8 @@ export function PropostasSalvas({
           </div>
 
           <div className="saved-page__rows">
-            {paginatedRows.length ? (
-              paginatedRows.map((row) => (
+            {filteredRows.length ? (
+              filteredRows.map((row) => (
                 <article key={row.record.id} className="saved-page__row">
                   <div className="saved-page__company">
                     <span
@@ -595,11 +560,11 @@ export function PropostasSalvas({
 
           <footer className="saved-page__footer">
             <p className="saved-page__footer-meta">
-              Mostrando{' '}
-              {filteredRows.length
-                ? `${(currentPage - 1) * pageSize + 1} a ${Math.min(currentPage * pageSize, filteredRows.length)}`
-                : '0 a 0'}{' '}
-              de {filteredRows.length} propostas
+              {filteredRows.length === 0
+                ? 'Nenhuma proposta encontrada'
+                : `Mostrando ${filteredRows.length} ${
+                    filteredRows.length === 1 ? 'proposta' : 'propostas'
+                  }`}
             </p>
 
           </footer>
