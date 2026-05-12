@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   Building2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -9,6 +8,7 @@ import {
   Eye,
   FileText,
   FolderOpen,
+  MoreHorizontal,
   PencilLine,
   Plus,
   Search,
@@ -257,14 +257,20 @@ export function PropostasSalvas({
   function handlePreview(record: SavedProposalRecord) {
     const calculationInput = toCalculationInputFromState(record.state)
     const calculation = calculateProposalState(record.state)
-    const html = buildProposalHtml(calculationInput, calculation)
+    const html = buildProposalHtml(calculationInput, calculation, {
+      meta: record.state.meta,
+      generatedAt: record.updatedAt,
+    })
     onPreviewProposal(html)
   }
 
   function handleDownloadProposal(record: SavedProposalRecord) {
     const calculationInput = toCalculationInputFromState(record.state)
     const calculation = calculateProposalState(record.state)
-    const html = buildProposalHtml(calculationInput, calculation)
+    const html = buildProposalHtml(calculationInput, calculation, {
+      meta: record.state.meta,
+      generatedAt: record.updatedAt,
+    })
     const meta = resolveProposalMeta(record.state)
 
     downloadHtmlDocument(
@@ -286,6 +292,22 @@ export function PropostasSalvas({
     record: SavedProposalRecord,
   ) {
     handleDownloadProposal(record)
+    closeParentDetails(event.currentTarget)
+  }
+
+  function handleOpenFromMenu(
+    event: React.MouseEvent<HTMLButtonElement>,
+    recordId: string,
+  ) {
+    onOpenProposal(recordId)
+    closeParentDetails(event.currentTarget)
+  }
+
+  function handlePreviewFromMenu(
+    event: React.MouseEvent<HTMLButtonElement>,
+    record: SavedProposalRecord,
+  ) {
+    handlePreview(record)
     closeParentDetails(event.currentTarget)
   }
 
@@ -508,69 +530,56 @@ export function PropostasSalvas({
                   </div>
 
                   <div className="saved-page__actions">
-                    <div className="saved-page__action-stack">
-                      <div className="saved-page__split-action">
+                    <details className="saved-page__actions-menu">
+                      <summary
+                        className="saved-page__action-trigger"
+                        aria-label="Abrir ações da proposta"
+                      >
+                        <MoreHorizontal size={16} strokeWidth={2} aria-hidden />
+                      </summary>
+                      <div className="saved-page__menu-dropdown saved-page__menu-dropdown--actions">
                         <button
                           type="button"
-                          className="saved-page__split-button saved-page__split-button--main"
-                          onClick={() => onOpenProposal(row.record.id)}
+                          className="saved-page__menu-item"
+                          onClick={(event) =>
+                            handleOpenFromMenu(event, row.record.id)
+                          }
                         >
                           <PencilLine size={15} strokeWidth={2} aria-hidden />
                           Editar
                         </button>
-                        <details className="saved-page__split-menu">
-                          <summary
-                            className="saved-page__split-button saved-page__split-button--toggle"
-                            aria-label="Mais ações de edição"
-                          >
-                            <ChevronDown size={15} strokeWidth={2} aria-hidden />
-                          </summary>
-                          <div className="saved-page__menu-dropdown">
-                            <button
-                              type="button"
-                              className="saved-page__menu-item"
-                              onClick={(event) =>
-                                handleDuplicateFromMenu(event, row.record.id)
-                              }
-                            >
-                              <Copy size={15} strokeWidth={2} aria-hidden />
-                              Duplicar
-                            </button>
-                          </div>
-                        </details>
-                      </div>
-
-                      <div className="saved-page__split-action saved-page__split-action--accent">
                         <button
                           type="button"
-                          className="saved-page__split-button saved-page__split-button--main"
-                          onClick={() => handlePreview(row.record)}
+                          className="saved-page__menu-item"
+                          onClick={(event) =>
+                            handlePreviewFromMenu(event, row.record)
+                          }
                         >
                           <Eye size={15} strokeWidth={2} aria-hidden />
                           Visualizar
                         </button>
-                        <details className="saved-page__split-menu">
-                          <summary
-                            className="saved-page__split-button saved-page__split-button--toggle"
-                            aria-label="Mais ações da proposta"
-                          >
-                            <ChevronDown size={15} strokeWidth={2} aria-hidden />
-                          </summary>
-                          <div className="saved-page__menu-dropdown">
-                            <button
-                              type="button"
-                              className="saved-page__menu-item"
-                              onClick={(event) =>
-                                handleDownloadFromMenu(event, row.record)
-                              }
-                            >
-                              <FileText size={15} strokeWidth={2} aria-hidden />
-                              Gerar HTML
-                            </button>
-                          </div>
-                        </details>
+                        <button
+                          type="button"
+                          className="saved-page__menu-item"
+                          onClick={(event) =>
+                            handleDuplicateFromMenu(event, row.record.id)
+                          }
+                        >
+                          <Copy size={15} strokeWidth={2} aria-hidden />
+                          Duplicar
+                        </button>
+                        <button
+                          type="button"
+                          className="saved-page__menu-item"
+                          onClick={(event) =>
+                            handleDownloadFromMenu(event, row.record)
+                          }
+                        >
+                          <FileText size={15} strokeWidth={2} aria-hidden />
+                          Gerar HTML
+                        </button>
                       </div>
-                    </div>
+                    </details>
                   </div>
                 </article>
               ))
@@ -593,65 +602,6 @@ export function PropostasSalvas({
               de {filteredRows.length} propostas
             </p>
 
-            <div className="saved-page__footer-controls">
-              <div className="saved-page__pagination">
-                <button
-                  type="button"
-                  className="saved-page__page-button"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  disabled={currentPage === 1}
-                  aria-label="Página anterior"
-                >
-                  <ChevronLeft size={16} strokeWidth={2} aria-hidden />
-                </button>
-
-                {paginationItems.map((item, index) =>
-                  item === 'ellipsis' ? (
-                    <span key={`ellipsis-${index}`} className="saved-page__page-ellipsis">
-                      ...
-                    </span>
-                  ) : (
-                    <button
-                      key={item}
-                      type="button"
-                      className={`saved-page__page-button${item === currentPage ? ' saved-page__page-button--active' : ''}`}
-                      onClick={() => setPage(item)}
-                    >
-                      {item}
-                    </button>
-                  ),
-                )}
-
-                <button
-                  type="button"
-                  className="saved-page__page-button"
-                  onClick={() =>
-                    setPage((current) => Math.min(totalPages, current + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  aria-label="Próxima página"
-                >
-                  <ChevronRight size={16} strokeWidth={2} aria-hidden />
-                </button>
-              </div>
-
-              <label className="saved-page__page-size">
-                <span>Por página</span>
-                <select
-                  value={pageSize}
-                  onChange={(event) => {
-                    setPageSize(Number(event.target.value))
-                    setPage(1)
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
           </footer>
         </section>
       )}

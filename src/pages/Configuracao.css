@@ -35,7 +35,7 @@
   background: rgb(239 246 255);
   color: var(--color-primary);
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -43,7 +43,7 @@
 .config-page__title {
   margin: 12px 0 8px;
   font-size: 1.6rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1.05;
   color: var(--color-text);
@@ -74,7 +74,7 @@
   display: block;
   margin-bottom: 8px;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -84,7 +84,7 @@
   display: block;
   margin-bottom: 6px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
@@ -155,7 +155,7 @@
   margin-bottom: 6px;
   font-size: 1rem;
   line-height: 1.25;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
@@ -232,7 +232,7 @@
 .config-page__card-title {
   margin: 0 0 6px;
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text);
 }
 
@@ -273,7 +273,7 @@
   display: inline-flex;
   margin-bottom: 8px;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -285,7 +285,7 @@
   align-items: center;
   gap: 10px;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }

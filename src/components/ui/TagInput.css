@@ -19,7 +19,7 @@
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .tag-input__chip-remove {

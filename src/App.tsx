@@ -62,8 +62,12 @@ function AppContent() {
   }, [route, state.prices])
 
   const html = useMemo(
-    () => buildProposalHtml(calculationInput, calculation),
-    [calculationInput, calculation],
+    () =>
+      buildProposalHtml(calculationInput, calculation, {
+        meta: state.meta,
+        generatedAt: state.lastSavedAt ?? Date.now(),
+      }),
+    [calculationInput, calculation, state.lastSavedAt, state.meta],
   )
 
   function handleDownload(filename?: string) {
