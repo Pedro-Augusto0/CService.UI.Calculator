@@ -51,10 +51,6 @@ export function Sidebar({
       icon: BookMarked,
     },
     {
-      label: 'Histórico de cálculos',
-      icon: Clock3,
-    },
-    {
       label: 'Configurações',
       icon: Settings,
       isActive: activeRoute === 'settings',
