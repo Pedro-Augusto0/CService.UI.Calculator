@@ -3,6 +3,7 @@ import type {
   AdditionalsState,
   BroadcastState,
   OperationalState,
+  ProposalMeta,
   ProposalSections,
   SectionKey,
   MonitoringServiceKey,
@@ -11,8 +12,10 @@ import type {
 export type ProposalAction =
   | { type: 'SET_STEP'; step: number }
   | { type: 'RESET_PROPOSAL' }
+  | { type: 'LOAD_PROPOSAL_STATE'; state: ProposalState }
   | { type: 'SET_SECTION_KEYWORDS'; section: SectionKey; keywords: string[] }
   | { type: 'SET_SECTION_VOLUME'; section: SectionKey; volume: number }
+  | { type: 'SET_PROPOSAL_META'; patch: Partial<ProposalMeta> }
   | {
       type: 'TOGGLE_SECTION_SERVICE'
       section: SectionKey
@@ -25,9 +28,11 @@ export type ProposalAction =
   | { type: 'SET_PRICES'; prices: Prices }
   | { type: 'SET_APPLY_SERVICES_TO_ALL'; value: boolean }
   | { type: 'SET_ACTIVE_SCOPE_TAB'; section: SectionKey }
+  | { type: 'MARK_PROPOSAL_SAVED'; id: string; savedAt: number }
 
 export interface ProposalState {
   currentStep: number
+  meta: ProposalMeta
   sections: ProposalSections
   broadcast: BroadcastState
   additionals: AdditionalsState
@@ -36,4 +41,8 @@ export interface ProposalState {
   prices: Prices
   applyServicesToAll: boolean
   activeScopeTab: SectionKey
+  savedProposalId: string | null
+  lastSavedAt: number | null
+  /** Timestamp ms da última persistência da tabela de preços ou do preço base (config). */
+  pricingConfigSavedAt: number
 }

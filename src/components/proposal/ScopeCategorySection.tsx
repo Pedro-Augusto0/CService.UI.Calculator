@@ -18,6 +18,8 @@ interface ScopeCategorySectionProps {
   volume: number
   services: Record<MonitoringServiceKey, boolean>
   defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   onKeywordsChange: (k: string[]) => void
   onVolumeChange: (v: number) => void
   onServiceToggle: (s: MonitoringServiceKey) => void
@@ -32,18 +34,29 @@ export function ScopeCategorySection({
   volume,
   services,
   defaultOpen = true,
+  open: controlledOpen,
+  onOpenChange,
   onKeywordsChange,
   onVolumeChange,
   onServiceToggle,
 }: ScopeCategorySectionProps) {
-  const [open, setOpen] = useState(defaultOpen)
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const open = controlledOpen ?? internalOpen
+
+  function handleOpenToggle() {
+    const nextOpen = !open
+    onOpenChange?.(nextOpen)
+    if (controlledOpen === undefined) {
+      setInternalOpen(nextOpen)
+    }
+  }
 
   return (
     <Card className={`scope-cat ${open ? 'scope-cat--open' : ''}`}>
       <button
         type="button"
         className="scope-cat__header"
-        onClick={() => setOpen(!open)}
+        onClick={handleOpenToggle}
         aria-expanded={open}
       >
         <span className="scope-cat__heading">

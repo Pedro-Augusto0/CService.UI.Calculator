@@ -1,40 +1,50 @@
 import type { ReactNode } from 'react'
-import { Sidebar } from './Sidebar'
-import { SummaryPanel } from './SummaryPanel'
-import { TopBar } from './TopBar'
+import { Sidebar, type MainAppRoute } from './Sidebar'
 import './AppShell.css'
+
+export type { MainAppRoute }
 
 interface AppShellProps {
   children: ReactNode
-  stepper: ReactNode
+  stepper: ReactNode | null
+  toolbar?: ReactNode | null
+  rightAside: ReactNode | null
+  sidebarActiveRoute: MainAppRoute
+  onSidebarNavigate: (route: MainAppRoute) => void
   onNovaProposta: () => void
-  onOpenPrices: () => void
-  onPreview: () => void
-  onDownload: () => void
+  onPreviewProposal: () => void
+  showSidebarProposalPreview?: boolean
 }
 
 export function AppShell({
   children,
   stepper,
+  toolbar = null,
+  rightAside,
+  sidebarActiveRoute,
+  onSidebarNavigate,
   onNovaProposta,
-  onOpenPrices,
-  onPreview,
-  onDownload,
+  onPreviewProposal,
+  showSidebarProposalPreview = true,
 }: AppShellProps) {
   return (
     <div className="app-shell">
-      <Sidebar onNovaProposta={onNovaProposta} />
+      <Sidebar
+        onNovaProposta={onNovaProposta}
+        activeRoute={sidebarActiveRoute}
+        onNavigate={onSidebarNavigate}
+        onPreviewProposal={onPreviewProposal}
+        showProposalPreview={showSidebarProposalPreview}
+      />
       <div className="app-shell__column">
         <div className="app-shell__inner">
-          <TopBar
-            onOpenPrices={onOpenPrices}
-            onPreview={onPreview}
-            onDownload={onDownload}
-          />
-          <div className="app-shell__stepper">{stepper}</div>
+          {stepper ? (
+            <div className="app-shell__stepper">{stepper}</div>
+          ) : null}
+          {toolbar}
           <div className="app-shell__body">
             <div className="app-shell__main">{children}</div>
-            <SummaryPanel onDownload={onDownload} />
+            {rightAside}
           </div>
         </div>
       </div>

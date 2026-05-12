@@ -27,12 +27,12 @@
 }
 
 .tipos-page__tab-title {
-  font-weight: 800;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
 .tipos-page__tab-meta {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--color-muted);
 }
 

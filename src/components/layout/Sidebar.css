@@ -1,112 +1,162 @@
 .sidebar {
-  width: 224px;
+  width: 310px;
   flex-shrink: 0;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
-  padding: 12px 10px;
+  padding: 18px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .sidebar__brand {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: flex-start;
+  padding: 2px 8px 0;
 }
 
 .sidebar__logo {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
   color: var(--color-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-top: 2px;
 }
 
 .sidebar__title {
-  font-weight: 800;
-  font-size: 0.85rem;
-  line-height: 1.25;
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.15;
+  color: #1f2a44;
 }
 
 .sidebar__tagline {
-  font-size: 0.6875rem;
-  color: var(--color-muted);
-  margin-top: 2px;
+  font-size: 0.68rem;
+  color: #7a8aa8;
+  margin-top: 5px;
+  font-weight: 500;
 }
 
 .sidebar__cta {
   width: 100%;
   justify-content: center;
+  min-height: 44px;
+  border-radius: 8px;
+  margin-top: 2px;
+  box-shadow: 0 10px 24px rgb(0 82 255 / 16%);
+  font-size: 0.86rem;
 }
 
 .sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .sidebar__link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--color-muted);
-  text-decoration: none;
+  gap: 12px;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #4b5d7a;
   font-weight: 600;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+button.sidebar__link {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
 }
 
 .sidebar__link:hover {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: #f5f8ff;
+  color: #26406e;
 }
 
 .sidebar__link--active {
-  background: var(--color-primary-soft);
+  background: linear-gradient(180deg, #f2f6ff 0%, #eef3ff 100%);
   color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px rgb(0 82 255 / 4%);
+}
+
+.sidebar__link:focus-visible,
+.sidebar__cta:focus-visible,
+.sidebar__help-btn:focus-visible {
+  outline: 2px solid rgb(0 82 255 / 30%);
+  outline-offset: 2px;
 }
 
 .sidebar__help {
   margin-top: auto;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: var(--color-primary-soft);
-  border: 1px solid #bfdbfe;
+  padding: 14px 12px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f6f9ff 100%);
+  border: 1px solid #dfe9ff;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 80%);
 }
 
 .sidebar__help-icon {
   color: var(--color-primary);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .sidebar__help-title {
   font-weight: 700;
-  font-size: 0.8125rem;
-  margin-bottom: 4px;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+  color: var(--color-primary);
 }
 
 .sidebar__help-text {
-  margin: 0 0 8px;
-  font-size: 0.75rem;
-  color: var(--color-muted);
+  margin: 0 0 14px;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: #61728f;
 }
 
 .sidebar__help-btn {
   width: 100%;
   justify-content: center;
+  min-height: 38px;
+  border-radius: 8px;
+  color: var(--color-primary);
+  border-color: #dbe7ff;
+  background: rgb(255 255 255 / 92%);
+  font-size: 0.78rem;
 }
 
-.sidebar__footer-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.625rem;
-  color: var(--color-muted);
-  padding: 0 2px 4px;
+.sidebar__logo svg {
+  display: block;
+}
+
+.sidebar__link svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: currentColor;
+}
+
+.sidebar__help-btn:hover:not(:disabled) {
+  background: #fff;
+  border-color: #c9d9ff;
 }

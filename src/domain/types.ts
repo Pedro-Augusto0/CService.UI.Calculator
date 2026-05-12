@@ -61,6 +61,11 @@ export interface OperationalState {
   aprovacaoAutomatica: boolean
 }
 
+export interface ProposalMeta {
+  clientName: string
+  proposalName: string
+}
+
 export interface CalculationInput {
   sections: ProposalSections
   broadcast: BroadcastState

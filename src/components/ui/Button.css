@@ -2,16 +2,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: 6px;
+  padding: 7px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
   transition:
     background 0.15s,
     border-color 0.15s,
     color 0.15s;
+}
+
+.ui-button svg {
+  flex-shrink: 0;
 }
 
 .ui-button:disabled {

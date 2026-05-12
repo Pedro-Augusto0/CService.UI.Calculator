@@ -6,9 +6,21 @@ import type { ProposalAction, ProposalState } from './proposalActions'
 
 export const STEP_COUNT = 4
 
-export function createInitialProposalState(): ProposalState {
+interface ProposalStateSeed {
+  precoBaseMensal?: number
+  prices?: ProposalState['prices']
+  pricingConfigSavedAt?: number
+}
+
+export function createInitialProposalState(
+  seed: ProposalStateSeed = {},
+): ProposalState {
   return {
     currentStep: 0,
+    meta: {
+      clientName: '',
+      proposalName: '',
+    },
     sections: defaultSections(),
     broadcast: {
       tvEnabled: false,
@@ -31,10 +43,13 @@ export function createInitialProposalState(): ProposalState {
       envioFeriadosFds: false,
       aprovacaoAutomatica: false,
     },
-    precoBaseMensal: 250,
-    prices: structuredClone(DEFAULT_PRICES),
+    precoBaseMensal: seed.precoBaseMensal ?? 250,
+    prices: structuredClone(seed.prices ?? DEFAULT_PRICES),
     applyServicesToAll: false,
     activeScopeTab: 'marcas',
+    savedProposalId: null,
+    lastSavedAt: null,
+    pricingConfigSavedAt: seed.pricingConfigSavedAt ?? Date.now(),
   }
 }
 
@@ -65,8 +80,16 @@ export function proposalReducer(
         ...state,
         currentStep: Math.max(0, Math.min(STEP_COUNT - 1, action.step)),
       }
+    case 'LOAD_PROPOSAL_STATE':
+      return structuredClone(action.state)
     case 'RESET_PROPOSAL':
-      return createInitialProposalState()
+      return createInitialProposalState({
+        precoBaseMensal: state.precoBaseMensal,
+        prices: state.prices,
+        pricingConfigSavedAt: state.pricingConfigSavedAt,
+      })
+    case 'SET_PROPOSAL_META':
+      return { ...state, meta: { ...state.meta, ...action.patch } }
     case 'SET_SECTION_KEYWORDS':
       return {
         ...state,
@@ -119,13 +142,27 @@ export function proposalReducer(
         operational: { ...state.operational, ...action.patch },
       }
     case 'SET_PRECO_BASE_MENSAL':
-      return { ...state, precoBaseMensal: Math.max(0, action.value) }
+      return {
+        ...state,
+        precoBaseMensal: Math.max(0, action.value),
+        pricingConfigSavedAt: Date.now(),
+      }
     case 'SET_PRICES':
-      return { ...state, prices: structuredClone(action.prices) }
+      return {
+        ...state,
+        prices: structuredClone(action.prices),
+        pricingConfigSavedAt: Date.now(),
+      }
     case 'SET_APPLY_SERVICES_TO_ALL':
       return { ...state, applyServicesToAll: action.value }
     case 'SET_ACTIVE_SCOPE_TAB':
       return { ...state, activeScopeTab: action.section }
+    case 'MARK_PROPOSAL_SAVED':
+      return {
+        ...state,
+        savedProposalId: action.id,
+        lastSavedAt: action.savedAt,
+      }
     default:
       return state
   }

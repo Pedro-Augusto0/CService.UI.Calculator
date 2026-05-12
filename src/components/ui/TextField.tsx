@@ -5,6 +5,8 @@ export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   hint?: string
   dense?: boolean
+  /** Ícone à esquerda do rótulo (linha fina, ex.: lucide). */
+  labelIcon?: ReactNode
 }
 
 export function TextField({
@@ -13,6 +15,7 @@ export function TextField({
   id: idProp,
   dense,
   className,
+  labelIcon,
   ...rest
 }: TextFieldProps) {
   const uid = useId()
@@ -21,10 +24,22 @@ export function TextField({
     .filter(Boolean)
     .join(' ')
 
+  const labelCls = [
+    'ui-field__label',
+    labelIcon ? ' ui-field__label--with-icon' : '',
+  ]
+    .filter(Boolean)
+    .join('')
+
   return (
     <div className={rootCls}>
       <div className="ui-field__meta">
-        <label className="ui-field__label" htmlFor={id}>
+        <label className={labelCls} htmlFor={id}>
+          {labelIcon ? (
+            <span className="ui-field__label-icon" aria-hidden>
+              {labelIcon}
+            </span>
+          ) : null}
           {label}
         </label>
         {hint ? <p className="ui-field__hint">{hint}</p> : null}

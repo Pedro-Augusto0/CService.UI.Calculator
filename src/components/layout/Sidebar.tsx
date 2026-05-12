@@ -1,22 +1,72 @@
 import {
   BarChart3,
   BookMarked,
-  Clock,
-  FileJson,
-  FolderOpen,
+  CirclePlus,
+  Clock3,
+  FileSpreadsheet,
+  FileText,
   HelpCircle,
-  Plus,
+  type LucideIcon,
+  Play,
   Settings,
   Users,
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import './Sidebar.css'
 
+export type MainAppRoute = 'wizard' | 'saved' | 'settings'
+
 interface SidebarProps {
   onNovaProposta: () => void
+  activeRoute: MainAppRoute
+  onNavigate: (route: MainAppRoute) => void
+  onPreviewProposal: () => void
+  showProposalPreview?: boolean
 }
 
-export function Sidebar({ onNovaProposta }: SidebarProps) {
+interface SidebarNavItem {
+  label: string
+  icon: LucideIcon
+  isActive?: boolean
+  onClick?: () => void
+}
+
+export function Sidebar({
+  onNovaProposta,
+  activeRoute,
+  onNavigate,
+}: SidebarProps) {
+  const navItems: SidebarNavItem[] = [
+    {
+      label: 'Propostas salvas',
+      icon: FileText,
+      isActive: activeRoute === 'saved',
+      onClick: () => onNavigate('saved'),
+    },
+    {
+      label: 'Clientes',
+      icon: Users,
+    },
+    {
+      label: 'Modelos de proposta',
+      icon: BookMarked,
+    },
+    {
+      label: 'Histórico de cálculos',
+      icon: Clock3,
+    },
+    {
+      label: 'Configurações',
+      icon: Settings,
+      isActive: activeRoute === 'settings',
+      onClick: () => onNavigate('settings'),
+    },
+    {
+      label: 'Tabela de preços',
+      icon: FileSpreadsheet,
+    },
+  ]
+
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
@@ -24,7 +74,7 @@ export function Sidebar({ onNovaProposta }: SidebarProps) {
           <BarChart3 size={22} strokeWidth={2} />
         </span>
         <div>
-          <div className="sidebar__title">Calculadora de Proposta</div>
+          <div className="sidebar__title">Calculadora de Propostas</div>
           <div className="sidebar__tagline">Monitoramento de Mídia</div>
         </div>
       </div>
@@ -34,31 +84,22 @@ export function Sidebar({ onNovaProposta }: SidebarProps) {
         className="sidebar__cta"
         onClick={onNovaProposta}
       >
-        <Plus size={18} strokeWidth={2} />
-        Nova Proposta
+        <CirclePlus size={16} strokeWidth={2} />
+        Nova proposta
       </Button>
 
       <nav className="sidebar__nav" aria-label="Principal">
-        <a className="sidebar__link sidebar__link--active" href="#">
-          <FolderOpen size={18} />
-          Propostas Salvas
-        </a>
-        <a className="sidebar__link" href="#">
-          <Users size={18} />
-          Clientes
-        </a>
-        <a className="sidebar__link" href="#">
-          <BookMarked size={18} />
-          Modelos de Proposta
-        </a>
-        <a className="sidebar__link" href="#">
-          <Clock size={18} />
-          Histórico de Cálculos
-        </a>
-        <a className="sidebar__link" href="#">
-          <Settings size={18} />
-          Configurações
-        </a>
+        {navItems.map(({ label, icon: Icon, isActive = false, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            className={`sidebar__link${isActive ? ' sidebar__link--active' : ''}`}
+            onClick={onClick}
+          >
+            <Icon size={17} strokeWidth={1.9} />
+            <span>{label}</span>
+          </button>
+        ))}
       </nav>
 
       <div className="sidebar__help">
@@ -68,13 +109,9 @@ export function Sidebar({ onNovaProposta }: SidebarProps) {
           Assista ao guia rápido para montar uma proposta em minutos.
         </p>
         <Button variant="secondary" className="sidebar__help-btn">
+          <Play size={14} strokeWidth={2} />
           Assistir guia rápido
         </Button>
-      </div>
-
-      <div className="sidebar__footer-note">
-        <FileJson size={14} />
-        <span>Rascunho local · sem backend</span>
       </div>
     </aside>
   )

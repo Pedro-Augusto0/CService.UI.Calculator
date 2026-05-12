@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
-import { Building2, Tag, Users } from 'lucide-react'
+import { useState } from 'react'
+import { Building2, BriefcaseBusiness, FileText, Tag, Users } from 'lucide-react'
+import { Card } from '../../components/ui/Card'
+import { TextField } from '../../components/ui/TextField'
 import { SECTION_KEYS } from '../../domain/types'
 import { SECTION_LABELS } from '../../domain/prices'
 import type { MonitoringServiceKey } from '../../domain/types'
@@ -27,17 +30,59 @@ const META: Record<
 
 export function Escopo() {
   const { state, dispatch } = useProposal()
+  const [openSection, setOpenSection] =
+    useState<(typeof SECTION_KEYS)[number] | null>(SECTION_KEYS[0])
 
   return (
     <div className="page-etapa escopo-page">
       <div className="page-etapa__intro">
         <h1 className="page-etapa__title">Escopo do monitoramento</h1>
         <p className="page-etapa__lead">
-          Defina palavras-chave e volumes estimados por categoria. Você pode
-          pré-selecionar serviços por tipo já nesta etapa ou refiná-los na
-          próxima.
+          Defina o cliente, nomeie a proposta e monte o pacote que sera salvo no historico local.
         </p>
       </div>
+
+      <Card className="escopo-page__meta-card">
+        <div className="escopo-page__meta-head">
+          <span className="escopo-page__meta-icon" aria-hidden>
+            <BriefcaseBusiness size={18} strokeWidth={2} />
+          </span>
+          <div>
+            <h2 className="escopo-page__meta-title">Identificacao da proposta</h2>
+            <p className="escopo-page__meta-text">
+              Esses dados aparecem na tela de propostas salvas e no nome padrao do arquivo exportado.
+            </p>
+          </div>
+        </div>
+        <div className="escopo-page__meta-grid">
+          <TextField
+            dense
+            label="Cliente"
+            placeholder="Ex.: Petrobras"
+            value={state.meta.clientName}
+            labelIcon={<BriefcaseBusiness size={14} strokeWidth={2} aria-hidden />}
+            onChange={(event) =>
+              dispatch({
+                type: 'SET_PROPOSAL_META',
+                patch: { clientName: event.target.value },
+              })
+            }
+          />
+          <TextField
+            dense
+            label="Nome interno da proposta"
+            placeholder="Ex.: Monitoramento institucional 2026"
+            value={state.meta.proposalName}
+            labelIcon={<FileText size={14} strokeWidth={2} aria-hidden />}
+            onChange={(event) =>
+              dispatch({
+                type: 'SET_PROPOSAL_META',
+                patch: { proposalName: event.target.value },
+              })
+            }
+          />
+        </div>
+      </Card>
 
       <div className="escopo-page__stack">
         {SECTION_KEYS.map((key, idx) => (
@@ -51,6 +96,8 @@ export function Escopo() {
             volume={state.sections[key].volume}
             services={state.sections[key].services}
             defaultOpen={idx === 0}
+            open={openSection === key}
+            onOpenChange={(nextOpen) => setOpenSection(nextOpen ? key : null)}
             onKeywordsChange={(keywords) =>
               dispatch({ type: 'SET_SECTION_KEYWORDS', section: key, keywords })
             }
@@ -68,10 +115,7 @@ export function Escopo() {
         ))}
       </div>
 
-      <button type="button" className="escopo-page__ghost-link" disabled>
-        + Adicionar outra categoria{' '}
-        <span className="escopo-page__hint">(MVP: 3 categorias fixas)</span>
-      </button>
+     
     </div>
   )
 }

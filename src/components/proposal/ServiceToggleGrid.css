@@ -45,6 +45,19 @@
 
 .service-grid__icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: inherit;
+  opacity: 0.92;
+}
+
+.service-grid__icon svg {
+  display: block;
+}
+
+.service-grid__item--on .service-grid__icon {
+  opacity: 1;
 }
 
 .service-grid__label {
@@ -53,7 +66,7 @@
 }
 
 .service-grid__desc {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--color-muted);
   text-align: left;
   line-height: 1.35;

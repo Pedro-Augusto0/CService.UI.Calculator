@@ -1,11 +1,27 @@
+.wizard-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.wizard-content {
+  flex: 1 0 auto;
+  min-height: 0;
+  overflow: visible;
+  padding-right: 4px;
+  padding-bottom: 12px;
+}
+
 .wizard-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  flex-shrink: 0;
 }
 
 .wizard-footer--end {
