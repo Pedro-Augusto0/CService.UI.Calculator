@@ -14,14 +14,6 @@ export function TiposMonitoramento() {
 
   return (
     <div className="page-etapa tipos-page">
-      <div className="page-etapa__intro">
-        <h1 className="page-etapa__title">Tipos de monitoramento</h1>
-        <p className="page-etapa__lead">
-          Escolha o escopo ativo e marque os serviços que entram no cálculo por
-          volume de notícias daquele bloco.
-        </p>
-      </div>
-
       <Card className="tipos-page__panel">
         <Toggle
           checked={state.applyServicesToAll}

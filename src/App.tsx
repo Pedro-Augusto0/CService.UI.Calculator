@@ -70,6 +70,10 @@ function AppContent() {
     downloadHtmlDocument(html, filename ?? proposalFilename(state.meta.clientName))
   }
 
+  function handleSaveComplete() {
+    setRoute('saved')
+  }
+
   const step = state.currentStep
 
   function handleOpenPreview(content = html) {
@@ -132,7 +136,13 @@ function AppContent() {
               {step === 1 ? <TiposMonitoramento /> : null}
               {step === 2 ? <ServicosAdicionais /> : null}
               {step === 3 ? (
-                <ResumoProposta onDownload={handleDownload} />
+                <ResumoProposta
+                  onBack={() =>
+                    dispatch({ type: 'SET_STEP', step: step - 1 })
+                  }
+                  onDownload={handleDownload}
+                  onSaveComplete={handleSaveComplete}
+                />
               ) : null}
             </div>
 
@@ -156,18 +166,7 @@ function AppContent() {
                   Continuar
                 </Button>
               </div>
-            ) : (
-              <div className="wizard-footer wizard-footer--end">
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    dispatch({ type: 'SET_STEP', step: step - 1 })
-                  }
-                >
-                  Voltar
-                </Button>
-              </div>
-            )}
+            ) : null}
           </div>
         )}
       </AppShell>

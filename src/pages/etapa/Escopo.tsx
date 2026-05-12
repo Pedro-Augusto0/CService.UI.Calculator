@@ -35,13 +35,6 @@ export function Escopo() {
 
   return (
     <div className="page-etapa escopo-page">
-      <div className="page-etapa__intro">
-        <h1 className="page-etapa__title">Escopo do monitoramento</h1>
-        <p className="page-etapa__lead">
-          Defina o cliente, nomeie a proposta e monte o pacote que sera salvo no historico local.
-        </p>
-      </div>
-
       <Card className="escopo-page__meta-card">
         <div className="escopo-page__meta-head">
           <span className="escopo-page__meta-icon" aria-hidden>

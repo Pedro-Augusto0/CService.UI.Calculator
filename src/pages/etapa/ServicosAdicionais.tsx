@@ -30,13 +30,6 @@ export function ServicosAdicionais() {
 
   return (
     <div className="page-etapa add-page">
-      <div className="page-etapa__intro">
-        <h1 className="page-etapa__title">Serviços adicionais</h1>
-        <p className="page-etapa__lead">
-          Broadcast fixo, opcionais do contrato e parâmetros de distribuição.
-        </p>
-      </div>
-
       <Card
         className={`add-page__accordion ${openSection === 'broadcast' ? 'add-page__accordion--open' : ''}`}
       >

@@ -1,58 +1,107 @@
 import {
-  CheckCircle2,
+  ArrowLeft,
   CircleDashed,
+  DollarSign,
   FileText,
   Layers,
   Package,
   Save,
+  Send,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { SECTION_KEYS, MONITORING_SERVICE_KEYS } from '../../domain/types'
-import { SECTION_LABELS, MONITORING_LABELS } from '../../domain/prices'
 import { formatCurrency } from '../../utils/currency'
 import { proposalFilename } from '../../utils/downloadHtml'
 import { useProposal } from '../../proposal/ProposalProvider'
 import './ResumoProposta.css'
 
 interface ResumoPropostaProps {
+  onBack: () => void
   onDownload: (filename?: string) => void
+  onSaveComplete: () => void
 }
 
-function compactList(items: string[], max = 4) {
-  if (items.length <= max) return items
-  return [...items.slice(0, max), `+${items.length - max} outros`]
+function summarizeList(items: string[], max = 2, empty = '—') {
+  if (!items.length) return empty
+  if (items.length <= max) return items.join(', ')
+  return `${items.slice(0, max).join(', ')} +${items.length - max}`
 }
 
-export function ResumoProposta({ onDownload }: ResumoPropostaProps) {
+function formatInteger(value: number) {
+  return new Intl.NumberFormat('pt-BR').format(value)
+}
+
+function splitTags(items: string[], max: number) {
+  return {
+    visible: items.slice(0, max),
+    overflow: Math.max(0, items.length - max),
+  }
+}
+
+export function ResumoProposta({
+  onBack,
+  onDownload,
+  onSaveComplete,
+}: ResumoPropostaProps) {
   const { state, calculation: c, saveCurrentProposal } = useProposal()
-  const selectedServices = c.selectedMonitoringLabels.length
-  const broadcastSelections = [
-    state.broadcast.tvEnabled && state.broadcast.tvRegion
-      ? `TV (${state.broadcast.tvRegion})`
-      : null,
-    state.broadcast.radioEnabled && state.broadcast.radioRegion
-      ? `Rádio (${state.broadcast.radioRegion})`
-      : null,
-    state.broadcast.relatorioEnabled && state.broadcast.relatorioFreq
-      ? `Relatório (${state.broadcast.relatorioFreq})`
-      : null,
-  ].filter(Boolean) as string[]
+
   const optionalSelections = [
     state.additionals.midiasSociais ? 'Mídias Sociais' : null,
-    state.additionals.alertasWeb ? 'Alertas WebSites' : null,
-    state.additionals.api ? 'API' : null,
+    state.additionals.alertasWeb ? 'Alertas de Websites' : null,
+    state.additionals.api ? 'Acesso API' : null,
     state.additionals.stories ? 'Stories' : null,
     state.additionals.destaques ? 'Destaques da Semana' : null,
   ].filter(Boolean) as string[]
-  const modifierSelections = [
-    state.operational.envioFeriadosFds ? 'Fins de semana (+25%)' : null,
-    state.operational.aprovacaoAutomatica ? 'Aprovação automática (−40%)' : null,
-  ].filter(Boolean) as string[]
-  const compactBroadcast = compactList(broadcastSelections, 2)
-  const compactOptionals = compactList(optionalSelections, 4)
-  const compactModifiers = compactList(modifierSelections, 3)
+
+  const monitoringTags = splitTags(c.selectedMonitoringLabels, 7)
+  const additionalTags = splitTags(optionalSelections, 4)
+
+  const coverageColumns = [
+    {
+      label: 'Marcas monitoradas',
+      value: summarizeList(state.sections.marcas.keywords, 2, '—'),
+    },
+    {
+      label: 'Concorrentes',
+      value: summarizeList(state.sections.concorrentes.keywords, 2, '—'),
+    },
+    {
+      label: 'Setor',
+      value: summarizeList(state.sections.setor.keywords, 2, '—'),
+    },
+    {
+      label: 'Volume estimado',
+      value: `${formatInteger(c.totalVolume)} notícias / mês`,
+    },
+    {
+      label: 'Palavras-chave',
+      value: `${formatInteger(c.totalKeywords)} termo${c.totalKeywords === 1 ? '' : 's'}`,
+    },
+  ]
+
+  const deliveryColumns = [
+    {
+      label: 'Frequência de envio',
+      value: `${state.operational.enviosDiarios} ${state.operational.enviosDiarios === 1 ? 'envio por dia' : 'envios por dia'}`,
+    },
+    {
+      label: 'Destinatários',
+      value: `${formatInteger(state.operational.numDestinatarios)} destinatário${state.operational.numDestinatarios === 1 ? '' : 's'}`,
+    },
+  ]
+
+  const commercialColumns = [
+    {
+      label: 'Preço base mensal',
+      value: formatCurrency(state.precoBaseMensal),
+    },
+    { label: 'Contrato', value: 'Mensal' },
+    { label: 'Vigência sugerida', value: '12 meses' },
+    { label: 'Reajuste', value: 'Anual' },
+    { label: 'Condição de pagamento', value: 'A combinar' },
+  ]
+
   const saveMeta = state.lastSavedAt
     ? `Salva localmente em ${new Intl.DateTimeFormat('pt-BR', {
         dateStyle: 'short',
@@ -62,266 +111,182 @@ export function ResumoProposta({ onDownload }: ResumoPropostaProps) {
 
   return (
     <div className="page-etapa resumo-page">
-      <header className="resumo-page__intro">
-        <div className="resumo-page__intro-badge" aria-hidden>
-          <Sparkles size={13} strokeWidth={2} />
-          Etapa final
-        </div>
-        <h1 className="resumo-page__title">Resumo e proposta</h1>
-        <p className="resumo-page__lead">
-          Confira o pacote antes de gerar o documento HTML para envio ao cliente.
-          Todos os valores refletem a configuração atual do assistente.
-        </p>
-      </header>
+    
 
       <Card
         padded={false}
-        className="resumo-page__totals"
+        className="resumo-page__hero"
         role="region"
         aria-labelledby="resumo-price-heading"
       >
-        <div className="resumo-page__totals-inner">
-          <div className="resumo-page__totals-price">
-            <p id="resumo-price-heading" className="resumo-page__totals-kicker">
-              Investimento mensal estimado
-            </p>
-            <p className="resumo-page__totals-amount">{formatCurrency(c.finalPrice)}</p>
-            <p className="resumo-page__totals-hint">
-              Valor final após opcionais e modificadores.
-            </p>
+        <div className="resumo-page__hero-inner">
+          <p id="resumo-price-heading" className="resumo-page__hero-kicker">
+            Investimento mensal estimado
+          </p>
+          <div className="resumo-page__hero-display">
+            <span className="resumo-page__hero-icon" aria-hidden>
+              <DollarSign size={18} strokeWidth={2.2} />
+            </span>
+            <div className="resumo-page__hero-value">
+              <p className="resumo-page__hero-amount">{formatCurrency(c.finalPrice)}</p>
+              <p className="resumo-page__hero-period">por mês</p>
+            </div>
           </div>
-          <ul className="resumo-page__totals-stats" aria-label="Indicadores do escopo">
-            <li className="resumo-page__totals-stat">
-              <span className="resumo-page__totals-stat-value">{c.totalKeywords}</span>
-              <span className="resumo-page__totals-stat-label">palavras-chave</span>
-            </li>
-            <li className="resumo-page__totals-stat">
-              <span className="resumo-page__totals-stat-value">{c.totalVolume}</span>
-              <span className="resumo-page__totals-stat-label">notícias / mês</span>
-            </li>
-            <li className="resumo-page__totals-stat">
-              <span className="resumo-page__totals-stat-value">{selectedServices}</span>
-              <span className="resumo-page__totals-stat-label">serviços ativos</span>
-            </li>
-          </ul>
         </div>
       </Card>
 
-      <section className="resumo-page__section" aria-labelledby="escopo-heading">
-        <div className="resumo-page__section-head">
-          <span className="resumo-page__section-icon" aria-hidden>
-            <Layers size={18} strokeWidth={2} />
-          </span>
-          <div className="resumo-page__section-titles">
-            <h2 id="escopo-heading" className="resumo-page__section-title">
-              Escopo do monitoramento
-            </h2>
-            <p className="resumo-page__section-sub">
-              Marcas, volumes e tipos de serviço por dimensão do contrato
-            </p>
+      <div className="resumo-page__stack">
+        <Card padded={false} className="resumo-page__section-card">
+          <div className="resumo-page__section-head">
+            <span className="resumo-page__section-icon resumo-page__section-icon--blue" aria-hidden>
+              <Layers size={18} strokeWidth={2} />
+            </span>
+            <div className="resumo-page__section-titles">
+              <h2 className="resumo-page__section-title">Cobertura do monitoramento</h2>
+              <p className="resumo-page__section-sub">
+                Marcas monitoradas, concorrentes e setor.
+              </p>
+            </div>
           </div>
-        </div>
-
-        <Card padded={false} className="resumo-page__panel">
-          <div className="resumo-page__scope-grid">
-            {SECTION_KEYS.map((key) => {
-              const sec = state.sections[key]
-              const svcs = MONITORING_SERVICE_KEYS.filter(
-                (s) => sec.services[s],
-              ).map((s) => MONITORING_LABELS[s])
-              const compactKeywords = compactList(sec.keywords, 5)
-              const compactServices = compactList(svcs, 3)
-              return (
-                <article
-                  key={key}
-                  className={`resumo-page__scope-card resumo-page__scope-card--${key}`}
-                >
-                  <header className="resumo-page__scope-head">
-                    <h3 className="resumo-page__scope-name">{SECTION_LABELS[key]}</h3>
-                    <div className="resumo-page__scope-badges">
-                      <span className="resumo-page__pill">{sec.keywords.length} termos</span>
-                      <span className="resumo-page__pill resumo-page__pill--volume">
-                        {sec.volume} notícias/mês
-                      </span>
-                    </div>
-                  </header>
-                  <dl className="resumo-page__dl">
-                    <div className="resumo-page__dl-row">
-                      <dt>Palavras-chave</dt>
-                      <dd>
-                        {compactKeywords.length ? (
-                          <div className="resumo-page__token-row">
-                            {compactKeywords.map((keyword) => (
-                              <span key={keyword} className="resumo-page__token">
-                                {keyword}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="resumo-page__empty">Nenhuma definida</span>
-                        )}
-                      </dd>
-                    </div>
-                    <div className="resumo-page__dl-row">
-                      <dt>Volume</dt>
-                      <dd className="resumo-page__dl-em">{sec.volume} / mês</dd>
-                    </div>
-                    <div className="resumo-page__dl-row resumo-page__dl-row--last">
-                      <dt>Serviços</dt>
-                      <dd>
-                        {compactServices.length ? (
-                          <div className="resumo-page__token-row">
-                            {compactServices.map((service) => (
-                              <span
-                                key={service}
-                                className="resumo-page__token resumo-page__token--svc"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="resumo-page__empty">Nenhum serviço</span>
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
-                </article>
-              )
-            })}
+          <div className="resumo-page__info-grid resumo-page__info-grid--coverage">
+            {coverageColumns.map((item) => (
+              <div key={item.label} className="resumo-page__info-item">
+                <span className="resumo-page__info-label">{item.label}</span>
+                <strong className="resumo-page__info-value">{item.value}</strong>
+              </div>
+            ))}
           </div>
         </Card>
-      </section>
 
-      <section className="resumo-page__section" aria-labelledby="extras-heading">
-        <div className="resumo-page__section-head">
-          <span className="resumo-page__section-icon" aria-hidden>
-            <Package size={18} strokeWidth={2} />
-          </span>
-          <div className="resumo-page__section-titles">
-            <h2 id="extras-heading" className="resumo-page__section-title">
-              Adicionais, broadcast e parâmetros
-            </h2>
-            <p className="resumo-page__section-sub">
-              Complementos comerciais, canais de entrega e ajustes de preço aplicados
-            </p>
+        <Card padded={false} className="resumo-page__section-card">
+          <div className="resumo-page__section-head">
+            <span
+              className="resumo-page__section-icon resumo-page__section-icon--violet"
+              aria-hidden
+            >
+              <Package size={18} strokeWidth={2} />
+            </span>
+            <div className="resumo-page__section-titles">
+              <h2 className="resumo-page__section-title">Serviços de monitoramento</h2>
+              <p className="resumo-page__section-sub">Serviços aplicados</p>
+            </div>
           </div>
-        </div>
-
-        <Card padded={false} className="resumo-page__panel">
-          <div className="resumo-page__extras">
-            <div className="resumo-page__extra">
-              <span className="resumo-page__extra-label">Preço base mensal</span>
-              <strong className="resumo-page__extra-value resumo-page__extra-value--money">
-                {formatCurrency(state.precoBaseMensal)}
-              </strong>
-              <span className="resumo-page__extra-hint">
-                valor fixo recorrente negociado no contrato
-              </span>
-            </div>
-
-            <div className="resumo-page__extra">
-              <span className="resumo-page__extra-label">Distribuição (envios × destinatários)</span>
-              <strong className="resumo-page__extra-value">
-                {state.operational.enviosDiarios} envios × {state.operational.numDestinatarios}{' '}
-                destinatários
-              </strong>
-              <span className="resumo-page__extra-hint">capacidade operacional declarada</span>
-            </div>
-
-            <div className="resumo-page__extra">
-              <span className="resumo-page__extra-label">
-                Broadcast
-                <span className="resumo-page__extra-count">
-                  {broadcastSelections.length
-                    ? `${broadcastSelections.length} ativo(s)`
-                    : 'nenhum'}
-                </span>
-              </span>
-              <div className="resumo-page__tag-strip">
-                {compactBroadcast.length ? (
-                  compactBroadcast.map((item) => (
-                    <span key={item} className="resumo-page__chip">
-                      {item}
-                    </span>
-                  ))
-                ) : (
-                  <span className="resumo-page__empty">Nenhum canal selecionado</span>
-                )}
-              </div>
-            </div>
-
-            <div className="resumo-page__extra">
-              <span className="resumo-page__extra-label">
-                Opcionais
-                <span className="resumo-page__extra-count">
-                  {optionalSelections.length
-                    ? `${optionalSelections.length} selecionado(s)`
-                    : 'nenhum'}
-                </span>
-              </span>
-              <div className="resumo-page__tag-strip">
-                {compactOptionals.length ? (
-                  compactOptionals.map((item) => (
-                    <span key={item} className="resumo-page__chip resumo-page__chip--muted">
-                      {item}
-                    </span>
-                  ))
-                ) : (
-                  <span className="resumo-page__empty">Nenhum opcional ativo</span>
-                )}
-              </div>
-            </div>
-
-            <div className="resumo-page__extra resumo-page__extra--span">
-              <span className="resumo-page__extra-label">Modificadores comerciais</span>
-              <div className="resumo-page__tag-strip">
-                {compactModifiers.length ? (
-                  compactModifiers.map((item) => (
-                    <span key={item} className="resumo-page__chip resumo-page__chip--accent">
-                      {item}
-                    </span>
-                  ))
-                ) : (
-                  <span className="resumo-page__empty">Nenhum modificador ativo nesta proposta</span>
-                )}
-              </div>
-            </div>
+          <div className="resumo-page__chip-strip" aria-label="Serviços de monitoramento aplicados">
+            {monitoringTags.visible.length ? (
+              <>
+                {monitoringTags.visible.map((service) => (
+                  <span key={service} className="resumo-page__chip">
+                    {service}
+                  </span>
+                ))}
+                {monitoringTags.overflow ? (
+                  <span className="resumo-page__chip resumo-page__chip--count">
+                    +{monitoringTags.overflow}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <span className="resumo-page__empty">Nenhum serviço selecionado</span>
+            )}
           </div>
         </Card>
-      </section>
+
+        <Card padded={false} className="resumo-page__section-card">
+          <div className="resumo-page__section-head">
+            <span className="resumo-page__section-icon resumo-page__section-icon--green" aria-hidden>
+              <Sparkles size={18} strokeWidth={2} />
+            </span>
+            <div className="resumo-page__section-titles">
+              <h2 className="resumo-page__section-title">Serviços adicionais</h2>
+              <p className="resumo-page__section-sub">Serviços inclusos</p>
+            </div>
+          </div>
+          <div className="resumo-page__chip-strip" aria-label="Serviços adicionais inclusos">
+            {additionalTags.visible.length ? (
+              <>
+                {additionalTags.visible.map((item) => (
+                  <span key={item} className="resumo-page__chip resumo-page__chip--muted">
+                    {item}
+                  </span>
+                ))}
+                {additionalTags.overflow ? (
+                  <span className="resumo-page__chip resumo-page__chip--count">
+                    +{additionalTags.overflow}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <span className="resumo-page__empty">Nenhum serviço adicional ativo</span>
+            )}
+          </div>
+        </Card>
+
+        <Card padded={false} className="resumo-page__section-card">
+          <div className="resumo-page__section-head">
+            <span
+              className="resumo-page__section-icon resumo-page__section-icon--orange"
+              aria-hidden
+            >
+              <Send size={18} strokeWidth={2} />
+            </span>
+            <div className="resumo-page__section-titles">
+              <h2 className="resumo-page__section-title">Distribuição e relatórios</h2>
+              <p className="resumo-page__section-sub">Configuração de entrega</p>
+            </div>
+          </div>
+          <div className="resumo-page__info-grid resumo-page__info-grid--delivery">
+            {deliveryColumns.map((item) => (
+              <div key={item.label} className="resumo-page__info-item">
+                <span className="resumo-page__info-label">{item.label}</span>
+                <strong className="resumo-page__info-value">{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card padded={false} className="resumo-page__section-card">
+          <div className="resumo-page__section-head">
+            <span className="resumo-page__section-icon resumo-page__section-icon--sky" aria-hidden>
+              <FileText size={18} strokeWidth={2} />
+            </span>
+            <div className="resumo-page__section-titles">
+              <h2 className="resumo-page__section-title">Parâmetros comerciais</h2>
+              <p className="resumo-page__section-sub">Condições padrão desta proposta</p>
+            </div>
+          </div>
+          <div className="resumo-page__info-grid resumo-page__info-grid--commercial">
+            {commercialColumns.map((item) => (
+              <div key={item.label} className="resumo-page__info-item">
+                <span className="resumo-page__info-label">{item.label}</span>
+                <strong className="resumo-page__info-value">{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
 
       <footer className="resumo-page__footer">
-        <div className="resumo-page__ready">
-          <span className="resumo-page__ready-icon" aria-hidden>
-            <CheckCircle2 size={20} strokeWidth={2} />
-          </span>
-          <div className="resumo-page__ready-text">
-            <strong>Pronto para envio ao cliente.</strong>{' '}
-            Revise os blocos acima e gere o arquivo HTML quando estiver conforme o combinado com o
-            cliente.
-          </div>
-        </div>
+        <Button variant="ghost" className="resumo-page__back-button" onClick={onBack}>
+          <ArrowLeft size={16} strokeWidth={2.1} aria-hidden />
+          Voltar
+        </Button>
 
         <div className="resumo-page__actions">
           <div className="resumo-page__actions-buttons">
             <Button
               variant="primary"
+              className="resumo-page__action-button"
               onClick={() => {
-                const saved = saveCurrentProposal()
-                onDownload(
-                  proposalFilename(
-                    saved.state.meta.clientName,
-                    saved.proposalNumber,
-                  ),
-                )
+                saveCurrentProposal()
+                onSaveComplete()
               }}
             >
               <Save size={16} strokeWidth={2.2} aria-hidden />
-              {state.savedProposalId ? 'Atualizar e gerar proposta' : 'Salvar e gerar proposta'}
+              {state.savedProposalId ? 'Atualizar proposta' : 'Salvar proposta'}
             </Button>
             <Button
               variant="secondary"
+              className="resumo-page__action-button"
               onClick={() => onDownload(proposalFilename(state.meta.clientName))}
             >
               <FileText size={16} strokeWidth={2.2} aria-hidden />
