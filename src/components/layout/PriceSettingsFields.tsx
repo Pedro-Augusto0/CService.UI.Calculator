@@ -10,11 +10,8 @@ import {
   Hash,
   Highlighter,
   Image as ImageIcon,
-  Layers,
   Mail,
-  Newspaper,
   Radio,
-  RadioTower,
   Ruler,
   Sparkles,
   Star,
@@ -42,27 +39,6 @@ const SERVICE_ICONS: Record<MonitoringServiceKey, LucideIcon> = {
   screenshot: ImageIcon,
 }
 
-function SectionTitle({
-  icon: Icon,
-  description,
-  children,
-}: {
-  icon: LucideIcon
-  description: string
-  children: string
-}) {
-  return (
-    <div className="price-modal__section-intro">
-      <h3>
-        <span className="price-modal__section-ico" aria-hidden>
-          <Icon size={17} strokeWidth={2} />
-        </span>
-        <span className="price-modal__section-heading-text">{children}</span>
-      </h3>
-      <p className="price-modal__section-desc">{description}</p>
-    </div>
-  )
-}
 
 function FieldLabelIcon({ icon: Icon }: { icon: LucideIcon }) {
   return <Icon size={14} strokeWidth={2} aria-hidden />

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   ChevronDown,
-  Clock3,
   FileBarChart,
   Layers3,
   Mail,
@@ -116,29 +115,6 @@ export function ConfigPricingSidebar({
     ],
     [prices],
   )
-  const referenceTotal = useMemo(() => {
-    const servicesTotal = Object.values(prices.servicePrices).reduce((sum, value) => sum + value, 0)
-    const broadcastTotal =
-      Object.values(prices.broadcast.tv).reduce((sum, value) => sum + value, 0) +
-      Object.values(prices.broadcast.radio).reduce((sum, value) => sum + value, 0) +
-      Object.values(prices.broadcast.relatorio).reduce((sum, value) => sum + value, 0)
-    const additionalsTotal =
-      prices.additionals.midiasSociaisExcessPricePerStep +
-      prices.additionals.alertasWebPricePerExtraEnvio +
-      prices.additionals.api +
-      prices.additionals.stories +
-      prices.additionals.destaques
-
-    return (
-      precoBaseMensal +
-      prices.volumePrice +
-      prices.destinatarioPrice +
-      servicesTotal +
-      broadcastTotal +
-      additionalsTotal
-    )
-  }, [precoBaseMensal, prices])
-
   function toggle(key: string) {
     setOpen((prev) => ({ ...prev, [key]: !prev[key] }))
   }
