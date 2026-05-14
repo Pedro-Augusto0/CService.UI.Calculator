@@ -4,15 +4,18 @@ import {
   FileText,
   HelpCircle,
   type LucideIcon,
+  LogOut,
   Play,
   Settings,
+  UserRound,
   Users,
 } from 'lucide-react'
-import logoClipping from '../../assets/logo_clipping.png'
+import { useAuth } from '../../auth/AuthContext'
+import logoClipping from '../../assets/result_logo_clipping_bg-removed.png'
 import { Button } from '../ui/Button'
 import './Sidebar.css'
 
-export type MainAppRoute = 'wizard' | 'saved' | 'settings'
+export type MainAppRoute = 'wizard' | 'saved' | 'settings' | 'users'
 
 interface SidebarProps {
   onNovaProposta: () => void
@@ -29,11 +32,24 @@ interface SidebarNavItem {
   onClick?: () => void
 }
 
+function initialsFromName(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) return '?'
+  const parts = trimmed.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase()
+  }
+  const single = parts[0] ?? trimmed
+  return single.slice(0, 2).toUpperCase()
+}
+
 export function Sidebar({
   onNovaProposta,
   activeRoute,
   onNavigate,
 }: SidebarProps) {
+  const { user, logout } = useAuth()
+
   const navItems: SidebarNavItem[] = [
     {
       label: 'Propostas salvas',
@@ -49,12 +65,23 @@ export function Sidebar({
       label: 'Modelos de proposta',
       icon: BookMarked,
     },
-    {
-      label: 'Configurações',
-      icon: Settings,
-      isActive: activeRoute === 'settings',
-      onClick: () => onNavigate('settings'),
-    },
+    ...(user?.isAdmin
+      ? ([
+        {
+          label: 'Usuários',
+          icon: UserRound,
+          isActive: activeRoute === 'users',
+          onClick: () => onNavigate('users'),
+        },
+        {
+          label: 'Configurações',
+          icon: Settings,
+          isActive: activeRoute === 'settings',
+          onClick: () => onNavigate('settings'),
+        },
+
+      ] satisfies SidebarNavItem[])
+      : []),
   ]
 
   return (
@@ -100,6 +127,27 @@ export function Sidebar({
           Assistir guia rápido
         </Button>
       </div>
+
+      {user ? (
+        <div className="sidebar__account">
+          <div className="sidebar__account-avatar" aria-hidden>
+            {initialsFromName(user.name)}
+          </div>
+          <div className="sidebar__account-main">
+            <div className="sidebar__account-name">{user.name}</div>
+            <div className="sidebar__account-email" title={user.email}>
+              {user.email}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="sidebar__logout"
+            onClick={logout}
+          >
+            <LogOut size={15} strokeWidth={1.9} aria-hidden />
+          </button>
+        </div>
+      ) : null}
     </aside>
   )
 }

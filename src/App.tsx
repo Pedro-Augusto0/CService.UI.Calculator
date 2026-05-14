@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
+import {
+  clearUrlHash,
+  readHashConfigPrecos,
+  setHashConfigPrecos,
+} from './auth/appHash'
+import { useAuth } from './auth/AuthContext'
 import type { MainAppRoute } from './components/layout/AppShell'
 import { AppShell } from './components/layout/AppShell'
 import { ConfigPricingSidebar } from './components/layout/ConfigPricingSidebar'
@@ -9,10 +15,12 @@ import { Button } from './components/ui/Button'
 import { Stepper } from './components/ui/Stepper'
 import { Configuracao } from './pages/Configuracao'
 import { PropostasSalvas } from './pages/PropostasSalvas'
+import { Usuarios } from './pages/Usuarios'
 import { Escopo } from './pages/etapa/Escopo'
 import { ResumoProposta } from './pages/etapa/ResumoProposta'
 import { ServicosAdicionais } from './pages/etapa/ServicosAdicionais'
 import { TiposMonitoramento } from './pages/etapa/TiposMonitoramento'
+import { AuthPages } from './pages/auth/AuthPages'
 import {
   ProposalProvider,
   useProposal,
@@ -41,6 +49,7 @@ const STEPPER_STEPS = [
 ]
 
 function AppContent() {
+  const { user } = useAuth()
   const {
     state,
     dispatch,
@@ -52,6 +61,92 @@ function AppContent() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [pricingDraft, setPricingDraft] = useState<Prices | null>(null)
+  const [accessBanner, setAccessBanner] = useState<string | null>(null)
+
+  const navigateMain = useCallback(
+    (r: MainAppRoute) => {
+      if (r === 'settings' && !user?.isAdmin) {
+        setAccessBanner(
+          'Você não tem permissão para acessar a configuração de preços.',
+        )
+        window.setTimeout(() => setAccessBanner(null), 6500)
+        return
+      }
+      if (r === 'users' && !user?.isAdmin) {
+        setAccessBanner(
+          'Você não tem permissão para acessar o gerenciamento de usuários.',
+        )
+        window.setTimeout(() => setAccessBanner(null), 6500)
+        return
+      }
+      setAccessBanner(null)
+      setRoute(r)
+    },
+    [user],
+  )
+
+  useEffect(() => {
+    if (route === 'settings' && user && !user.isAdmin) {
+      clearUrlHash()
+      setRoute('wizard')
+      setAccessBanner(
+        'Você não tem permissão para acessar a configuração de preços.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+  }, [route, user])
+
+  useEffect(() => {
+    if (route === 'users' && user && !user.isAdmin) {
+      setRoute('wizard')
+      setAccessBanner(
+        'Você não tem permissão para acessar o gerenciamento de usuários.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+  }, [route, user])
+
+  useEffect(() => {
+    if (!readHashConfigPrecos()) return
+    if (user?.isAdmin) {
+      setRoute('settings')
+    } else {
+      clearUrlHash()
+      setAccessBanner(
+        'Você não tem permissão para acessar a configuração de preços.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+  }, [user])
+
+  useEffect(() => {
+    const onHash = () => {
+      if (!readHashConfigPrecos()) return
+      if (user?.isAdmin) {
+        setRoute('settings')
+        return
+      }
+      clearUrlHash()
+      setAccessBanner(
+        'Você não tem permissão para acessar a configuração de preços.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [user])
+
+  useEffect(() => {
+    if (route === 'settings' && user?.isAdmin) {
+      setHashConfigPrecos()
+    }
+  }, [route, user])
+
+  useEffect(() => {
+    if (route !== 'settings' && readHashConfigPrecos()) {
+      clearUrlHash()
+    }
+  }, [route])
 
   useEffect(() => {
     if (route === 'settings') {
@@ -98,7 +193,18 @@ function AppContent() {
   }
 
   return (
-    <>
+    <div
+      className={
+        accessBanner
+          ? 'app-root app-root--with-access-banner'
+          : 'app-root'
+      }
+    >
+      {accessBanner ? (
+        <div className="app-access-banner" role="alert">
+          {accessBanner}
+        </div>
+      ) : null}
       <AppShell
         stepper={
           route === 'wizard' ? (
@@ -117,7 +223,7 @@ function AppContent() {
           ) : null
         }
         sidebarActiveRoute={route}
-        onSidebarNavigate={setRoute}
+        onSidebarNavigate={navigateMain}
         onNovaProposta={handleNovaProposta}
         onPreviewProposal={() => handleOpenPreview()}
         showSidebarProposalPreview={route === 'wizard'}
@@ -133,6 +239,8 @@ function AppContent() {
             onOpenProposal={handleOpenSavedProposal}
             onPreviewProposal={handleOpenPreview}
           />
+        ) : route === 'users' ? (
+          <Usuarios />
         ) : (
           <div className="wizard-layout">
             <div className="wizard-content">
@@ -180,11 +288,15 @@ function AppContent() {
         html={previewHtml}
         onClose={() => setPreviewOpen(false)}
       />
-    </>
+    </div>
   )
 }
 
 export default function App() {
+  const { user } = useAuth()
+  if (!user) {
+    return <AuthPages />
+  }
   return (
     <ProposalProvider>
       <AppContent />

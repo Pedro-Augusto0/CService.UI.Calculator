@@ -106,7 +106,8 @@ button.sidebar__link {
 
 .sidebar__link:focus-visible,
 .sidebar__cta:focus-visible,
-.sidebar__help-btn:focus-visible {
+.sidebar__help-btn:focus-visible,
+.sidebar__logout:focus-visible {
   outline: 2px solid rgb(0 82 255 / 30%);
   outline-offset: 2px;
 }
@@ -160,4 +161,94 @@ button.sidebar__link {
 .sidebar__help-btn:hover:not(:disabled) {
   background: #fff;
   border-color: #c9d9ff;
+}
+
+.sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 14px 6px 2px;
+  margin-top: 2px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar__account-avatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 35px;
+  display: grid;
+  place-items: center;
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--color-primary);
+  background: linear-gradient(145deg, var(--color-primary-soft) 0%, #d9e6ff 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 82 255 / 10%),
+    0 1px 2px rgb(15 23 42 / 6%);
+}
+
+.sidebar__account-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.sidebar__account-name {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__account-email {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.sidebar__logout {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition:
+    color 0.14s ease,
+    background-color 0.14s ease;
+}
+
+button.sidebar__logout:hover {
+  color: var(--color-text);
+  background: rgb(148 163 184 / 12%);
+}
+
+button.sidebar__logout:active {
+  color: var(--color-text);
+  background: rgb(148 163 184 / 18%);
+}
+
+button.sidebar__logout svg {
+  flex-shrink: 0;
+  opacity: 0.88;
 }

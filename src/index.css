@@ -1,7 +1,7 @@
 :root {
-  --color-primary: #0052ff;
+  --color-primary: #4d8fd5;
   --color-primary-soft: #e8f0ff;
-  --color-primary-hover: #0040cc;
+  --color-primary-hover: #3e76a8;
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-border: #e2e8f0;
@@ -87,6 +87,7 @@ body {
 
 #root {
   height: 100%;
+  width: 100%;
   min-height: 100vh;
   overflow: hidden;
 }
