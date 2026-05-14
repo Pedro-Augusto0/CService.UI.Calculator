@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useState, type CSSProperties } from 'react'
 import backgroundPng from '../../assets/background.png'
-import logoClipping from '../../assets/result_logo_clipping_bg-removed.png'
+import logoClipping from '../../assets/logocs-aberto.png'
 import { useAuth } from '../../auth/AuthContext'
 import './AuthPages.css'
 
