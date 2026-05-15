@@ -1,0 +1,109 @@
+import { ChevronDown } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
+import { Card } from '@/components/ui/Card'
+import { FieldGroup, TextField } from '@/components/ui/TextField'
+import { TagInput } from '@/components/ui/TagInput'
+import { ServiceToggleGrid } from '@/features/proposal/components/ServiceToggleGrid'
+import type { MonitoringServiceKey, SectionKey } from '@/domain/types'
+import './ScopeCategorySection.css'
+
+interface ScopeCategorySectionProps {
+  sectionKey: SectionKey
+  title: string
+  subtitle?: string
+  leading?: ReactNode
+  keywords: string[]
+  volume: number
+  services: Record<MonitoringServiceKey, boolean>
+  defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  onKeywordsChange: (k: string[]) => void
+  onVolumeChange: (v: number) => void
+  onServiceToggle: (s: MonitoringServiceKey) => void
+}
+
+export function ScopeCategorySection({
+  sectionKey,
+  title,
+  subtitle,
+  leading,
+  keywords,
+  volume,
+  services,
+  defaultOpen = true,
+  open: controlledOpen,
+  onOpenChange,
+  onKeywordsChange,
+  onVolumeChange,
+  onServiceToggle,
+}: ScopeCategorySectionProps) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const open = controlledOpen ?? internalOpen
+
+  function handleOpenToggle() {
+    const nextOpen = !open
+    onOpenChange?.(nextOpen)
+    if (controlledOpen === undefined) {
+      setInternalOpen(nextOpen)
+    }
+  }
+
+  return (
+    <Card className={`scope-cat ${open ? 'scope-cat--open' : ''}`}>
+      <button
+        type="button"
+        className="scope-cat__header"
+        onClick={handleOpenToggle}
+        aria-expanded={open}
+      >
+        <span className="scope-cat__heading">
+          {leading}
+          <span>
+            <span className="scope-cat__title">{title}</span>
+            {subtitle ? (
+              <span className="scope-cat__subtitle">{subtitle}</span>
+            ) : null}
+          </span>
+        </span>
+        <ChevronDown
+          size={20}
+          className={`scope-cat__chevron ${open ? 'scope-cat__chevron--up' : ''}`}
+        />
+      </button>
+      {open ? (
+        <div className="scope-cat__body">
+          <FieldGroup
+            label="Palavras-chave"
+            hint="Digite e pressione Enter para criar cada termo."
+          >
+            <TagInput
+              tags={keywords}
+              onChange={onKeywordsChange}
+              placeholder="Ex.: Petrobras, Vale…"
+            />
+          </FieldGroup>
+          <TextField
+            id={`vol-${sectionKey}`}
+            label="Volume estimado (notícias / mês)"
+            type="number"
+            min={0}
+            step={1}
+            value={volume || ''}
+            onChange={(e) =>
+              onVolumeChange(Number.parseInt(e.target.value, 10) || 0)
+            }
+          />
+          <FieldGroup label="Serviços aplicados">
+            <ServiceToggleGrid
+              variant="compact"
+              selected={services}
+              onToggle={onServiceToggle}
+            />
+          </FieldGroup>
+        </div>
+      ) : null}
+    </Card>
+  )
+}
