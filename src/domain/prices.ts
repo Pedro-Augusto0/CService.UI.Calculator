@@ -48,6 +48,9 @@ export const DEFAULT_PRICES: Prices = {
   },
 }
 
+/** Preço base mensal inicial da configuração (espelha o seed do estado da proposta). */
+export const DEFAULT_PRECO_BASE_MENSAL = 250
+
 export const MONITORING_LABELS: Record<MonitoringServiceKey, string> = {
   texto: 'Texto',
   centimetragem: 'Centimetragem',

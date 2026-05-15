@@ -1,4 +1,4 @@
-import { DEFAULT_PRICES } from '../domain/prices'
+import { DEFAULT_PRECO_BASE_MENSAL, DEFAULT_PRICES } from '../domain/prices'
 import { defaultSections } from '../domain/calculations'
 import type { ProposalSections, SectionKey, MonitoringServiceKey } from '../domain/types'
 import { SECTION_KEYS } from '../domain/types'
@@ -43,7 +43,7 @@ export function createInitialProposalState(
       envioFeriadosFds: false,
       aprovacaoAutomatica: false,
     },
-    precoBaseMensal: seed.precoBaseMensal ?? 250,
+    precoBaseMensal: seed.precoBaseMensal ?? DEFAULT_PRECO_BASE_MENSAL,
     prices: structuredClone(seed.prices ?? DEFAULT_PRICES),
     applyServicesToAll: false,
     activeScopeTab: 'marcas',
@@ -151,6 +151,13 @@ export function proposalReducer(
       return {
         ...state,
         prices: structuredClone(action.prices),
+        pricingConfigSavedAt: Date.now(),
+      }
+    case 'COMMIT_PRICING_CONFIG':
+      return {
+        ...state,
+        prices: structuredClone(action.prices),
+        precoBaseMensal: Math.max(0, action.precoBaseMensal),
         pricingConfigSavedAt: Date.now(),
       }
     case 'SET_APPLY_SERVICES_TO_ALL':

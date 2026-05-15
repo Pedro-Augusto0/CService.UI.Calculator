@@ -13,7 +13,7 @@ import { PreviewProposalModal } from './components/layout/PreviewProposalModal'
 import { SummaryPanel } from './components/layout/SummaryPanel'
 import { Button } from './components/ui/Button'
 import { Stepper } from './components/ui/Stepper'
-import { Configuracao } from './pages/Configuracao'
+import { Configuracao, type ConfigTabId } from './pages/Configuracao'
 import { PropostasSalvas } from './pages/PropostasSalvas'
 import { Usuarios } from './pages/Usuarios'
 import { Escopo } from './pages/etapa/Escopo'
@@ -61,6 +61,9 @@ function AppContent() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [pricingDraft, setPricingDraft] = useState<Prices | null>(null)
+  const [precoBaseDraft, setPrecoBaseDraft] = useState<number | null>(null)
+  const [settingsSidebarSection, setSettingsSidebarSection] =
+    useState<ConfigTabId>('base')
   const [accessBanner, setAccessBanner] = useState<string | null>(null)
 
   const navigateMain = useCallback(
@@ -151,10 +154,12 @@ function AppContent() {
   useEffect(() => {
     if (route === 'settings') {
       setPricingDraft(structuredClone(state.prices))
+      setPrecoBaseDraft(state.precoBaseMensal)
     } else {
       setPricingDraft(null)
+      setPrecoBaseDraft(null)
     }
-  }, [route, state.prices])
+  }, [route, state.prices, state.precoBaseMensal])
 
   const html = useMemo(
     () =>
@@ -217,8 +222,9 @@ function AppContent() {
           ) : route === 'settings' ? (
             <ConfigPricingSidebar
               prices={pricingDraft ?? state.prices}
-              precoBaseMensal={state.precoBaseMensal}
+              precoBaseMensal={precoBaseDraft ?? state.precoBaseMensal}
               pricingSavedAt={state.pricingConfigSavedAt}
+              focusSection={settingsSidebarSection}
             />
           ) : null
         }
@@ -232,6 +238,9 @@ function AppContent() {
           <Configuracao
             draftPrices={pricingDraft ?? state.prices}
             setDraftPrices={setPricingDraft}
+            draftPrecoBaseMensal={precoBaseDraft ?? state.precoBaseMensal}
+            setDraftPrecoBaseMensal={setPrecoBaseDraft}
+            onActiveTabChange={setSettingsSidebarSection}
           />
         ) : route === 'saved' ? (
           <PropostasSalvas

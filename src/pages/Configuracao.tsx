@@ -1,43 +1,57 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import {
-  Activity,
   BarChart3,
-  Coins,
+  Calculator,
   FileBarChart,
+  FileCog,
+  HeartHandshake,
   Info,
-  Layers3,
   Mail,
-  RadioTower,
   RotateCcw,
   Save,
-  Sparkles,
-  Wallet,
+  Settings,
+  Share2,
   type LucideIcon,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import { TextField } from '../components/ui/TextField'
+import { PtDecimalField } from '../components/ui/PtDecimalField'
 import {
   PriceSettingsFields,
   type PriceSettingsSection,
 } from '../components/layout/PriceSettingsFields'
-import { DEFAULT_PRICES, type Prices } from '../domain/prices'
-import { MONITORING_SERVICE_KEYS } from '../domain/types'
+import {
+  DEFAULT_PRECO_BASE_MENSAL,
+  DEFAULT_PRICES,
+  type Prices,
+} from '../domain/prices'
 import { useProposal } from '../proposal/ProposalProvider'
 import './Configuracao.css'
+
+export type ConfigTabId =
+  | 'base'
+  | 'services'
+  | 'distribution'
+  | 'reports'
+  | 'extras'
+
+const TAB_PANEL_INFO: Record<Exclude<ConfigTabId, 'base'>, string> = {
+  services:
+    'Estes valores definem o quanto cada tipo de monitoramento contribui para o total da proposta. Mantenha a coerência com o pacote comercial ofertado.',
+  distribution:
+    'Os valores de TV e rádio são cobranças fixas por praça. Atualize-os quando negociar novas tabelas com veículos.',
+  reports:
+    'Relatórios recorrentes aparecem como linhas fixas na proposta; o preço deve refletir o esforço analítico.',
+  extras:
+    'Franquias, excessos e APIs alteram o resultado final. Revise estes parâmetros quando mudar políticas de uso.',
+}
 
 interface ConfiguracaoProps {
   draftPrices: Prices
   setDraftPrices: Dispatch<SetStateAction<Prices | null>>
+  draftPrecoBaseMensal: number
+  setDraftPrecoBaseMensal: Dispatch<SetStateAction<number | null>>
+  onActiveTabChange?: (tab: ConfigTabId) => void
 }
-
-type ConfigTabId =
-  | 'base'
-  | 'metrics'
-  | 'services'
-  | 'distribution'
-  | 'broadcast'
-  | 'reports'
-  | 'extras'
 
 interface ConfigTabItem {
   id: ConfigTabId
@@ -54,26 +68,17 @@ const CONFIG_TABS: ConfigTabItem[] = [
     label: 'Base de cálculo',
     title: 'Base de cálculo',
     description:
-      'Concentra os valores de partida usados com mais frequência para montar e revisar a tabela.',
-    icon: Wallet,
+      'Parâmetros principais que formam a base para todos os cálculos.',
+    icon: FileCog,
     visibleSections: [],
-  },
-  {
-    id: 'metrics',
-    label: 'Multiplicadores',
-    title: 'Multiplicadores',
-    description:
-      'Ajusta o valor aplicado sobre o volume monitorado antes das demais composições da proposta.',
-    icon: BarChart3,
-    visibleSections: ['metrics'],
   },
   {
     id: 'services',
     label: 'Serviços monitorados',
     title: 'Serviços monitorados',
     description:
-      'Edite os valores unitários dos serviços que compõem o núcleo mensal de monitoramento.',
-    icon: Layers3,
+      'Valores unitários cobrados por tipo de serviço no núcleo de monitoramento.',
+    icon: Share2,
     visibleSections: ['services'],
   },
   {
@@ -81,70 +86,49 @@ const CONFIG_TABS: ConfigTabItem[] = [
     label: 'Distribuição',
     title: 'Distribuição',
     description:
-      'Centraliza os parâmetros usados nos envios recorrentes de newsletter e rotinas de distribuição.',
-    icon: Mail,
-    visibleSections: ['distribution'],
-  },
-  {
-    id: 'broadcast',
-    label: 'Broadcast',
-    title: 'Broadcast',
-    description:
-      'Configure a cobertura fixa de TV e rádio por praça para compor propostas com mídia tradicional.',
-    icon: RadioTower,
+      'TV e rádio por praça — coberturas fixas que entram na proposta.',
+    icon: Settings,
     visibleSections: ['broadcast'],
   },
   {
     id: 'reports',
     label: 'Relatórios',
     title: 'Relatórios',
-    description:
-      'Defina os custos dos entregáveis analíticos recorrentes vinculados à operação.',
+    description: 'Preços dos entregáveis analíticos recorrentes.',
     icon: FileBarChart,
     visibleSections: ['reports'],
   },
   {
     id: 'extras',
     label: 'Extras',
-    title: 'Extras e regras',
+    title: 'Extras',
     description:
-      'Ajuste serviços avulsos, franquias e regras complementares que alteram o preço final.',
-    icon: Sparkles,
+      'Adicionais, franquias e parâmetros que ajustam o total da proposta.',
+    icon: HeartHandshake,
     visibleSections: ['additionals'],
   },
 ]
 
-export function Configuracao({ draftPrices, setDraftPrices }: ConfiguracaoProps) {
+export function Configuracao({
+  draftPrices,
+  setDraftPrices,
+  draftPrecoBaseMensal,
+  setDraftPrecoBaseMensal,
+  onActiveTabChange,
+}: ConfiguracaoProps) {
   const { state, dispatch } = useProposal()
   const [activeTab, setActiveTab] = useState<ConfigTabId>('base')
-  const serviceValues = Object.values(draftPrices.servicePrices)
-  const minServicePrice = serviceValues.length ? Math.min(...serviceValues) : 0
-  const maxServicePrice = serviceValues.length ? Math.max(...serviceValues) : 0
-  const totalConfigFields =
-    1 +
-    2 +
-    MONITORING_SERVICE_KEYS.length +
-    Object.keys(draftPrices.broadcast.tv).length +
-    Object.keys(draftPrices.broadcast.radio).length +
-    Object.keys(draftPrices.broadcast.relatorio).length +
-    Object.keys(draftPrices.additionals).length
-  const hasPendingPriceChanges = JSON.stringify(draftPrices) !== JSON.stringify(state.prices)
-  const isDefaultDraft = JSON.stringify(draftPrices) === JSON.stringify(DEFAULT_PRICES)
-  const tabCounts = useMemo<Record<ConfigTabId, number>>(
-    () => ({
-      base: 3,
-      metrics: 1,
-      services: MONITORING_SERVICE_KEYS.length,
-      distribution: 1,
-      broadcast:
-        Object.keys(draftPrices.broadcast.tv).length +
-        Object.keys(draftPrices.broadcast.radio).length,
-      reports: Object.keys(draftPrices.broadcast.relatorio).length,
-      extras: Object.keys(draftPrices.additionals).length,
-    }),
-    [draftPrices],
-  )
+  const hasPendingPriceChanges =
+    JSON.stringify(draftPrices) !== JSON.stringify(state.prices) ||
+    draftPrecoBaseMensal !== state.precoBaseMensal
+  const isDefaultDraft =
+    JSON.stringify(draftPrices) === JSON.stringify(DEFAULT_PRICES) &&
+    draftPrecoBaseMensal === DEFAULT_PRECO_BASE_MENSAL
   const activeTabItem = CONFIG_TABS.find((tab) => tab.id === activeTab) ?? CONFIG_TABS[0]
+
+  useEffect(() => {
+    onActiveTabChange?.(activeTab)
+  }, [activeTab, onActiveTabChange])
 
   function patch<K extends keyof Prices>(key: K, value: Prices[K]) {
     setDraftPrices((prev) => {
@@ -156,15 +140,6 @@ export function Configuracao({ draftPrices, setDraftPrices }: ConfiguracaoProps)
   return (
     <div className="config-page wizard-layout">
       <div className="wizard-content config-page__scroll">
-        <header className="config-page__intro">
-          <div className="config-page__intro-copy">
-            <h1 className="config-page__headline">Configuração de preços</h1>
-            <p className="config-page__lead">
-              Defina os valores base e parâmetros utilizados nos cálculos das propostas.
-            </p>
-          </div>
-        </header>
-
         <nav className="config-page__tabs" aria-label="Seções da configuração" role="tablist">
           {CONFIG_TABS.map(({ id, label, icon: Icon }) => (
             <button
@@ -176,7 +151,7 @@ export function Configuracao({ draftPrices, setDraftPrices }: ConfiguracaoProps)
               onClick={() => setActiveTab(id)}
             >
               <span className="config-page__tab-icon" aria-hidden>
-                <Icon size={15} strokeWidth={2} />
+                <Icon size={18} strokeWidth={1.75} />
               </span>
               <span className="config-page__tab-label">{label}</span>
             </button>
@@ -185,230 +160,144 @@ export function Configuracao({ draftPrices, setDraftPrices }: ConfiguracaoProps)
 
         <div className="config-page__panel price-modal">
           <div className="price-modal__header config-page__price-header">
-            <div className="config-page__price-head-main">
-              <h2 className="config-page__price-panel-title">
-                <span className="config-page__panel-ico" aria-hidden>
-                  <activeTabItem.icon size={18} strokeWidth={2} />
-                </span>
-                {activeTabItem.title}
-              </h2>
-              <p className="config-page__price-copy">
-                {activeTabItem.description}
-              </p>
-            </div>
-
-            <div className="config-page__price-actions">
-              <div className="config-page__badges" aria-label="Resumo rápido da tabela">
-                <span className="config-page__badge">
-                  <Activity size={14} strokeWidth={2} aria-hidden />
-                  {tabCounts[activeTab]} parâmetro{tabCounts[activeTab] > 1 ? 's' : ''}
-                </span>
-                <span className="config-page__badge config-page__badge--muted">
-                  {hasPendingPriceChanges ? 'Rascunho em edição' : 'Sem pendências'}
-                </span>
-              </div>
-
-              <Button
-                variant="ghost"
-                type="button"
-                className="config-page__restore"
-                disabled={isDefaultDraft}
-                onClick={() => setDraftPrices(structuredClone(DEFAULT_PRICES))}
-              >
-                <RotateCcw size={16} strokeWidth={2} aria-hidden />
-                Restaurar padrão
-              </Button>
+            <div className="config-page__price-head-inner">
+              <h2 className="config-page__price-panel-title">{activeTabItem.title}</h2>
+              <p className="config-page__price-subtitle">{activeTabItem.description}</p>
             </div>
           </div>
 
           {activeTab === 'base' ? (
             <div className="config-page__base-layout">
-              <section className="config-page__section-card" aria-labelledby="config-base-heading">
-                <div className="config-page__section-head">
-                  <div>
-                    <h3 id="config-base-heading" className="config-page__section-title">
-                      Base de cálculo
-                    </h3>
-                    <p className="config-page__section-copy">
-                      Valores fundamentais usados como ponto de partida nos cálculos.
-                    </p>
-                  </div>
-                  <span className="config-page__section-badge">3 parâmetros</span>
+              <article className="config-base-card">
+                <div
+                  className="config-base-card__icon config-base-card__icon--blue"
+                  aria-hidden
+                >
+                  <Calculator size={22} strokeWidth={1.85} />
                 </div>
-
-                <section className="config-page__overview" aria-label="Visão geral da configuração">
-                  <article className="config-page__overview-card config-page__overview-card--editable">
-                    <span className="config-page__overview-icon" aria-hidden>
-                      <Wallet size={18} strokeWidth={2} />
-                    </span>
-                    <div className="config-page__overview-body">
-                      <span className="config-page__overview-label">Preço base mensal</span>
-                      <p className="config-page__overview-text">
-                        Valor fixo aplicado a todas as novas propostas.
-                      </p>
-                      <TextField
-                        dense
-                        id="config-preco-base-mensal"
-                        className="ui-field--inline-max config-page__inline-field"
-                        labelIcon={<Coins size={14} strokeWidth={2} aria-hidden />}
-                        label="Valor base (R$)"
-                        hint="Valor total incluso na proposta."
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={state.precoBaseMensal || ''}
-                        onChange={(e) =>
-                          dispatch({
-                            type: 'SET_PRECO_BASE_MENSAL',
-                            value: Number.parseFloat(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                  </article>
-
-                  <article className="config-page__overview-card">
-                    <span className="config-page__overview-icon config-page__overview-icon--soft" aria-hidden>
-                      <Coins size={18} strokeWidth={2} />
-                    </span>
-                    <div className="config-page__overview-body">
-                      <span className="config-page__overview-label">Faixa dos serviços variáveis</span>
-                      <p className="config-page__overview-text">
-                        Referência rápida dos menores e maiores valores utilizados na tabela.
-                      </p>
-                      <div className="config-page__metric-box">
-                        <span className="config-page__metric-prefix">R$</span>
-                        <strong>{minServicePrice.toFixed(2).replace('.', ',')}</strong>
-                        <span className="config-page__metric-sep">-</span>
-                        <strong>{maxServicePrice.toFixed(2).replace('.', ',')}</strong>
-                      </div>
-                    </div>
-                  </article>
-
-                  <article className="config-page__overview-card">
-                    <span className="config-page__overview-icon config-page__overview-icon--slate" aria-hidden>
-                      <Layers3 size={18} strokeWidth={2} />
-                    </span>
-                    <div className="config-page__overview-body">
-                      <span className="config-page__overview-label">Parâmetros configuráveis</span>
-                      <p className="config-page__overview-text">
-                        Total de campos disponíveis entre multiplicadores, serviços, broadcast, relatórios e adicionais.
-                      </p>
-                      <div className="config-page__metric-box config-page__metric-box--count">
-                        <strong>{totalConfigFields}</strong>
-                        <span>campos</span>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-
-                <p className="config-page__section-tip">
-                  <Info
-                    size={18}
-                    strokeWidth={2}
-                    className="config-page__section-tip-icon"
-                    aria-hidden
+                <div className="config-base-card__copy">
+                  <h3 className="config-base-card__title">Preço base mensal</h3>
+                  <p className="config-base-card__desc">
+                    Valor fixo aplicado mensalmente a todas as propostas.
+                  </p>
+                </div>
+                <div className="config-base-card__field">
+                  <PtDecimalField
+                    id="config-preco-base-mensal"
+                    label="Valor (R$)"
+                    value={draftPrecoBaseMensal}
+                    onCommit={(n) => setDraftPrecoBaseMensal(n)}
                   />
-                  <span>
-                    Estas configurações formam a base de todos os cálculos das propostas.
-                  </span>
+                </div>
+              </article>
+
+              <article className="config-base-card">
+                <div
+                  className="config-base-card__icon config-base-card__icon--green"
+                  aria-hidden
+                >
+                  <BarChart3 size={22} strokeWidth={1.85} />
+                </div>
+                <div className="config-base-card__copy">
+                  <h3 className="config-base-card__title">Preço por volume (R$)</h3>
+                  <p className="config-base-card__desc">
+                    Multiplicador aplicado sobre a soma mensal das notícias monitoradas.
+                  </p>
+                </div>
+                <div className="config-base-card__field">
+                  <PtDecimalField
+                    id="config-volume-price"
+                    label="Multiplicador"
+                    value={draftPrices.volumePrice}
+                    onCommit={(n) => patch('volumePrice', n)}
+                  />
+                </div>
+              </article>
+
+              <article className="config-base-card">
+                <div
+                  className="config-base-card__icon config-base-card__icon--orange"
+                  aria-hidden
+                >
+                  <Mail size={22} strokeWidth={1.85} />
+                </div>
+                <div className="config-base-card__copy">
+                  <h3 className="config-base-card__title">
+                    Preço destinatário-envio-dia (R$)
+                  </h3>
+                  <p className="config-base-card__desc">
+                    Valor aplicado quando há envios para destinatários recorrentes
+                    (newsletter).
+                  </p>
+                </div>
+                <div className="config-base-card__field">
+                  <PtDecimalField
+                    id="config-destinatario-price"
+                    label="Valor"
+                    value={draftPrices.destinatarioPrice}
+                    onCommit={(n) => patch('destinatarioPrice', n)}
+                  />
+                </div>
+              </article>
+
+              <div className="config-page__info-callout" role="status">
+                <span className="config-page__info-callout-icon" aria-hidden>
+                  <Info size={20} strokeWidth={2} />
+                </span>
+                <p className="config-page__info-callout-text">
+                  Esses valores são a base para o cálculo de todos os serviços e adicionais.
+                  Alterações aqui impactam diretamente o resultado final das propostas.
                 </p>
-              </section>
-
-              <section className="config-page__section-card" aria-labelledby="config-newsletter-heading">
-                <div className="config-page__section-head">
-                  <div>
-                    <h3 id="config-newsletter-heading" className="config-page__section-title">
-                      Newsletter (envio diário)
-                    </h3>
-                    <p className="config-page__section-copy">
-                      Parâmetros utilizados para cálculo dos envios diários de newsletter.
-                    </p>
-                  </div>
-                  <span className="config-page__section-badge">2 parâmetros</span>
-                </div>
-
-                <div className="price-config-metrics config-page__compact-metrics">
-                  <div className="price-config-metrics__card">
-                    <div className="price-config-metrics__ico" aria-hidden>
-                      <BarChart3 size={20} strokeWidth={2} />
-                    </div>
-                    <div className="price-config-metrics__fields">
-                      <TextField
-                        dense
-                        label="Preço por volume (R$)"
-                        hint="Multiplicador aplicado sobre a soma mensal das notícias monitoradas."
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={draftPrices.volumePrice}
-                        onChange={(e) => patch('volumePrice', Number.parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="price-config-metrics__card">
-                    <div
-                      className="price-config-metrics__ico price-config-metrics__ico--mail"
-                      aria-hidden
-                    >
-                      <Mail size={20} strokeWidth={2} />
-                    </div>
-                    <div className="price-config-metrics__fields">
-                      <TextField
-                        dense
-                        label="Preço destinatário-envio/dia (R$)"
-                        hint="Valor por destinatário por envio diário da newsletter."
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={draftPrices.destinatarioPrice}
-                        onChange={(e) =>
-                          patch('destinatarioPrice', Number.parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
+              </div>
             </div>
           ) : (
-            <PriceSettingsFields
-              draft={draftPrices}
-              patch={patch}
-              visibleSections={activeTabItem.visibleSections}
-            />
-          )}
-
-          <div className="price-modal__footer config-page__price-footer">
-            <p className="config-page__save-hint">
-              <Info
-                size={18}
-                strokeWidth={2}
-                className="config-page__save-hint-icon"
-                aria-hidden
+            <div className="config-page__base-layout">
+              <PriceSettingsFields
+                draft={draftPrices}
+                patch={patch}
+                visibleSections={activeTabItem.visibleSections}
               />
-              <span>
-                {hasPendingPriceChanges
-                  ? 'As alterações da tabela ainda não foram aplicadas. Salve para usar esses valores nas novas propostas.'
-                  : 'Tabela em sincronia. Novas alterações feitas abaixo só passam a valer quando você salvar.'}
-              </span>
-            </p>
-            <Button
-              variant="primary"
-              type="button"
-              disabled={!hasPendingPriceChanges}
-              onClick={() =>
-                dispatch({
-                  type: 'SET_PRICES',
-                  prices: structuredClone(draftPrices),
-                })
-              }
-            >
-              <Save size={18} strokeWidth={2} aria-hidden />
-              {hasPendingPriceChanges ? 'Salvar tabela de preços' : 'Tabela sincronizada'}
-            </Button>
-          </div>
+              <div className="config-page__info-callout" role="status">
+                <span className="config-page__info-callout-icon" aria-hidden>
+                  <Info size={20} strokeWidth={2} />
+                </span>
+                <p className="config-page__info-callout-text">
+                  {TAB_PANEL_INFO[activeTab]}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="config-page__actions-bar">
+          <Button
+            variant="secondary"
+            type="button"
+            className="config-page__restore"
+            disabled={isDefaultDraft}
+            onClick={() => {
+              setDraftPrices(structuredClone(DEFAULT_PRICES))
+              setDraftPrecoBaseMensal(DEFAULT_PRECO_BASE_MENSAL)
+            }}
+          >
+            <RotateCcw size={16} strokeWidth={2} aria-hidden />
+            Restaurar padrão
+          </Button>
+          <Button
+            variant="primary"
+            type="button"
+            disabled={!hasPendingPriceChanges}
+            onClick={() =>
+              dispatch({
+                type: 'COMMIT_PRICING_CONFIG',
+                prices: structuredClone(draftPrices),
+                precoBaseMensal: draftPrecoBaseMensal,
+              })
+            }
+          >
+            <Save size={18} strokeWidth={2} aria-hidden />
+            Salvar alterações
+          </Button>
         </div>
       </div>
     </div>

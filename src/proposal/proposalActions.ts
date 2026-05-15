@@ -26,6 +26,8 @@ export type ProposalAction =
   | { type: 'SET_OPERATIONAL'; patch: Partial<OperationalState> }
   | { type: 'SET_PRECO_BASE_MENSAL'; value: number }
   | { type: 'SET_PRICES'; prices: Prices }
+  /** Persiste tabela de preços e preço base mensal num único passo (tela de configuração). */
+  | { type: 'COMMIT_PRICING_CONFIG'; prices: Prices; precoBaseMensal: number }
   | { type: 'SET_APPLY_SERVICES_TO_ALL'; value: boolean }
   | { type: 'SET_ACTIVE_SCOPE_TAB'; section: SectionKey }
   | { type: 'MARK_PROPOSAL_SAVED'; id: string; savedAt: number }

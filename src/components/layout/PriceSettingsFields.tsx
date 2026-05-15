@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
@@ -10,7 +11,6 @@ import {
   Hash,
   Highlighter,
   Image as ImageIcon,
-  Mail,
   Radio,
   Ruler,
   Sparkles,
@@ -19,15 +19,11 @@ import {
   Tv,
   Type,
 } from 'lucide-react'
-import { TextField } from '../ui/TextField'
+import { PtDecimalField, PtIntegerField } from '../ui/PtDecimalField'
 import { MONITORING_LABELS, type Prices } from '../../domain/prices'
 import { MONITORING_SERVICE_KEYS, type MonitoringServiceKey } from '../../domain/types'
-import './PriceSettingsModal.css'
 
-function num(v: string): number {
-  const n = Number.parseFloat(v.replace(',', '.'))
-  return Number.isFinite(n) ? n : 0
-}
+const CARD_TONES = ['blue', 'green', 'orange'] as const
 
 const SERVICE_ICONS: Record<MonitoringServiceKey, LucideIcon> = {
   texto: Type,
@@ -39,9 +35,14 @@ const SERVICE_ICONS: Record<MonitoringServiceKey, LucideIcon> = {
   screenshot: ImageIcon,
 }
 
-
-function FieldLabelIcon({ icon: Icon }: { icon: LucideIcon }) {
-  return <Icon size={14} strokeWidth={2} aria-hidden />
+const SERVICE_DESCRIPTIONS: Record<MonitoringServiceKey, string> = {
+  texto: 'Tarifa unitária aplicada ao monitoramento veiculado em texto corrido.',
+  centimetragem: 'Valor por centimetragem ou espaço editorial equivalente.',
+  grifo: 'Sobretaxa por menções em grifo ou destaque tipográfico.',
+  score: 'Custo por processamento ou exibição do score de relevância.',
+  avaliacao: 'Valor da avaliação qualitativa ou parecer sobre publicações.',
+  ia: 'Tarifa dos serviços que utilizam analítica ou assistência por IA.',
+  screenshot: 'Valor por captura ou preservação visual da menção.',
 }
 
 interface PriceSettingsFieldsProps {
@@ -50,314 +51,333 @@ interface PriceSettingsFieldsProps {
   visibleSections?: PriceSettingsSection[]
 }
 
-export type PriceSettingsSection =
-  | 'metrics'
-  | 'distribution'
-  | 'services'
-  | 'broadcast'
-  | 'reports'
-  | 'additionals'
+export type PriceSettingsSection = 'services' | 'broadcast' | 'reports' | 'additionals'
+
+function PriceConfigCard({
+  toneIndex,
+  Icon,
+  title,
+  description,
+  children,
+}: {
+  toneIndex: number
+  Icon: LucideIcon
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  const tone = CARD_TONES[toneIndex % CARD_TONES.length]
+  return (
+    <article className="config-base-card">
+      <div
+        className={`config-base-card__icon config-base-card__icon--${tone}`}
+        aria-hidden
+      >
+        <Icon size={22} strokeWidth={1.85} />
+      </div>
+      <div className="config-base-card__copy">
+        <h3 className="config-base-card__title">{title}</h3>
+        <p className="config-base-card__desc">{description}</p>
+      </div>
+      <div className="config-base-card__field">{children}</div>
+    </article>
+  )
+}
 
 export function PriceSettingsFields({
   draft,
   patch,
-  visibleSections = [
-    'metrics',
-    'distribution',
-    'services',
-    'broadcast',
-    'reports',
-    'additionals',
-  ],
+  visibleSections = ['services', 'broadcast', 'reports', 'additionals'],
 }: PriceSettingsFieldsProps) {
   const visible = new Set(visibleSections)
+  let toneIndex = 0
 
   return (
-    <div className="price-modal__body price-modal__body--config">
-      {visible.has('metrics') ? (
-        <section
-          id="config-section-metrics"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-config-metrics">
-            <div className="price-config-metrics__card">
-              <div className="price-config-metrics__ico" aria-hidden>
-                <BarChart3 size={20} strokeWidth={2} />
-              </div>
-              <div className="price-config-metrics__fields">
-                <TextField
-                  dense
-                  id="vp"
-                  label="Preço por volume (R$)"
-                  hint="Valor multiplicador da soma mensal das notícias monitoradas."
-                  value={draft.volumePrice}
-                  onChange={(e) => patch('volumePrice', num(e.target.value))}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {visible.has('distribution') ? (
-        <section
-          id="config-section-distribution"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-config-metrics">
-            <div className="price-config-metrics__card">
-              <div className="price-config-metrics__ico price-config-metrics__ico--mail" aria-hidden>
-                <Mail size={20} strokeWidth={2} />
-              </div>
-              <div className="price-config-metrics__fields">
-                <TextField
-                  dense
-                  id="dp"
-                  label="Preço destinatário-envio/dia (R$)"
-                  hint="Usado quando há envios e destinatários recorrentes (newsletter)."
-                  value={draft.destinatarioPrice}
-                  onChange={(e) => patch('destinatarioPrice', num(e.target.value))}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {visible.has('services') ? (
-        <section
-          id="config-section-services"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-modal__grid">
-            {MONITORING_SERVICE_KEYS.map((k) => {
-              const Icon = SERVICE_ICONS[k]
-              return (
-                <TextField
-                  key={k}
-                  dense
-                  labelIcon={<FieldLabelIcon icon={Icon} />}
-                  label={MONITORING_LABELS[k]}
+    <>
+      {visible.has('services')
+        ? MONITORING_SERVICE_KEYS.map((k) => {
+            const Icon = SERVICE_ICONS[k]
+            const idx = toneIndex++
+            return (
+              <PriceConfigCard
+                key={k}
+                toneIndex={idx}
+                Icon={Icon}
+                title={MONITORING_LABELS[k]}
+                description={SERVICE_DESCRIPTIONS[k]}
+              >
+                <PtDecimalField
+                  id={`config-service-${k}`}
+                  label="Valor (R$)"
                   value={draft.servicePrices[k]}
-                  onChange={(e) =>
+                  onCommit={(n) =>
                     patch('servicePrices', {
                       ...draft.servicePrices,
-                      [k]: num(e.target.value),
+                      [k]: n,
                     })
                   }
                 />
-              )
-            })}
-          </div>
-        </section>
-      ) : null}
+              </PriceConfigCard>
+            )
+          })
+        : null}
 
       {visible.has('broadcast') ? (
-        <section
-          id="config-section-broadcast"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-modal__grid2">
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Tv} />}
-              label="TV SP+RJ"
+        <>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Tv}
+            title="TV SP+RJ"
+            description="Valor fixo mensal para inclusão da cobertura de televisão nas praças São Paulo e Rio de Janeiro."
+          >
+            <PtDecimalField
+              id="config-broadcast-tv-sp-rj"
+              label="Valor (R$)"
               value={draft.broadcast.tv.sp_rj}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
-                  tv: { ...draft.broadcast.tv, sp_rj: num(e.target.value) },
+                  tv: { ...draft.broadcast.tv, sp_rj: n },
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Tv} />}
-              label="TV Nacional"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Tv}
+            title="TV Nacional"
+            description="Preço da distribuição em televisão com alcance em nível nacional."
+          >
+            <PtDecimalField
+              id="config-broadcast-tv-nacional"
+              label="Valor (R$)"
               value={draft.broadcast.tv.nacional}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
-                  tv: {
-                    ...draft.broadcast.tv,
-                    nacional: num(e.target.value),
-                  },
+                  tv: { ...draft.broadcast.tv, nacional: n },
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Radio} />}
-              label="Rádio SP+RJ"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Radio}
+            title="Rádio SP+RJ"
+            description="Valor para spots ou inserções em rádio nas praças SP e RJ."
+          >
+            <PtDecimalField
+              id="config-broadcast-radio-sp-rj"
+              label="Valor (R$)"
               value={draft.broadcast.radio.sp_rj}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
-                  radio: {
-                    ...draft.broadcast.radio,
-                    sp_rj: num(e.target.value),
-                  },
+                  radio: { ...draft.broadcast.radio, sp_rj: n },
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Radio} />}
-              label="Rádio Nacional"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Radio}
+            title="Rádio Nacional"
+            description="Preço da cobertura em rádio com abrangência nacional."
+          >
+            <PtDecimalField
+              id="config-broadcast-radio-nacional"
+              label="Valor (R$)"
               value={draft.broadcast.radio.nacional}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
-                  radio: {
-                    ...draft.broadcast.radio,
-                    nacional: num(e.target.value),
-                  },
+                  radio: { ...draft.broadcast.radio, nacional: n },
                 })
               }
             />
-          </div>
-        </section>
+          </PriceConfigCard>
+        </>
       ) : null}
 
       {visible.has('reports') ? (
-        <section
-          id="config-section-reports"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-modal__grid2">
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={FileBarChart} />}
-              label="Relatório mensal"
+        <>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={FileBarChart}
+            title="Relatório mensal"
+            description="Valor do relatório analítico entregue com periodicidade mensal."
+          >
+            <PtDecimalField
+              id="config-report-mensal"
+              label="Valor (R$)"
               value={draft.broadcast.relatorio.mensal}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
                   relatorio: {
                     ...draft.broadcast.relatorio,
-                    mensal: num(e.target.value),
+                    mensal: n,
                   },
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={FileBarChart} />}
-              label="Relatório semanal"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={BarChart3}
+            title="Relatório semanal"
+            description="Valor do relatório analítico com atualização semanal."
+          >
+            <PtDecimalField
+              id="config-report-semanal"
+              label="Valor (R$)"
               value={draft.broadcast.relatorio.semanal}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('broadcast', {
                   ...draft.broadcast,
                   relatorio: {
                     ...draft.broadcast.relatorio,
-                    semanal: num(e.target.value),
+                    semanal: n,
                   },
                 })
               }
             />
-          </div>
-        </section>
+          </PriceConfigCard>
+        </>
       ) : null}
 
       {visible.has('additionals') ? (
-        <section
-          id="config-section-additionals"
-          className="price-modal__section price-modal__section--config price-modal__section--surface"
-        >
-          <div className="price-modal__grid2">
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Hash} />}
-              label="Posts inclusos (mídias sociais)"
+        <>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Hash}
+            title="Posts inclusos (mídias sociais)"
+            description="Quantidade de posts de redes sociais cobertos pela mensalidade sem cobrança extra."
+          >
+            <PtIntegerField
+              id="config-extra-posts-inclusos"
+              label="Quantidade"
               value={draft.additionals.midiasSociaisIncludedPosts}
-              onChange={(e) =>
+              min={0}
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  midiasSociaisIncludedPosts: Math.max(
-                    0,
-                    Math.floor(num(e.target.value)),
-                  ),
+                  midiasSociaisIncludedPosts: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={ChevronsRight} />}
-              label="Passo excedente (posts)"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={ChevronsRight}
+            title="Passo do excedente (posts)"
+            description="Tamanho do bloco de posts usado para calcular cobrança quando há excesso."
+          >
+            <PtIntegerField
+              id="config-extra-posts-step"
+              label="Quantidade"
               value={draft.additionals.midiasSociaisExcessPostsStep}
-              onChange={(e) =>
+              min={1}
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  midiasSociaisExcessPostsStep: Math.max(
-                    1,
-                    Math.floor(num(e.target.value)),
-                  ),
+                  midiasSociaisExcessPostsStep: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={TrendingUp} />}
-              label="Preço por passo excedente"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={TrendingUp}
+            title="Preço por passo excedente"
+            description="Valor cobrado a cada passo de posts além da franquia inclusa."
+          >
+            <PtDecimalField
+              id="config-extra-excesso-step-price"
+              label="Valor (R$)"
               value={draft.additionals.midiasSociaisExcessPricePerStep}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  midiasSociaisExcessPricePerStep: num(e.target.value),
+                  midiasSociaisExcessPricePerStep: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Bell} />}
-              label="Alertas: R$ por envio extra"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Bell}
+            title="Alertas web · envio extra"
+            description="Tarifa aplicada por envio adicional nos alertas pela web."
+          >
+            <PtDecimalField
+              id="config-extra-alertas-envio"
+              label="Valor (R$)"
               value={draft.additionals.alertasWebPricePerExtraEnvio}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  alertasWebPricePerExtraEnvio: num(e.target.value),
+                  alertasWebPricePerExtraEnvio: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Cpu} />}
-              label="API"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Cpu}
+            title="API"
+            description="Valor mensal ou unitário para disponibilização do acesso via API."
+          >
+            <PtDecimalField
+              id="config-extra-api"
+              label="Valor (R$)"
               value={draft.additionals.api}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  api: num(e.target.value),
+                  api: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={BookOpen} />}
-              label="Stories"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={BookOpen}
+            title="Stories"
+            description="Preço relacionado ao monitoramento ou entrega em formato stories."
+          >
+            <PtDecimalField
+              id="config-extra-stories"
+              label="Valor (R$)"
               value={draft.additionals.stories}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  stories: num(e.target.value),
+                  stories: n,
                 })
               }
             />
-            <TextField
-              dense
-              labelIcon={<FieldLabelIcon icon={Sparkles} />}
-              label="Destaques da semana"
+          </PriceConfigCard>
+          <PriceConfigCard
+            toneIndex={toneIndex++}
+            Icon={Sparkles}
+            title="Destaques da semana"
+            description="Valor do add-on de curadoria ou destaque semanal do conteúdo."
+          >
+            <PtDecimalField
+              id="config-extra-destaques"
+              label="Valor (R$)"
               value={draft.additionals.destaques}
-              onChange={(e) =>
+              onCommit={(n) =>
                 patch('additionals', {
                   ...draft.additionals,
-                  destaques: num(e.target.value),
+                  destaques: n,
                 })
               }
             />
-          </div>
-        </section>
+          </PriceConfigCard>
+        </>
       ) : null}
-    </div>
+    </>
   )
 }
