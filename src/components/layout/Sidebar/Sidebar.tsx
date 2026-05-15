@@ -53,6 +53,8 @@ export function Sidebar({
     {
       label: 'Modelos de proposta',
       icon: BookMarked,
+      isActive: activeRoute === 'templates',
+      onClick: () => onNavigate('templates'),
     },
     ...(user?.isAdmin
       ? ([

@@ -6,7 +6,7 @@ import type { ProposalAction, ProposalState } from './proposalActions'
 
 export const STEP_COUNT = 4
 
-interface ProposalStateSeed {
+export interface ProposalStateSeed {
   precoBaseMensal?: number
   prices?: ProposalState['prices']
   pricingConfigSavedAt?: number

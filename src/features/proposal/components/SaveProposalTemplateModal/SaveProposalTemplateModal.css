@@ -1,0 +1,105 @@
+.save-template-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 45%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px;
+  z-index: 60;
+}
+
+.save-template-modal {
+  width: min(100%, 440px);
+  background: var(--color-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 640px);
+}
+
+.save-template-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.save-template-modal__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0c2744;
+}
+
+.save-template-modal__lead {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.save-template-modal__close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  margin: -6px -6px 0 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.save-template-modal__close:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.save-template-modal__body {
+  padding: 18px 20px 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.save-template-modal__textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.45;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.save-template-modal__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(0 82 255 / 18%);
+}
+
+.save-template-modal__error {
+  margin: -8px 0 0;
+  font-size: 0.75rem;
+  color: var(--color-danger);
+}
+
+.save-template-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--color-border);
+  background: #f8fafc;
+  border-radius: 0 0 12px 12px;
+}

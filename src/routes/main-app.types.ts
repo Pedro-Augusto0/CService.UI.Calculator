@@ -1,1 +1,6 @@
-export type MainAppRoute = 'wizard' | 'saved' | 'settings' | 'users'
+export type MainAppRoute =
+  | 'wizard'
+  | 'saved'
+  | 'templates'
+  | 'settings'
+  | 'users'

@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  BookMarked,
   CircleDashed,
   DollarSign,
   FileText,
@@ -20,6 +21,7 @@ interface ResumoPropostaProps {
   onBack: () => void
   onDownload: (filename?: string) => void
   onSaveComplete: () => void
+  onOpenSaveTemplate: () => void
 }
 
 function summarizeList(items: string[], max = 2, empty = '—') {
@@ -43,6 +45,7 @@ export function ResumoProposta({
   onBack,
   onDownload,
   onSaveComplete,
+  onOpenSaveTemplate,
 }: ResumoPropostaProps) {
   const { state, calculation: c, saveCurrentProposal } = useProposal()
 
@@ -266,10 +269,21 @@ export function ResumoProposta({
       </div>
 
       <footer className="resumo-page__footer">
-        <Button variant="ghost" className="resumo-page__back-button" onClick={onBack}>
-          <ArrowLeft size={16} strokeWidth={2.1} aria-hidden />
-          Voltar
-        </Button>
+        <div className="resumo-page__footer-start">
+          <Button variant="ghost" className="resumo-page__back-button" onClick={onBack}>
+            <ArrowLeft size={16} strokeWidth={2.1} aria-hidden />
+            Voltar
+          </Button>
+          <Button
+            variant="secondary"
+            type="button"
+            className="resumo-page__save-template-button"
+            onClick={onOpenSaveTemplate}
+          >
+            <BookMarked size={16} strokeWidth={2} aria-hidden />
+            Salvar como modelo
+          </Button>
+        </div>
 
         <div className="resumo-page__actions">
           <div className="resumo-page__actions-buttons">

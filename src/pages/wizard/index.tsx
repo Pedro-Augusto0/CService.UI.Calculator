@@ -1,4 +1,7 @@
+import { useState } from 'react'
+import { BookMarked } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { SaveProposalTemplateModal } from '@/features/proposal/components/SaveProposalTemplateModal'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import { Escopo } from '@/pages/wizard/steps/escopo'
 import { ResumoProposta } from '@/pages/wizard/steps/resumo-proposta'
@@ -11,7 +14,8 @@ interface WizardPageProps {
 }
 
 export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
-  const { state, dispatch } = useProposal()
+  const { state, dispatch, saveCurrentAsUserTemplate } = useProposal()
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
   const step = state.currentStep
 
   return (
@@ -25,19 +29,30 @@ export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
             onBack={() => dispatch({ type: 'SET_STEP', step: step - 1 })}
             onDownload={onDownload}
             onSaveComplete={onSaveComplete}
+            onOpenSaveTemplate={() => setSaveTemplateOpen(true)}
           />
         ) : null}
       </div>
 
       {step < 3 ? (
         <div className="wizard-footer">
-          <Button
-            variant="secondary"
-            disabled={step === 0}
-            onClick={() => dispatch({ type: 'SET_STEP', step: step - 1 })}
-          >
-            Voltar
-          </Button>
+          <div className="wizard-footer__left">
+            <Button
+              variant="secondary"
+              disabled={step === 0}
+              onClick={() => dispatch({ type: 'SET_STEP', step: step - 1 })}
+            >
+              Voltar
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setSaveTemplateOpen(true)}
+            >
+              <BookMarked size={16} strokeWidth={2} aria-hidden />
+              Salvar como modelo
+            </Button>
+          </div>
           <Button
             variant="primary"
             onClick={() => dispatch({ type: 'SET_STEP', step: step + 1 })}
@@ -46,6 +61,14 @@ export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
           </Button>
         </div>
       ) : null}
+
+      <SaveProposalTemplateModal
+        open={saveTemplateOpen}
+        onClose={() => setSaveTemplateOpen(false)}
+        onSave={(name, description) => {
+          saveCurrentAsUserTemplate(name, description)
+        }}
+      />
     </div>
   )
 }

@@ -10,10 +10,16 @@ import type { ConfigTabId } from '@/features/pricing-config/types'
 import { PreviewProposalModal } from '@/features/pricing-config/components/PreviewProposalModal'
 import { SummaryPanel } from '@/features/pricing-config/components/SummaryPanel'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
+import {
+  buildProposalStateFromTemplate,
+  isProposalTemplateId,
+} from '@/features/proposal/lib/proposalTemplates'
+import { proposalSnapshotToState } from '@/features/proposal/lib/proposalTemplateSnapshot'
 import type { Prices } from '@/domain/prices'
 import { AppShell } from '@/components/layout/AppShell'
 import { Stepper } from '@/components/ui/Stepper'
 import { PriceConfiguration } from '@/pages/price-configuration'
+import { ProposalTemplates } from '@/pages/proposal-templates'
 import { SavedProposals } from '@/pages/saved-proposals'
 import { Users } from '@/pages/users'
 import { WizardPage } from '@/pages/wizard'
@@ -48,6 +54,8 @@ export function MainAppRoutes() {
     calculationInput,
     calculation,
     loadSavedProposal,
+    userProposalTemplates,
+    bumpUserTemplateUsage,
   } = useProposal()
   const [route, setRoute] = useState<MainAppRoute>('wizard')
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -185,6 +193,29 @@ export function MainAppRoutes() {
     setRoute('wizard')
   }
 
+  function handleUsarModelo(templateId: string) {
+    const seed = {
+      precoBaseMensal: state.precoBaseMensal,
+      prices: state.prices,
+      pricingConfigSavedAt: state.pricingConfigSavedAt,
+    }
+    if (isProposalTemplateId(templateId)) {
+      dispatch({
+        type: 'LOAD_PROPOSAL_STATE',
+        state: buildProposalStateFromTemplate(templateId, seed),
+      })
+    } else {
+      const record = userProposalTemplates.find((t) => t.id === templateId)
+      if (!record) return
+      dispatch({
+        type: 'LOAD_PROPOSAL_STATE',
+        state: proposalSnapshotToState(record.snapshot, seed),
+      })
+      bumpUserTemplateUsage(templateId)
+    }
+    setRoute('wizard')
+  }
+
   function handleOpenSavedProposal(proposalId: string) {
     const proposal = loadSavedProposal(proposalId)
     if (!proposal) return
@@ -240,6 +271,11 @@ export function MainAppRoutes() {
             onNovaProposta={handleNovaProposta}
             onOpenProposal={handleOpenSavedProposal}
             onPreviewProposal={handleOpenPreview}
+          />
+        ) : route === 'templates' ? (
+          <ProposalTemplates
+            onNovoModelo={handleNovaProposta}
+            onUsarModelo={handleUsarModelo}
           />
         ) : route === 'users' ? (
           <Users />

@@ -24,6 +24,15 @@ import {
   toCalculationInputFromState,
 } from './lib/savedProposalStore'
 
+import { proposalStateToTemplateSnapshot } from './lib/proposalTemplateSnapshot'
+import {
+  createUserProposalTemplateRecord,
+  loadUserProposalTemplates,
+  persistUserProposalTemplates,
+  sortUserProposalTemplates,
+  type UserProposalTemplateRecord,
+} from './lib/userProposalTemplateStore'
+
 interface ProposalContextValue {
   state: ProposalState
   dispatch: React.Dispatch<ProposalAction>
@@ -37,6 +46,9 @@ interface ProposalContextValue {
     id: string,
     status: SavedProposalStatus,
   ) => void
+  userProposalTemplates: UserProposalTemplateRecord[]
+  saveCurrentAsUserTemplate: (name: string, description: string) => void
+  bumpUserTemplateUsage: (id: string) => void
 }
 
 const ProposalContext = createContext<ProposalContextValue | null>(null)
@@ -50,10 +62,17 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
   const [savedProposals, setSavedProposals] = useState<SavedProposalRecord[]>(() =>
     loadSavedProposals(),
   )
+  const [userProposalTemplates, setUserProposalTemplates] = useState<
+    UserProposalTemplateRecord[]
+  >(() => loadUserProposalTemplates())
 
   useEffect(() => {
     persistSavedProposals(savedProposals)
   }, [savedProposals])
+
+  useEffect(() => {
+    persistUserProposalTemplates(userProposalTemplates)
+  }, [userProposalTemplates])
 
   const calculationInput = useMemo(
     () => toCalculationInputFromState(state),
@@ -179,6 +198,34 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const saveCurrentAsUserTemplate = useCallback(
+    (name: string, description: string) => {
+      const snapshot = proposalStateToTemplateSnapshot(state)
+      const record = createUserProposalTemplateRecord(name, description, snapshot)
+      setUserProposalTemplates((prev) =>
+        sortUserProposalTemplates([record, ...prev]),
+      )
+    },
+    [state],
+  )
+
+  const bumpUserTemplateUsage = useCallback((id: string) => {
+    setUserProposalTemplates((prev) =>
+      sortUserProposalTemplates(
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                usedCount: t.usedCount + 1,
+                lastUsedAt: Date.now(),
+                updatedAt: Date.now(),
+              }
+            : t,
+        ),
+      ),
+    )
+  }, [])
+
   const value = useMemo(
     () => ({
       state,
@@ -190,6 +237,9 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       loadSavedProposal,
       duplicateSavedProposal,
       updateSavedProposalStatus,
+      userProposalTemplates,
+      saveCurrentAsUserTemplate,
+      bumpUserTemplateUsage,
     }),
     [
       state,
@@ -201,6 +251,9 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       loadSavedProposal,
       duplicateSavedProposal,
       updateSavedProposalStatus,
+      userProposalTemplates,
+      saveCurrentAsUserTemplate,
+      bumpUserTemplateUsage,
     ],
   )
 
