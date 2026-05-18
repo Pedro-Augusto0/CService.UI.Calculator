@@ -101,9 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: trimmedEmail,
       passwordHash,
       isAdmin: resolveIsAdminForNewUser(trimmedEmail),
-      groupId: resolveIsAdminForNewUser(trimmedEmail)
-        ? 'grp-administrador'
-        : 'grp-leitura',
+      groupIds: resolveIsAdminForNewUser(trimmedEmail)
+        ? ['grp-administrador']
+        : ['grp-leitura'],
       internalField: createInternalRegistrationField(),
       createdAt: Date.now(),
     }

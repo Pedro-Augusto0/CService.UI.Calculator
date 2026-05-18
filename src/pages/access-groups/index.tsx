@@ -18,10 +18,18 @@ export function AccessGroups() {
         setEditorTab={p.setEditorTab}
         assignedCount={p.assignedCount}
         assignedUsers={p.assignedUsers}
+        allUsersSnapshot={p.allUsersSnapshot}
+        sortedGroups={p.sortedGroups}
+        assignUsersToDraftGroup={p.assignUsersToDraftGroup}
+        removeUsersFromDraftGroup={p.removeUsersFromDraftGroup}
+        removeAllUsersFromDraftGroup={p.removeAllUsersFromDraftGroup}
         allSelected={p.allSelected}
         someSelected={p.someSelected}
         selectAllPermissions={p.selectAllPermissions}
         togglePermission={p.togglePermission}
+        newCreationStep={p.newCreationStep}
+        advanceNewGroupToPermissions={p.advanceNewGroupToPermissions}
+        advanceNewGroupToUsers={p.advanceNewGroupToUsers}
       />
     )
   }

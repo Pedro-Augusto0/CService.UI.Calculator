@@ -35,7 +35,6 @@ export function Users() {
         someFilteredSelected={p.someFilteredSelected}
         toggleSelectAllFiltered={p.toggleSelectAllFiltered}
         toggleRowSelected={p.toggleRowSelected}
-        handleGroupChange={p.handleGroupChange}
         handleToggleAdmin={p.handleToggleAdmin}
         handleRemove={p.handleRemove}
       />

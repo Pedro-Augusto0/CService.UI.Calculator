@@ -53,14 +53,6 @@
   color: var(--color-muted);
 }
 
-.saved-page__filters {
-  padding: 16px 18px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-}
-
 .saved-page__filters-bar {
   display: flex;
   align-items: center;
@@ -104,43 +96,6 @@
 .saved-page__filter-popover {
   position: relative;
   flex-shrink: 0;
-}
-
-.saved-page__view-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.saved-page__view-button {
-  min-height: 36px;
-  padding-inline: 12px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--color-muted);
-  white-space: nowrap;
-}
-
-.saved-page__view-button:hover:not(:disabled) {
-  background: var(--color-bg);
-}
-
-.saved-page__view-button--active,
-.saved-page__view-button[aria-pressed='true'] {
-  border-color: rgb(147 197 253 / 65%);
-  background: rgb(239 246 255);
-  color: var(--color-primary);
-}
-
-.saved-page__view-button:focus-visible {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(0 82 255 / 18%);
 }
 
 .saved-page__filter-toggle--active {
@@ -854,8 +809,10 @@
     justify-content: center;
   }
 
-  .saved-page__view-button {
+  .saved-page__view-toggle .ui-view-mode-toggle__btn {
     flex: 1;
+    width: auto;
+    min-width: 0;
   }
 
   .saved-page__filter-modal {

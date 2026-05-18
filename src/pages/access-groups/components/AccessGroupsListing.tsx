@@ -3,8 +3,6 @@ import {
   CirclePlus,
   Eye,
   Filter,
-  LayoutGrid,
-  LayoutList,
   MoreVertical,
   Search,
   Shield,
@@ -13,7 +11,9 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 import type { AccessGroup } from '@/features/access-groups/types'
+import type { EditorTabName } from '@/pages/access-groups/hooks/useAccessGroupsPage'
 import { GroupIconBox } from '@/pages/access-groups/components/GroupIconBox'
 import { countUsersForGroup } from '@/pages/access-groups/lib/accessGroupsLib'
 
@@ -47,7 +47,7 @@ export function AccessGroupsListing({
   sortedGroups: AccessGroup[]
   filteredListGroups: AccessGroup[]
   openNew: () => void
-  openEdit: (g: AccessGroup, tab?: 'info' | 'users') => void
+  openEdit: (g: AccessGroup, tab?: EditorTabName) => void
   handleDelete: (g: AccessGroup) => void
   menuOpenId: string | null
   setMenuOpenId: Dispatch<SetStateAction<string | null>>
@@ -178,30 +178,7 @@ export function AccessGroupsListing({
               </div>
             ) : null}
           </div>
-          <div
-            className="access-groups__view-toggle"
-            role="group"
-            aria-label="Tipo de visualização"
-          >
-            <button
-              type="button"
-              className={`access-groups__view-btn${listView === 'grid' ? ' access-groups__view-btn--active' : ''}`}
-              aria-pressed={listView === 'grid'}
-              onClick={() => setListView('grid')}
-              aria-label="Grade"
-            >
-              <LayoutGrid size={18} strokeWidth={2} />
-            </button>
-            <button
-              type="button"
-              className={`access-groups__view-btn${listView === 'list' ? ' access-groups__view-btn--active' : ''}`}
-              aria-pressed={listView === 'list'}
-              onClick={() => setListView('list')}
-              aria-label="Lista"
-            >
-              <LayoutList size={18} strokeWidth={2} />
-            </button>
-          </div>
+          <ViewModeToggle value={listView} onChange={setListView} />
         </div>
       </div>
 

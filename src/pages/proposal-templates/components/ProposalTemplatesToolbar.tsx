@@ -1,9 +1,9 @@
-import { LayoutGrid, List } from 'lucide-react'
 import {
   TABS,
   type SortId,
   type TemplateTabId,
 } from '@/pages/proposal-templates/lib/proposalTemplatesPageLib'
+import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 
 export function ProposalTemplatesToolbar({
   tab,
@@ -57,38 +57,7 @@ export function ProposalTemplatesToolbar({
             <option value="nome">Nome (A–Z)</option>
           </select>
         </div>
-        <div
-          className="proposal-templates-page__view-toggle"
-          role="group"
-          aria-label="Modo de visualização"
-        >
-          <button
-            type="button"
-            className={
-              view === 'grid'
-                ? 'proposal-templates-page__view-btn proposal-templates-page__view-btn--active'
-                : 'proposal-templates-page__view-btn'
-            }
-            onClick={() => setView('grid')}
-            aria-pressed={view === 'grid'}
-            aria-label="Grade"
-          >
-            <LayoutGrid size={18} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            className={
-              view === 'list'
-                ? 'proposal-templates-page__view-btn proposal-templates-page__view-btn--active'
-                : 'proposal-templates-page__view-btn'
-            }
-            onClick={() => setView('list')}
-            aria-pressed={view === 'list'}
-            aria-label="Lista"
-          >
-            <List size={18} strokeWidth={2} />
-          </button>
-        </div>
+        <ViewModeToggle value={view} onChange={setView} />
       </div>
     </div>
   )

@@ -1,3 +1,8 @@
+import type { AccessGroup } from '@/features/access-groups/types'
+import {
+  participatesInStoredGroupCatalog,
+  normalizeUserGroupIds,
+} from '@/features/auth/groupIds'
 import type { StoredUser } from '@/features/auth/types'
 
 export const MS_DAY = 24 * 60 * 60 * 1000
@@ -42,6 +47,39 @@ export function formatTimePt(d: Date): string {
   }).format(d)
 }
 
+export function storedGroupIds(u: StoredUser): string[] {
+  return normalizeUserGroupIds(u)
+}
+
+/** Primeiro grupo explícito, se existir (legado/UI que espera um id). */
+export function storedGroupId(u: StoredUser): string | undefined {
+  const xs = normalizeUserGroupIds(u)
+  return xs[0]
+}
+
+export function participatesInStoredGroup(
+  u: StoredUser,
+  accessGroups: readonly { id: string }[],
+): boolean {
+  return participatesInStoredGroupCatalog(u, accessGroups)
+}
+
+/** Grupos cadastrados em que o usuário participa, ordenados pelo nome (pt-BR). */
+export function accessGroupsParticipatedSorted(
+  u: StoredUser,
+  accessGroups: AccessGroup[],
+): AccessGroup[] {
+  const ids = new Set(normalizeUserGroupIds(u))
+  return accessGroups
+    .filter((g) => ids.has(g.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt'))
+}
+
+/**
+ * Fallback para telas antigas que assumem um único grupo herdado quando não há vínculos.
+ */
 export function resolveGroupId(u: StoredUser): string {
-  return u.groupId ?? (u.isAdmin ? 'grp-administrador' : 'grp-leitura')
+  const ids = normalizeUserGroupIds(u)
+  if (ids.length > 0) return ids[0]
+  return u.isAdmin ? 'grp-administrador' : 'grp-leitura'
 }

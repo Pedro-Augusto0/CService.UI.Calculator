@@ -1,13 +1,14 @@
 import { Trash2 } from 'lucide-react'
-import type { AccessGroup, GroupColor } from '@/features/access-groups/types'
+import type { AccessGroup } from '@/features/access-groups/types'
 import type { AuthUser, StoredUser } from '@/features/auth/types'
+import { normalizeUserGroupIds } from '@/features/auth/groupIds'
 import { initialsFromName } from '@/utils/strings'
 import {
   formatDatePt,
   formatTimePt,
   isActiveInWindow,
   paletteForId,
-  resolveGroupId,
+  accessGroupsParticipatedSorted,
 } from '@/pages/users/lib/usersPageLib'
 
 export function UsersTable({
@@ -20,7 +21,6 @@ export function UsersTable({
   someFilteredSelected,
   toggleSelectAllFiltered,
   toggleRowSelected,
-  handleGroupChange,
   handleToggleAdmin,
   handleRemove,
 }: {
@@ -33,7 +33,6 @@ export function UsersTable({
   someFilteredSelected: boolean
   toggleSelectAllFiltered: () => void
   toggleRowSelected: (id: string) => void
-  handleGroupChange: (target: StoredUser, groupId: string) => void
   handleToggleAdmin: (target: StoredUser, nextAdmin: boolean) => void
   handleRemove: (target: StoredUser) => void
 }) {
@@ -71,9 +70,20 @@ export function UsersTable({
             const created = new Date(u.createdAt)
             const pal = paletteForId(u.id)
             const switchDisabled = u.isAdmin && adminCount <= 1
-            const gid = resolveGroupId(u)
-            const grp = accessGroups.find((g) => g.id === gid)
-            const groupColor: GroupColor = grp?.color ?? 'blue'
+            const groupsWithMeta = accessGroupsParticipatedSorted(
+              u,
+              accessGroups,
+            )
+            const catalogIdSet = new Set(accessGroups.map((g) => g.id))
+            const orphanIds = normalizeUserGroupIds(u).filter(
+              (id) => !catalogIdSet.has(id),
+            )
+            const labelParts = [
+              ...groupsWithMeta.map((g) => g.name),
+              ...orphanIds,
+            ]
+            const labelNames =
+              labelParts.length > 0 ? labelParts.join(', ') : ''
             const activeNow = isActiveInWindow(u, Date.now())
 
             return (
@@ -106,24 +116,39 @@ export function UsersTable({
                   </div>
                 </td>
                 <td className="users-page__td users-page__td--group">
-                  <select
-                    className={`users-page__group-select users-page__group-select--${groupColor}`}
-                    aria-label={`Grupo de ${u.name}`}
-                    value={gid}
-                    onChange={(e) =>
-                      handleGroupChange(u, e.target.value)
-                    }
-                  >
-                    {accessGroups
-                      .filter(
-                        (g) => g.active !== false || g.id === gid,
-                      )
-                      .map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
+                  {!groupsWithMeta.length && !orphanIds.length ? (
+                    <span
+                      className="users-page__group-label users-page__group-label--none"
+                      aria-label={`Grupo de ${u.name}: não participa de nenhum grupo cadastrado`}
+                    >
+                      Não participa de nenhum grupo
+                    </span>
+                  ) : (
+                    <div
+                      className="users-page__group-chips"
+                      role="group"
+                      aria-label={`Grupo de ${u.name}: ${labelNames}`}
+                    >
+                      {groupsWithMeta.map((g) => (
+                        <span
+                          key={g.id}
+                          className={`users-page__group-label users-page__group-label--${g.color}`}
+                        >
+                          {g.name}
+                        </span>
+                      ))}
+                      {orphanIds.length > 0 ? (
+                        <span
+                          className="users-page__group-label users-page__group-label--ghost"
+                          title={orphanIds.join(', ')}
+                        >
+                          {orphanIds.length === 1
+                            ? 'Referência órfã'
+                            : `${orphanIds.length} referências órfãs`}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
                 </td>
                 <td className="users-page__td users-page__td--status">
                   <span

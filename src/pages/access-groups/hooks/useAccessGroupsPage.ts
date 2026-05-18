@@ -5,17 +5,24 @@ import {
   saveAccessGroups,
 } from '@/features/access-groups/accessGroupStorage'
 import { getAllPermissionIds } from '@/features/access-groups/permissions'
-import { loadUsers } from '@/features/auth/api/userStorage'
+import { loadUsers, saveUsers } from '@/features/auth/api/userStorage'
+import {
+  addUserToGroup,
+  removeUserFromGroup,
+  userBelongsToGroup,
+} from '@/features/auth/groupIds'
 import {
   countUsersForGroup,
   DESCRIPTION_MAX,
   newGroupId,
-  usersAssignedToGroup,
 } from '@/pages/access-groups/lib/accessGroupsLib'
 
 const ALL_IDS = getAllPermissionIds()
 
 export type EditorMode = 'list' | 'new' | 'edit'
+export type EditorTabName = 'info' | 'permissions' | 'users'
+/** Fluxo guiado na criação: 0 = só Informações; 1 = Permissões liberada; 2 = Usuários liberada. */
+export type NewCreationStep = 0 | 1 | 2
 
 export function useAccessGroupsPage() {
   const [groups, setGroups] = useState<AccessGroup[]>(() => loadAccessGroups())
@@ -23,7 +30,10 @@ export function useAccessGroupsPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draft, setDraft] = useState<AccessGroup | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
-  const [editorTab, setEditorTab] = useState<'info' | 'users'>('info')
+  const [editorTab, setEditorTab] = useState<EditorTabName>('info')
+  const [newGroupStagingIds, setNewGroupStagingIds] = useState<string[]>([])
+  const [newCreationStep, setNewCreationStep] = useState<NewCreationStep>(0)
+  const [usersTick, setUsersTick] = useState(0)
   const [listSearch, setListSearch] = useState('')
   const [listView, setListView] = useState<'list' | 'grid'>('list')
   const [listFilter, setListFilter] = useState<'all' | 'active'>('all')
@@ -31,6 +41,10 @@ export function useAccessGroupsPage() {
 
   const reload = useCallback(() => {
     setGroups(loadAccessGroups())
+  }, [])
+
+  const bumpUsers = useCallback(() => {
+    setUsersTick((x) => x + 1)
   }, [])
 
   useEffect(() => {
@@ -85,15 +99,18 @@ export function useAccessGroupsPage() {
       active: true,
     })
     setEditorTab('info')
+    setNewGroupStagingIds([])
+    setNewCreationStep(0)
     setActiveId(null)
     setMode('new')
   }, [])
 
   const openEdit = useCallback(
-    (g: AccessGroup, tab: 'info' | 'users' = 'info') => {
+    (g: AccessGroup, tab: EditorTabName = 'info') => {
       setDraft({ ...g, permissionIds: [...g.permissionIds] })
       setActiveId(g.id)
       setEditorTab(tab)
+      setNewGroupStagingIds([])
       setMode('edit')
       setMenuOpenId(null)
     },
@@ -104,6 +121,8 @@ export function useAccessGroupsPage() {
     setMode('list')
     setDraft(null)
     setActiveId(null)
+    setNewGroupStagingIds([])
+    setNewCreationStep(0)
   }, [])
 
   const persistGroups = useCallback(
@@ -116,6 +135,12 @@ export function useAccessGroupsPage() {
 
   const handleSave = useCallback(() => {
     if (!draft) return
+    if (mode === 'new' && editorTab !== 'users') {
+      window.alert(
+        'Para concluir o cadastro, avance até a aba Usuários com o botão no topo da página.',
+      )
+      return
+    }
     const name = draft.name.trim()
     if (!name) {
       window.alert('Informe o nome do grupo.')
@@ -134,11 +159,30 @@ export function useAccessGroupsPage() {
 
     if (mode === 'new') {
       persistGroups([...groups, normalized])
+      const stage = [...newGroupStagingIds]
+      if (stage.length) {
+        const target = new Set(stage)
+        const nextUsers = loadUsers().map((u) =>
+          target.has(u.id) ? addUserToGroup(u, normalized.id) : u,
+        )
+        saveUsers(nextUsers)
+        bumpUsers()
+      }
+      setNewGroupStagingIds([])
     } else {
       persistGroups(groups.map((g) => (g.id === normalized.id ? normalized : g)))
     }
     backToList()
-  }, [draft, mode, groups, persistGroups, backToList])
+  }, [
+    draft,
+    mode,
+    editorTab,
+    groups,
+    persistGroups,
+    backToList,
+    newGroupStagingIds,
+    bumpUsers,
+  ])
 
   const handleDelete = useCallback(
     (g: AccessGroup) => {
@@ -193,9 +237,89 @@ export function useAccessGroupsPage() {
     draft.permissionIds.length > 0 &&
     !allSelected
 
-  const assignedUsers = draft ? usersAssignedToGroup(draft.id) : []
-  const assignedCount =
-    mode === 'new' ? 0 : draft ? countUsersForGroup(draft.id) : 0
+  const allUsersSnapshot = useMemo(() => loadUsers(), [usersTick])
+
+  const assignedUsers = useMemo(() => {
+    if (!draft) return []
+    if (mode === 'new') {
+      const take = new Set(newGroupStagingIds)
+      return allUsersSnapshot
+        .filter((u) => take.has(u.id))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt'))
+    }
+    return allUsersSnapshot
+      .filter((u) => userBelongsToGroup(u, draft.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt'))
+  }, [draft, mode, newGroupStagingIds, allUsersSnapshot])
+
+  const assignedCount = assignedUsers.length
+
+  const assignUsersToDraftGroup = useCallback(
+    (userIds: string[]) => {
+      if (!draft || userIds.length === 0) return
+      if (mode === 'new') {
+        setNewGroupStagingIds((prev) => [...new Set([...prev, ...userIds])])
+        return
+      }
+      const add = new Set(userIds)
+      const nextUsers = loadUsers().map((u) =>
+        add.has(u.id) ? addUserToGroup(u, draft.id) : u,
+      )
+      saveUsers(nextUsers)
+      bumpUsers()
+    },
+    [draft, mode, bumpUsers],
+  )
+
+  const removeUsersFromDraftGroup = useCallback(
+    (userIds: string[]) => {
+      if (!draft || userIds.length === 0) return
+      if (mode === 'new') {
+        const drop = new Set(userIds)
+        setNewGroupStagingIds((prev) => prev.filter((id) => !drop.has(id)))
+        return
+      }
+      const drop = new Set(userIds)
+      const nextUsers = loadUsers().map((u) => {
+        if (!drop.has(u.id)) return u
+        if (!userBelongsToGroup(u, draft.id)) return u
+        return removeUserFromGroup(u, draft.id)
+      })
+      saveUsers(nextUsers)
+      bumpUsers()
+    },
+    [draft, mode, bumpUsers],
+  )
+
+  const removeAllUsersFromDraftGroup = useCallback(() => {
+    if (!draft) return
+    if (mode === 'new') {
+      setNewGroupStagingIds([])
+      return
+    }
+    const gid = draft.id
+    const nextUsers = loadUsers().map((u) =>
+      userBelongsToGroup(u, gid) ? removeUserFromGroup(u, gid) : u,
+    )
+    saveUsers(nextUsers)
+    bumpUsers()
+  }, [draft, mode, bumpUsers])
+
+  const advanceNewGroupToPermissions = useCallback(() => {
+    if (!draft || mode !== 'new') return
+    if (!draft.name.trim()) {
+      window.alert('Informe o nome do grupo para continuar.')
+      return
+    }
+    setNewCreationStep((s) => (s >= 1 ? s : 1))
+    setEditorTab('permissions')
+  }, [draft, mode])
+
+  const advanceNewGroupToUsers = useCallback(() => {
+    if (mode !== 'new') return
+    setNewCreationStep((s) => (s >= 2 ? s : 2))
+    setEditorTab('users')
+  }, [mode])
 
   return {
     mode,
@@ -227,5 +351,12 @@ export function useAccessGroupsPage() {
     someSelected,
     assignedUsers,
     assignedCount,
+    allUsersSnapshot,
+    assignUsersToDraftGroup,
+    removeUsersFromDraftGroup,
+    removeAllUsersFromDraftGroup,
+    newCreationStep,
+    advanceNewGroupToPermissions,
+    advanceNewGroupToUsers,
   }
 }

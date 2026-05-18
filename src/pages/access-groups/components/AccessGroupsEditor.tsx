@@ -1,13 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react'
-import {
-  ArrowLeft,
-  Check,
-  Info,
-} from 'lucide-react'
+import { ArrowLeft, Check, ChevronRight, Info } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import type { AccessGroup } from '@/features/access-groups/types'
 import type { StoredUser } from '@/features/auth/types'
 import { PERMISSION_MODULES } from '@/features/access-groups/permissions'
+import { AccessGroupUsersPanel } from '@/pages/access-groups/components/AccessGroupUsersPanel'
 import { GroupIconBox } from '@/pages/access-groups/components/GroupIconBox'
 import {
   CARD_ICON_MAP,
@@ -15,7 +12,11 @@ import {
   DESCRIPTION_MAX,
   GROUP_COLORS_ORDER,
 } from '@/pages/access-groups/lib/accessGroupsLib'
-import type { EditorMode } from '@/pages/access-groups/hooks/useAccessGroupsPage'
+import type {
+  EditorMode,
+  EditorTabName,
+  NewCreationStep,
+} from '@/pages/access-groups/hooks/useAccessGroupsPage'
 
 export function AccessGroupsEditor({
   mode,
@@ -27,26 +28,52 @@ export function AccessGroupsEditor({
   setEditorTab,
   assignedCount,
   assignedUsers,
+  allUsersSnapshot,
+  sortedGroups,
+  assignUsersToDraftGroup,
+  removeUsersFromDraftGroup,
+  removeAllUsersFromDraftGroup,
   allSelected,
   someSelected,
   selectAllPermissions,
   togglePermission,
+  newCreationStep,
+  advanceNewGroupToPermissions,
+  advanceNewGroupToUsers,
 }: {
-  mode: EditorMode
+  mode: Exclude<EditorMode, 'list'>
   draft: AccessGroup
   setDraft: Dispatch<SetStateAction<AccessGroup | null>>
   backToList: () => void
   handleSave: () => void
-  editorTab: 'info' | 'users'
-  setEditorTab: (t: 'info' | 'users') => void
+  editorTab: EditorTabName
+  setEditorTab: (t: EditorTabName) => void
   assignedCount: number
   assignedUsers: StoredUser[]
+  allUsersSnapshot: StoredUser[]
+  sortedGroups: AccessGroup[]
+  assignUsersToDraftGroup: (userIds: string[]) => void
+  removeUsersFromDraftGroup: (userIds: string[]) => void
+  removeAllUsersFromDraftGroup: () => void
   allSelected: boolean
   someSelected: boolean
   selectAllPermissions: (checked: boolean) => void
   togglePermission: (id: string) => void
+  newCreationStep: NewCreationStep
+  advanceNewGroupToPermissions: () => void
+  advanceNewGroupToUsers: () => void
 }) {
   const isActive = draft.active !== false
+  const isNewWizard = mode === 'new'
+  const permissionsTabLocked = isNewWizard && newCreationStep < 1
+  const usersTabLocked = isNewWizard && newCreationStep < 2
+
+  const wizardSubtitle =
+    editorTab === 'info'
+      ? 'Etapa 1 de 3 — Informações obrigatórias: nome do grupo.'
+      : editorTab === 'permissions'
+        ? 'Etapa 2 de 3 — Permissões (opcional: pode criar um grupo sem marcar itens).'
+        : 'Etapa 3 de 3 — Usuários (opcional); conclua com Criar grupo.'
 
   return (
     <div className="access-groups access-groups--editor">
@@ -65,17 +92,40 @@ export function AccessGroupsEditor({
               {mode === 'new' ? 'Novo grupo' : 'Editar grupo'}
             </h1>
             <p className="access-groups__subtitle access-groups__subtitle--editor">
-              Defina as informações e permissões que os usuários deste grupo
-              terão na plataforma.
+              {isNewWizard
+                ? wizardSubtitle
+                : 'Defina as informações e permissões deste grupo.'}
             </p>
           </div>
         </div>
         <Button
           variant="primary"
-          className="access-groups__save-btn"
-          onClick={handleSave}
+          className={`access-groups__save-btn${isNewWizard ? ' access-groups__wizard-primary-btn' : ''}`}
+          onClick={
+            mode === 'edit'
+              ? handleSave
+              : editorTab === 'info'
+                ? advanceNewGroupToPermissions
+                : editorTab === 'permissions'
+                  ? advanceNewGroupToUsers
+                  : handleSave
+          }
         >
-          {mode === 'new' ? 'Criar grupo' : 'Salvar alterações'}
+          {mode === 'edit' ? (
+            'Salvar alterações'
+          ) : editorTab === 'info' ? (
+            <>
+              Ir para permissões
+              <ChevronRight size={18} strokeWidth={2} aria-hidden />
+            </>
+          ) : editorTab === 'permissions' ? (
+            <>
+              Ir para usuários
+              <ChevronRight size={18} strokeWidth={2} aria-hidden />
+            </>
+          ) : (
+            'Criar grupo'
+          )}
         </Button>
       </header>
 
@@ -87,195 +137,175 @@ export function AccessGroupsEditor({
           className={`access-groups__tab${editorTab === 'info' ? ' access-groups__tab--active' : ''}`}
           onClick={() => setEditorTab('info')}
         >
-          Informações do grupo
+          Informações
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={editorTab === 'permissions'}
+          disabled={permissionsTabLocked}
+          title={
+            permissionsTabLocked
+              ? 'Preencha o nome do grupo e clique em «Ir para permissões».'
+              : undefined
+          }
+          className={`access-groups__tab${editorTab === 'permissions' ? ' access-groups__tab--active' : ''}`}
+          onClick={() => {
+            if (permissionsTabLocked) return
+            setEditorTab('permissions')
+          }}
+        >
+          Permissões
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={editorTab === 'users'}
+          disabled={usersTabLocked}
+          title={
+            usersTabLocked
+              ? 'Avance com «Ir para usuários» na etapa de permissões.'
+              : undefined
+          }
           className={`access-groups__tab${editorTab === 'users' ? ' access-groups__tab--active' : ''}`}
-          onClick={() => setEditorTab('users')}
+          onClick={() => {
+            if (usersTabLocked) return
+            setEditorTab('users')
+          }}
         >
           Usuários ({assignedCount})
         </button>
       </div>
 
-      {editorTab === 'users' ? (
-        <section className="access-groups__users-tab-panel">
-          {mode === 'new' ? (
-            <p className="access-groups__users-tab-empty">
-              Salve o grupo para visualizar e gerenciar os usuários vinculados.
-            </p>
-          ) : assignedUsers.length === 0 ? (
-            <p className="access-groups__users-tab-empty">
-              Nenhum usuário neste grupo no momento.
-            </p>
-          ) : (
-            <div className="access-groups__users-tab-table-wrap">
-              <table className="access-groups__users-tab-table">
-                <thead>
-                  <tr>
-                    <th>Usuário</th>
-                    <th>E-mail</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignedUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <span className="access-groups__users-tab-name">
-                          {u.name}
-                        </span>
-                      </td>
-                      <td>{u.email}</td>
-                      <td>
-                        <span className="access-groups__users-tab-badge">
-                          Ativo
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {editorTab === 'info' ? (
+        <section className="access-groups__panel access-groups__panel--info">
+          <div className="access-groups__info-layout">
+            <div className="access-groups__info-icon-col">
+              <span className="access-groups__info-col-title">
+                Ícone do grupo
+              </span>
+              <GroupIconBox
+                color={draft.color}
+                iconKey={draft.iconKey}
+                size="lg"
+                variant="editor"
+              />
             </div>
-          )}
+
+            <div className="access-groups__info-middle-col">
+              <label className="access-groups__field">
+                <span className="access-groups__field-label">
+                  Nome do grupo{' '}
+                  <abbr
+                    title="obrigatório"
+                    className="access-groups__required"
+                  >
+                    *
+                  </abbr>
+                </span>
+                <input
+                  className="access-groups__input"
+                  value={draft.name}
+                  onChange={(e) =>
+                    setDraft((d) => (d ? { ...d, name: e.target.value } : d))
+                  }
+                  placeholder="Ex.: Comercial"
+                  autoComplete="off"
+                />
+              </label>
+              <label className="access-groups__field">
+                <span className="access-groups__field-label">Descrição</span>
+                <div className="access-groups__textarea-wrap">
+                  <textarea
+                    className="access-groups__textarea"
+                    value={draft.description}
+                    maxLength={DESCRIPTION_MAX}
+                    onChange={(e) =>
+                      setDraft((d) =>
+                        d ? { ...d, description: e.target.value } : d,
+                      )
+                    }
+                    rows={5}
+                    placeholder="Descreva o papel deste grupo na plataforma."
+                  />
+                  <span className="access-groups__char-count">
+                    {draft.description.length}/{DESCRIPTION_MAX}
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            <div className="access-groups__info-side-col">
+              <div className="access-groups__field">
+                <span className="access-groups__field-label">Cor do grupo</span>
+                <div className="access-groups__swatches">
+                  {GROUP_COLORS_ORDER.map((c) => {
+                    const sel = draft.color === c
+                    const hex = COLOR_STYLES[c].bg
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`access-groups__swatch${sel ? ' access-groups__swatch--selected' : ''}`}
+                        style={{ background: hex }}
+                        onClick={() =>
+                          setDraft((d) => (d ? { ...d, color: c } : d))
+                        }
+                        aria-label={`Cor ${c}`}
+                        aria-pressed={sel}
+                      >
+                        {sel ? (
+                          <Check
+                            size={14}
+                            strokeWidth={3}
+                            className="access-groups__swatch-check"
+                          />
+                        ) : null}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="access-groups__field access-groups__field--status">
+                <span className="access-groups__field-label">
+                  Status do grupo
+                </span>
+                <div
+                  className={`access-groups__group-status-badge${isActive ? ' access-groups__group-status-badge--on' : ' access-groups__group-status-badge--off'}`}
+                >
+                  <span className="access-groups__group-status-dot" />
+                  {isActive ? 'Ativo' : 'Inativo'}
+                </div>
+                <button
+                  type="button"
+                  className="access-groups__status-toggle-btn"
+                  onClick={() =>
+                    setDraft((d) =>
+                      d ? { ...d, active: !(d.active !== false) } : d,
+                    )
+                  }
+                >
+                  {isActive ? 'Desativar grupo' : 'Ativar grupo'}
+                </button>
+                <p className="access-groups__status-hint">
+                  Grupos inativos não podem ser atribuídos a novos usuários.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
       ) : null}
 
-      {editorTab === 'info' ? (
+      {editorTab === 'permissions' ? (
         <>
-          <section className="access-groups__panel access-groups__panel--info">
-            <div className="access-groups__info-layout">
-              <div className="access-groups__info-icon-col">
-                <span className="access-groups__info-col-title">
-                  Ícone do grupo
-                </span>
-                <GroupIconBox
-                  color={draft.color}
-                  iconKey={draft.iconKey}
-                  size="lg"
-                  variant="editor"
-                />
-              </div>
-
-              <div className="access-groups__info-middle-col">
-                <label className="access-groups__field">
-                  <span className="access-groups__field-label">
-                    Nome do grupo{' '}
-                    <abbr
-                      title="obrigatório"
-                      className="access-groups__required"
-                    >
-                      *
-                    </abbr>
-                  </span>
-                  <input
-                    className="access-groups__input"
-                    value={draft.name}
-                    onChange={(e) =>
-                      setDraft((d) =>
-                        d ? { ...d, name: e.target.value } : d,
-                      )
-                    }
-                    placeholder="Ex.: Comercial"
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="access-groups__field">
-                  <span className="access-groups__field-label">
-                    Descrição
-                  </span>
-                  <div className="access-groups__textarea-wrap">
-                    <textarea
-                      className="access-groups__textarea"
-                      value={draft.description}
-                      maxLength={DESCRIPTION_MAX}
-                      onChange={(e) =>
-                        setDraft((d) =>
-                          d ? { ...d, description: e.target.value } : d,
-                        )
-                      }
-                      rows={5}
-                      placeholder="Descreva o papel deste grupo na plataforma."
-                    />
-                    <span className="access-groups__char-count">
-                      {draft.description.length}/{DESCRIPTION_MAX}
-                    </span>
-                  </div>
-                </label>
-              </div>
-
-              <div className="access-groups__info-side-col">
-                <div className="access-groups__field">
-                  <span className="access-groups__field-label">
-                    Cor do grupo
-                  </span>
-                  <div className="access-groups__swatches">
-                    {GROUP_COLORS_ORDER.map((c) => {
-                      const sel = draft.color === c
-                      const hex = COLOR_STYLES[c].bg
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          className={`access-groups__swatch${sel ? ' access-groups__swatch--selected' : ''}`}
-                          style={{ background: hex }}
-                          onClick={() =>
-                            setDraft((d) => (d ? { ...d, color: c } : d))
-                          }
-                          aria-label={`Cor ${c}`}
-                          aria-pressed={sel}
-                        >
-                          {sel ? (
-                            <Check
-                              size={14}
-                              strokeWidth={3}
-                              className="access-groups__swatch-check"
-                            />
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="access-groups__field access-groups__field--status">
-                  <span className="access-groups__field-label">
-                    Status do grupo
-                  </span>
-                  <div
-                    className={`access-groups__group-status-badge${isActive ? ' access-groups__group-status-badge--on' : ' access-groups__group-status-badge--off'}`}
-                  >
-                    <span className="access-groups__group-status-dot" />
-                    {isActive ? 'Ativo' : 'Inativo'}
-                  </div>
-                  <button
-                    type="button"
-                    className="access-groups__status-toggle-btn"
-                    onClick={() =>
-                      setDraft((d) =>
-                        d ? { ...d, active: !(d.active !== false) } : d,
-                      )
-                    }
-                  >
-                    {isActive ? 'Desativar grupo' : 'Ativar grupo'}
-                  </button>
-                  <p className="access-groups__status-hint">
-                    Grupos inativos não podem ser atribuídos a novos usuários.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
           <section className="access-groups__perm-section">
             <div className="access-groups__perm-head">
               <div>
                 <h2 className="access-groups__perm-title">Permissões</h2>
                 <p className="access-groups__perm-sub">
-                  Selecione as funcionalidades que os usuários deste grupo
-                  poderão acessar.
+                  Selecione as funcionalidades que os usuários deste grupo poderão
+                  acessar.
                 </p>
               </div>
               <div className="access-groups__perm-actions">
@@ -286,9 +316,7 @@ export function AccessGroupsEditor({
                     ref={(el) => {
                       if (el) el.indeterminate = someSelected
                     }}
-                    onChange={(e) =>
-                      selectAllPermissions(e.target.checked)
-                    }
+                    onChange={(e) => selectAllPermissions(e.target.checked)}
                   />
                   <span>Selecionar tudo</span>
                 </label>
@@ -324,9 +352,7 @@ export function AccessGroupsEditor({
                           <label className="access-groups__perm-row">
                             <input
                               type="checkbox"
-                              checked={draft.permissionIds.includes(
-                                item.id,
-                              )}
+                              checked={draft.permissionIds.includes(item.id)}
                               onChange={() => togglePermission(item.id)}
                             />
                             <span>{item.label}</span>
@@ -356,19 +382,23 @@ export function AccessGroupsEditor({
         </>
       ) : null}
 
-      {editorTab === 'users' && mode !== 'new' ? (
-        <div className="access-groups__info-banner access-groups__info-banner--muted" role="note">
-          <Info
-            size={20}
-            strokeWidth={2}
-            className="access-groups__info-banner-icon"
-            aria-hidden
-          />
-          <p>
-            Para alterar o grupo de um usuário, utilize a tela{' '}
-            <strong>Usuários</strong> na barra lateral.
-          </p>
-        </div>
+      {editorTab === 'users' ? (
+        <AccessGroupUsersPanel
+          mode={mode}
+          draftName={draft.name}
+          draftDescription={draft.description}
+          draftColor={draft.color}
+          draftIconKey={draft.iconKey}
+          draftActive={isActive}
+          permissionGrantedCount={draft.permissionIds.length}
+          accessGroupsSorted={sortedGroups}
+          assignedUsers={assignedUsers}
+          allUsersSnapshot={allUsersSnapshot}
+          onAssignUsers={assignUsersToDraftGroup}
+          onRemoveUsers={removeUsersFromDraftGroup}
+          onRemoveAllFromGroup={removeAllUsersFromDraftGroup}
+          onNavigateToPermissions={() => setEditorTab('permissions')}
+        />
       ) : null}
     </div>
   )

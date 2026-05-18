@@ -1,12 +1,7 @@
 import type { RefObject } from 'react'
-import {
-  LayoutGrid,
-  List,
-  Search,
-  SlidersHorizontal,
-  X,
-} from 'lucide-react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 import { SAVED_PROPOSAL_STATUSES } from '@/features/proposal/lib/savedProposalStore'
 import type { SavedProposalStatus } from '@/features/proposal/lib/savedProposalStore'
 import type { SortOrder } from '@/pages/saved-proposals/hooks/useSavedProposalsListing'
@@ -170,32 +165,11 @@ export function SavedProposalsFiltersSection({
           ) : null}
         </div>
 
-        <div className="saved-page__view-toggle" role="group" aria-label="Modo de visualização">
-          <Button
-            variant="secondary"
-            className={`saved-page__view-button${
-              viewMode === 'list' ? ' saved-page__view-button--active' : ''
-            }`}
-            onClick={() => setViewMode('list')}
-            aria-pressed={viewMode === 'list'}
-            aria-label="Visualização em lista"
-          >
-            <List size={16} strokeWidth={2} aria-hidden />
-            Lista
-          </Button>
-          <Button
-            variant="secondary"
-            className={`saved-page__view-button${
-              viewMode === 'grid' ? ' saved-page__view-button--active' : ''
-            }`}
-            onClick={() => setViewMode('grid')}
-            aria-pressed={viewMode === 'grid'}
-            aria-label="Visualização em grade"
-          >
-            <LayoutGrid size={16} strokeWidth={2} aria-hidden />
-            Grid
-          </Button>
-        </div>
+        <ViewModeToggle
+          className="saved-page__view-toggle"
+          value={viewMode}
+          onChange={setViewMode}
+        />
       </div>
     </section>
   )

@@ -3,11 +3,8 @@ import { useAuth } from '@/features/auth/AuthContext'
 import type { StoredUser } from '@/features/auth/types'
 import { loadAccessGroups } from '@/features/access-groups/accessGroupStorage'
 import { loadUsers, saveUsers } from '@/features/auth/api/userStorage'
-import {
-  isActiveInWindow,
-  resolveGroupId,
-  type RoleFilter,
-} from '@/pages/users/lib/usersPageLib'
+import { withUserGroupIds } from '@/features/auth/groupIds'
+import { isActiveInWindow, type RoleFilter } from '@/pages/users/lib/usersPageLib'
 
 export function useUsersPage() {
   const { user: sessionUser, refreshSessionUser } = useAuth()
@@ -79,37 +76,16 @@ export function useUsersPage() {
         return
       }
 
-      const next = rows.map((u) =>
-        u.id === target.id
-          ? {
-              ...u,
-              isAdmin: nextAdmin,
-              groupId: nextAdmin ? 'grp-administrador' : 'grp-leitura',
-            }
-          : u,
-      )
-      persist(next)
-    },
-    [sessionUser, adminCount, rows, persist],
-  )
-
-  const handleGroupChange = useCallback(
-    (target: StoredUser, groupId: string) => {
-      if (!sessionUser) return
-      const gid = resolveGroupId(target)
-      if (gid === groupId) return
-
-      const nextIsAdmin = groupId === 'grp-administrador'
-      if (target.isAdmin && !nextIsAdmin && adminCount <= 1) {
-        window.alert(
-          'É necessário manter pelo menos um administrador na plataforma.',
-        )
-        return
-      }
-
-      const next = rows.map((u) =>
-        u.id === target.id ? { ...u, groupId, isAdmin: nextIsAdmin } : u,
-      )
+      const next = rows.map((u) => {
+        if (u.id !== target.id) return u
+        const groupIdsNext = nextAdmin
+          ? ['grp-administrador']
+          : ['grp-leitura']
+        return {
+          ...withUserGroupIds(u, groupIdsNext),
+          isAdmin: nextAdmin,
+        }
+      })
       persist(next)
     },
     [sessionUser, adminCount, rows, persist],
@@ -166,7 +142,6 @@ export function useUsersPage() {
     allFilteredSelected,
     someFilteredSelected,
     handleToggleAdmin,
-    handleGroupChange,
     handleRemove,
     toggleSelectAllFiltered,
     toggleRowSelected,

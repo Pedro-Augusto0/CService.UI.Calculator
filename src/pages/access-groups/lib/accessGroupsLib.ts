@@ -14,6 +14,7 @@ import type {
   GroupColor,
   PermissionCardIcon,
 } from '@/features/access-groups/types'
+import { userBelongsToGroup } from '@/features/auth/groupIds'
 import type { StoredUser } from '@/features/auth/types'
 import { loadUsers } from '@/features/auth/api/userStorage'
 
@@ -71,14 +72,10 @@ export const COLOR_STYLES: Record<
   grey: { bg: '#475569', fg: '#fff', soft: '#e2e8f0' },
 }
 
-export function userGroupId(u: StoredUser): string {
-  return u.groupId ?? (u.isAdmin ? 'grp-administrador' : 'grp-leitura')
-}
-
 export function countUsersForGroup(groupId: string): number {
-  return loadUsers().filter((u) => userGroupId(u) === groupId).length
+  return loadUsers().filter((u) => userBelongsToGroup(u, groupId)).length
 }
 
 export function usersAssignedToGroup(groupId: string): StoredUser[] {
-  return loadUsers().filter((u) => userGroupId(u) === groupId)
+  return loadUsers().filter((u) => userBelongsToGroup(u, groupId))
 }
