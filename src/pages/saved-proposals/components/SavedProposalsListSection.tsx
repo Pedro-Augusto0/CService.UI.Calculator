@@ -1,0 +1,261 @@
+import {
+  Building2,
+  Copy,
+  Eye,
+  FileText,
+  FolderOpen,
+  MoreHorizontal,
+  PencilLine,
+  Plus,
+} from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import {
+  SAVED_PROPOSAL_STATUSES,
+  formatProposalNumber,
+  type SavedProposalRecord,
+  type SavedProposalStatus,
+} from '@/features/proposal/lib/savedProposalStore'
+import { formatCurrency } from '@/utils/currency'
+import type { SavedProposalRow } from '@/pages/saved-proposals/hooks/useSavedProposalsListing'
+import { formatCalendarEdit } from '@/pages/saved-proposals/lib/presentation'
+import { STATUS_LABELS, STATUS_TONE } from '@/pages/saved-proposals/lib/statusMeta'
+
+export function SavedProposalsListSection({
+  rows,
+  filteredRows,
+  viewMode,
+  onNovaProposta,
+  handleMenuToggle,
+  handleStatusChangeFromMenu,
+  handleOpenFromMenu,
+  handlePreviewFromMenu,
+  handleDuplicateFromMenu,
+  handleDownloadFromMenu,
+}: {
+  rows: SavedProposalRow[]
+  filteredRows: SavedProposalRow[]
+  viewMode: 'list' | 'grid'
+  onNovaProposta: () => void
+  handleMenuToggle: (event: React.SyntheticEvent<HTMLDetailsElement>) => void
+  handleStatusChangeFromMenu: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    recordId: string,
+    status: SavedProposalStatus,
+  ) => void
+  handleOpenFromMenu: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    recordId: string,
+  ) => void
+  handlePreviewFromMenu: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    record: SavedProposalRecord,
+  ) => void
+  handleDuplicateFromMenu: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    recordId: string,
+  ) => void
+  handleDownloadFromMenu: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    record: SavedProposalRecord,
+  ) => void
+}) {
+  if (rows.length === 0) {
+    return (
+      <Card className="saved-page__empty">
+        <div className="saved-page__empty-icon" aria-hidden>
+          <FolderOpen size={26} strokeWidth={2} />
+        </div>
+        <h2 className="saved-page__empty-title">Nenhuma proposta salva por enquanto</h2>
+        <p className="saved-page__empty-text">
+            Salve a proposta na etapa final para montar este painel com filtros, historico e atalhos de edicao.
+        </p>
+        <Button variant="primary" className="saved-page__cta" onClick={onNovaProposta}>
+          <Plus size={18} strokeWidth={2} aria-hidden />
+          Nova proposta
+        </Button>
+      </Card>
+    )
+  }
+
+  return (
+    <section
+      className={`saved-page__table saved-page__table--${viewMode}`}
+      aria-label="Lista de propostas salvas"
+    >
+      {viewMode === 'list' ? (
+        <div className="saved-page__table-head">
+          <span>Cliente</span>
+          <span>Volume monitorado</span>
+          <span>Serviços incluídos</span>
+          <span>Valor final</span>
+          <span>Status</span>
+          <span>Ações</span>
+        </div>
+      ) : null}
+
+      <div className={`saved-page__rows saved-page__rows--${viewMode}`}>
+        {filteredRows.length ? (
+          filteredRows.map((row) => (
+            <article
+              key={row.record.id}
+              className={`saved-page__row saved-page__row--${viewMode}`}
+            >
+              <div className="saved-page__company">
+                <span
+                  className={`saved-page__company-icon saved-page__company-icon--${row.record.proposalNumber % 4}`}
+                  aria-hidden
+                >
+                  <Building2 size={18} strokeWidth={2} />
+                </span>
+                <div className="saved-page__company-content">
+                  <strong className="saved-page__company-name">{row.clientName}</strong>
+                  <span className="saved-page__company-meta">
+                    {row.proposalName} {formatProposalNumber(row.record.proposalNumber)}
+                  </span>
+                  <span className="saved-page__company-updated">
+                    <span className="saved-page__company-updated-dot" aria-hidden />
+                    {formatCalendarEdit(row.record.updatedAt)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="saved-page__metric">
+                <span className="saved-page__cell-label">Volume monitorado</span>
+                <div className="saved-page__metric-main">
+                  <strong>{row.totalVolume.toLocaleString('pt-BR')}</strong>
+                  <span className="saved-page__metric-unit">notícias/mês</span>
+                </div>
+                <span className="saved-page__metric-meta">{row.totalKeywords} termos</span>
+              </div>
+
+              <div className="saved-page__services-cell">
+                <span className="saved-page__cell-label">Serviços incluídos</span>
+                <div className="saved-page__services">
+                  {row.visibleServices.map((service) => (
+                    <span key={service} className="saved-page__service-chip">
+                      {service}
+                    </span>
+                  ))}
+                  {row.hiddenServices ? (
+                    <span className="saved-page__service-chip saved-page__service-chip--ghost">
+                      +{row.hiddenServices}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="saved-page__price">
+                <span className="saved-page__cell-label">Valor final</span>
+                <div className="saved-page__price-main">
+                  <strong>{formatCurrency(row.finalPrice)}</strong>
+                  <span className="saved-page__price-unit">/mês</span>
+                </div>
+              </div>
+
+              <div className="saved-page__status">
+                <span className="saved-page__cell-label">Status</span>
+                <details className="saved-page__status-menu" onToggle={handleMenuToggle}>
+                  <summary
+                    className={`saved-page__status-badge saved-page__status-badge--${STATUS_TONE[row.record.status]}`}
+                  >
+                    {STATUS_LABELS[row.record.status]}
+                  </summary>
+                  <div className="saved-page__menu-dropdown saved-page__menu-dropdown--status">
+                    {SAVED_PROPOSAL_STATUSES.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        className={`saved-page__menu-item${status === row.record.status ? ' saved-page__menu-item--active' : ''}`}
+                        onClick={(event) =>
+                          handleStatusChangeFromMenu(
+                            event,
+                            row.record.id,
+                            status,
+                          )
+                        }
+                      >
+                        {STATUS_LABELS[status]}
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              </div>
+
+              <div className="saved-page__actions">
+                <details className="saved-page__actions-menu" onToggle={handleMenuToggle}>
+                  <summary
+                    className="saved-page__action-trigger"
+                    aria-label="Abrir ações da proposta"
+                  >
+                    <MoreHorizontal size={16} strokeWidth={2} aria-hidden />
+                  </summary>
+                  <div className="saved-page__menu-dropdown saved-page__menu-dropdown--actions">
+                    <button
+                      type="button"
+                      className="saved-page__menu-item"
+                      onClick={(event) =>
+                        handleOpenFromMenu(event, row.record.id)
+                      }
+                    >
+                      <PencilLine size={15} strokeWidth={2} aria-hidden />
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="saved-page__menu-item"
+                      onClick={(event) =>
+                        handlePreviewFromMenu(event, row.record)
+                      }
+                    >
+                      <Eye size={15} strokeWidth={2} aria-hidden />
+                      Visualizar
+                    </button>
+                    <button
+                      type="button"
+                      className="saved-page__menu-item"
+                      onClick={(event) =>
+                        handleDuplicateFromMenu(event, row.record.id)
+                      }
+                    >
+                      <Copy size={15} strokeWidth={2} aria-hidden />
+                      Duplicar
+                    </button>
+                    <button
+                      type="button"
+                      className="saved-page__menu-item"
+                      onClick={(event) =>
+                        handleDownloadFromMenu(event, row.record)
+                      }
+                    >
+                      <FileText size={15} strokeWidth={2} aria-hidden />
+                      Gerar HTML
+                    </button>
+                  </div>
+                </details>
+              </div>
+            </article>
+          ))
+        ) : (
+          <Card className="saved-page__empty-results">
+            <h2 className="saved-page__empty-results-title">Nenhum resultado encontrado</h2>
+            <p className="saved-page__empty-results-text">
+                Ajuste os filtros ou limpe a busca para voltar a ver todas as propostas salvas.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      <footer className="saved-page__footer">
+        <p className="saved-page__footer-meta">
+          {filteredRows.length === 0
+            ? 'Nenhuma proposta encontrada'
+            : `Mostrando ${filteredRows.length} ${
+                filteredRows.length === 1 ? 'proposta' : 'propostas'
+              }`}
+        </p>
+
+      </footer>
+    </section>
+  )
+}

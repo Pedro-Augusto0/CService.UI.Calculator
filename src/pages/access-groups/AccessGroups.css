@@ -7,13 +7,8 @@
     0 1px 3px rgb(15 23 42 / 8%),
     0 4px 12px rgb(15 23 42 / 4%);
   width: 100%;
-  max-width: 1180px;
   margin: 0 auto;
   padding: 8px 0 40px;
-}
-
-.access-groups--listing {
-  max-width: 1220px;
 }
 
 .access-groups__stats {
@@ -496,7 +491,7 @@
 .access-groups__title {
   margin: 0 0 6px;
   font-size: 1.65rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ag-navy);
 }
@@ -836,7 +831,7 @@
 .access-groups__info-col-title {
   display: block;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--ag-navy);
   letter-spacing: -0.01em;
 }
@@ -883,7 +878,7 @@
 .access-groups__required {
   text-decoration: none;
   color: var(--color-danger);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .access-groups__textarea-wrap {
@@ -949,7 +944,7 @@
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .access-groups__group-status-badge--on {
@@ -1032,7 +1027,7 @@
   text-align: left;
   padding: 10px 12px 12px 0;
   font-size: 0.68rem;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #94a3b8;
@@ -1054,7 +1049,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 700;
   background: #dcfce7;
   color: #166534;
 }
@@ -1129,7 +1124,7 @@
 .access-groups__perm-title {
   margin: 0 0 4px;
   font-size: 1.08rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--ag-navy);
 }
 
@@ -1242,7 +1237,7 @@
 
 .access-groups__perm-card-title {
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--ag-navy);
 }
 
