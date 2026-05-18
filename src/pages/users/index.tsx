@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Filter,
+  LayoutGrid,
   Search,
   Shield,
   Trash2,
@@ -10,6 +11,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { StoredUser } from '@/features/auth/types'
+import { loadAccessGroups } from '@/features/access-groups/accessGroupStorage'
+import type { GroupColor } from '@/features/access-groups/types'
 import { loadUsers, saveUsers } from '@/features/auth/api/userStorage'
 import { initialsFromName } from '@/utils/strings'
 import './Users.css'
@@ -56,8 +59,13 @@ function formatTimePt(d: Date): string {
   }).format(d)
 }
 
+function resolveGroupId(u: StoredUser): string {
+  return u.groupId ?? (u.isAdmin ? 'grp-administrador' : 'grp-leitura')
+}
+
 export function Users() {
   const { user: sessionUser, refreshSessionUser } = useAuth()
+  const accessGroups = loadAccessGroups()
   const [rows, setRows] = useState<StoredUser[]>(() => loadUsers())
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
@@ -77,8 +85,9 @@ export function Users() {
     const total = rows.length
     const admins = rows.filter((u) => u.isAdmin).length
     const active = rows.filter((u) => isActiveInWindow(u, t)).length
-    return { total, admins, active }
-  }, [rows])
+    const groupsTotal = accessGroups.length
+    return { total, admins, active, groupsTotal }
+  }, [rows, accessGroups.length])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -125,7 +134,35 @@ export function Users() {
       }
 
       const next = rows.map((u) =>
-        u.id === target.id ? { ...u, isAdmin: nextAdmin } : u,
+        u.id === target.id
+          ? {
+              ...u,
+              isAdmin: nextAdmin,
+              groupId: nextAdmin ? 'grp-administrador' : 'grp-leitura',
+            }
+          : u,
+      )
+      persist(next)
+    },
+    [sessionUser, adminCount, rows, persist],
+  )
+
+  const handleGroupChange = useCallback(
+    (target: StoredUser, groupId: string) => {
+      if (!sessionUser) return
+      const gid = resolveGroupId(target)
+      if (gid === groupId) return
+
+      const nextIsAdmin = groupId === 'grp-administrador'
+      if (target.isAdmin && !nextIsAdmin && adminCount <= 1) {
+        window.alert(
+          'É necessário manter pelo menos um administrador na plataforma.',
+        )
+        return
+      }
+
+      const next = rows.map((u) =>
+        u.id === target.id ? { ...u, groupId, isAdmin: nextIsAdmin } : u,
       )
       persist(next)
     },
@@ -191,6 +228,21 @@ export function Users() {
             <div className="users-page__card-value">{stats.total}</div>
             <div className="users-page__card-hint">
               Todos os usuários cadastrados
+            </div>
+          </div>
+        </article>
+        <article className="users-page__card">
+          <div
+            className="users-page__card-icon users-page__card-icon--groups"
+            aria-hidden
+          >
+            <LayoutGrid size={22} strokeWidth={2} />
+          </div>
+          <div className="users-page__card-body">
+            <div className="users-page__card-label">Grupos de acesso</div>
+            <div className="users-page__card-value">{stats.groupsTotal}</div>
+            <div className="users-page__card-hint">
+              Perfis com permissões agrupadas
             </div>
           </div>
         </article>
@@ -290,7 +342,8 @@ export function Users() {
                 />
               </th>
               <th className="users-page__th">Usuário</th>
-              <th className="users-page__th">Email</th>
+              <th className="users-page__th users-page__th--group">Grupo</th>
+              <th className="users-page__th users-page__th--status">Status</th>
               <th className="users-page__th">Perfil</th>
               <th className="users-page__th">Criado em</th>
               <th className="users-page__th users-page__th--actions">
@@ -303,6 +356,10 @@ export function Users() {
               const created = new Date(u.createdAt)
               const pal = paletteForId(u.id)
               const switchDisabled = u.isAdmin && adminCount <= 1
+              const gid = resolveGroupId(u)
+              const grp = accessGroups.find((g) => g.id === gid)
+              const groupColor: GroupColor = grp?.color ?? 'blue'
+              const activeNow = isActiveInWindow(u, Date.now())
 
               return (
                 <tr key={u.id} className="users-page__row">
@@ -333,8 +390,37 @@ export function Users() {
                       </div>
                     </div>
                   </td>
-                  <td className="users-page__td users-page__td--email">
-                    {u.email}
+                  <td className="users-page__td users-page__td--group">
+                    <select
+                      className={`users-page__group-select users-page__group-select--${groupColor}`}
+                      aria-label={`Grupo de ${u.name}`}
+                      value={gid}
+                      onChange={(e) =>
+                        handleGroupChange(u, e.target.value)
+                      }
+                    >
+                      {accessGroups
+                        .filter(
+                          (g) => g.active !== false || g.id === gid,
+                        )
+                        .map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="users-page__td users-page__td--status">
+                    <span
+                      className={
+                        activeNow
+                          ? 'users-page__status users-page__status--on'
+                          : 'users-page__status users-page__status--off'
+                      }
+                    >
+                      <span className="users-page__status-dot" aria-hidden />
+                      {activeNow ? 'Ativo' : 'Inativo'}
+                    </span>
                   </td>
                   <td className="users-page__td users-page__td--profile">
                     <div className="users-page__profile-cell">

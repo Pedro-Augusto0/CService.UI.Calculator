@@ -4,3 +4,5 @@ export type MainAppRoute =
   | 'templates'
   | 'settings'
   | 'users'
+  | 'groups'
+  | 'permissions'

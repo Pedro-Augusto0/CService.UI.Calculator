@@ -4,6 +4,8 @@ export interface StoredUser {
   email: string
   passwordHash: string
   isAdmin: boolean
+  /** Grupo de acesso (permissões herdadas do grupo). */
+  groupId?: string
   /** Preenchido apenas pelo sistema; nunca exibido em cadastro ou perfil. */
   internalField: string
   createdAt: number

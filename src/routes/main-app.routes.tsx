@@ -21,6 +21,7 @@ import { Stepper } from '@/components/ui/Stepper'
 import { PriceConfiguration } from '@/pages/price-configuration'
 import { ProposalTemplates } from '@/pages/proposal-templates'
 import { SavedProposals } from '@/pages/saved-proposals'
+import { AccessGroups } from '@/pages/access-groups'
 import { Users } from '@/pages/users'
 import { WizardPage } from '@/pages/wizard'
 import type { MainAppRoute } from '@/routes/main-app.types'
@@ -82,6 +83,20 @@ export function MainAppRoutes() {
         window.setTimeout(() => setAccessBanner(null), 6500)
         return
       }
+      if (r === 'groups' && !user?.isAdmin) {
+        setAccessBanner(
+          'Você não tem permissão para acessar grupos de acesso.',
+        )
+        window.setTimeout(() => setAccessBanner(null), 6500)
+        return
+      }
+      if (r === 'permissions' && !user?.isAdmin) {
+        setAccessBanner(
+          'Você não tem permissão para acessar o catálogo de permissões.',
+        )
+        window.setTimeout(() => setAccessBanner(null), 6500)
+        return
+      }
       setAccessBanner(null)
       setRoute(r)
     },
@@ -104,6 +119,26 @@ export function MainAppRoutes() {
       setRoute('wizard')
       setAccessBanner(
         'Você não tem permissão para acessar o gerenciamento de usuários.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+  }, [route, user])
+
+  useEffect(() => {
+    if (route === 'groups' && user && !user.isAdmin) {
+      setRoute('wizard')
+      setAccessBanner(
+        'Você não tem permissão para acessar grupos de acesso.',
+      )
+      window.setTimeout(() => setAccessBanner(null), 6500)
+    }
+  }, [route, user])
+
+  useEffect(() => {
+    if (route === 'permissions' && user && !user.isAdmin) {
+      setRoute('wizard')
+      setAccessBanner(
+        'Você não tem permissão para acessar o catálogo de permissões.',
       )
       window.setTimeout(() => setAccessBanner(null), 6500)
     }
@@ -279,6 +314,8 @@ export function MainAppRoutes() {
           />
         ) : route === 'users' ? (
           <Users />
+        ) : route === 'groups' ? (
+          <AccessGroups />
         ) : (
           <WizardPage
             onDownload={handleDownload}

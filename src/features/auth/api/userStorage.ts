@@ -10,7 +10,20 @@ export function loadUsers(): StoredUser[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    return parsed as StoredUser[]
+    const users = parsed as StoredUser[]
+    let needsSave = false
+    const migrated = users.map((u) => {
+      if (u.groupId) return u
+      needsSave = true
+      return {
+        ...u,
+        groupId: u.isAdmin ? 'grp-administrador' : 'grp-leitura',
+      }
+    })
+    if (needsSave) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(migrated))
+    }
+    return migrated
   } catch {
     return []
   }

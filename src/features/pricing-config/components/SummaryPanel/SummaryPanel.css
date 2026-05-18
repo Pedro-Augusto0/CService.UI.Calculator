@@ -851,7 +851,7 @@
   position: absolute;
   inset: auto 0 0;
   height: 3px;
-  background: linear-gradient(90deg, #0c63ff 0%, #1e78ff 100%);
+  background: var(--color-primary);
 }
 
 .summary-panel__final-icon {
@@ -862,7 +862,7 @@
   justify-content: center;
   margin: 0 auto;
   border-radius: 999px;
-  background: linear-gradient(180deg, #2f80ff 0%, #0052ff 100%);
+  background: var(--color-primary);
   color: #fff;
   box-shadow: 0 6px 12px rgb(0 82 255 / 20%);
 }
