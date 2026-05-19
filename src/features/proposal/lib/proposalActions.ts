@@ -48,7 +48,13 @@ export type ProposalAction =
   | { type: 'SET_VALIDADE_DIAS'; dias: number }
   | { type: 'SET_PRECO_BASE_MENSAL'; value: number }
   | { type: 'SET_PRICES'; prices: Prices }
-  | { type: 'COMMIT_PRICING_CONFIG'; prices: Prices; precoBaseMensal: number }
+  | {
+      type: 'COMMIT_PRICING_CONFIG'
+      prices: Prices
+      precoBaseMensal: number
+      /** Alinha estado e localStorage ao mesmo instante (opcional). */
+      savedAt?: number
+    }
   | { type: 'MARK_PROPOSAL_SAVED'; id: string; savedAt: number }
 
 export interface ProposalState {

@@ -14,6 +14,7 @@ import {
   BILLING_MODE_LABELS,
   MATTER_SERVICE_SHORT_LABELS,
   REPORT_FREQUENCY_LABELS,
+  type MatterServiceConfig,
   type Prices,
 } from '@/domain/prices'
 import { MATTER_SERVICE_KEYS, REPORT_FREQUENCIES } from '@/domain/types'
@@ -28,6 +29,20 @@ interface ConfigPricingSidebarProps {
 }
 
 type IconTone = 'purple' | 'green' | 'orange' | 'blue'
+
+/** Textos legíveis no resumo (evita abreviações F:/V:). */
+function matterServiceSummaryText(conf: MatterServiceConfig): string {
+  if (conf.mode === 'fixed') {
+    return `Valor fixo: ${formatCurrency(conf.fixedPrice)}`
+  }
+  if (conf.mode === 'variable') {
+    return `Por volume (por notícia): ${formatCurrency(conf.variablePrice)}`
+  }
+  return [
+    `Valor fixo: ${formatCurrency(conf.fixedPrice)}`,
+    `Por volume (por notícia): ${formatCurrency(conf.variablePrice)}`,
+  ].join('\n')
+}
 
 export function ConfigPricingSidebar({
   prices,
@@ -47,20 +62,16 @@ export function ConfigPricingSidebar({
         const tierCount = conf.tiers.length
         return {
           label: MATTER_SERVICE_SHORT_LABELS[k],
-          value: `${BILLING_MODE_LABELS[conf.mode]} · ${tierCount} faixa${tierCount === 1 ? '' : 's'}`,
+          value: [
+            `Modo de cobrança: ${BILLING_MODE_LABELS[conf.mode]}`,
+            `${tierCount} faixa${tierCount === 1 ? '' : 's'} por quantidade de campos`,
+          ].join('\n'),
         }
       }
       const conf = prices.matterServices[k]
-      const parts: string[] = [BILLING_MODE_LABELS[conf.mode]]
-      if (conf.mode === 'fixed' || conf.mode === 'both') {
-        parts.push(`F: ${formatCurrency(conf.fixedPrice)}`)
-      }
-      if (conf.mode === 'variable' || conf.mode === 'both') {
-        parts.push(`V: ${formatCurrency(conf.variablePrice)}`)
-      }
       return {
         label: MATTER_SERVICE_SHORT_LABELS[k],
-        value: parts.join(' · '),
+        value: matterServiceSummaryText(conf),
       }
     })
   }, [prices.matterServices])
@@ -68,16 +79,16 @@ export function ConfigPricingSidebar({
   const reportItems = useMemo(
     () => [
       ...REPORT_FREQUENCIES.map((f) => ({
-        label: `Executivo · ${REPORT_FREQUENCY_LABELS[f]}`,
+        label: `Relatório executivo (PowerPoint) · ${REPORT_FREQUENCY_LABELS[f]}`,
         value: formatCurrency(prices.reports.executivo.byFrequency[f]),
       })),
       ...REPORT_FREQUENCIES.map((f) => ({
-        label: `Estratégico · ${REPORT_FREQUENCY_LABELS[f]}`,
+        label: `Relatório estratégico (HTML) · ${REPORT_FREQUENCY_LABELS[f]}`,
         value: formatCurrency(prices.reports.estrategico.byFrequency[f]),
       })),
-      { label: 'BI · Setup', value: formatCurrency(prices.reports.bi.setupPrice) },
+      { label: 'CService BI · taxa de setup', value: formatCurrency(prices.reports.bi.setupPrice) },
       {
-        label: 'BI · Manutenção',
+        label: 'CService BI · manutenção mensal',
         value: formatCurrency(prices.reports.bi.monthlyMaintenance),
       },
     ],
@@ -92,11 +103,11 @@ export function ConfigPricingSidebar({
       { label: 'TV SP/RJ', value: formatCurrency(a.tv.spRj) },
       { label: 'TV Nacional', value: formatCurrency(a.tv.nacional) },
       {
-        label: 'Mídias sociais',
+        label: 'Mídias sociais (faixas por posts)',
         value: `${a.midiasSociais.tiers.length} faixa${a.midiasSociais.tiers.length === 1 ? '' : 's'}`,
       },
       {
-        label: 'Stories Instagram',
+        label: 'Stories Instagram (faixas por perfis)',
         value: `${a.storiesInstagram.tiers.length} faixa${a.storiesInstagram.tiers.length === 1 ? '' : 's'}`,
       },
       { label: 'Alertas web', value: formatCurrency(a.alertasWebRealtime) },
@@ -107,16 +118,16 @@ export function ConfigPricingSidebar({
         value: formatCurrency(a.newsletterExtraEnvio),
       },
       {
-        label: 'Destinatários extras',
+        label: 'Destinatários extras (faixas)',
         value: `${a.destinatariosExtras.tiers.length} faixa${a.destinatariosExtras.tiers.length === 1 ? '' : 's'}`,
       },
-      { label: 'Plantão', value: `${a.plantaoPercent}%` },
+      { label: 'Plantão (fds e feriados, % sobre subtotal)', value: `${a.plantaoPercent}%` },
       {
         label: 'Curadoria manual',
         value: formatCurrency(a.curadoriaAprovacaoManual),
       },
       {
-        label: 'Aprovação automática',
+        label: 'Aprovação / envio automático (desconto %)',
         value: `${a.aprovacaoAutomaticaPercent}%`,
       },
     ]
@@ -126,7 +137,7 @@ export function ConfigPricingSidebar({
     () =>
       prices.validadeOptions.length
         ? prices.validadeOptions.map((d) => ({
-            label: `Validade · ${d} dia${d === 1 ? '' : 's'}`,
+            label: `Proposta válida por ${d} dia${d === 1 ? '' : 's'}`,
             value: '',
           }))
         : [{ label: 'Nenhuma opção cadastrada', value: '' }],

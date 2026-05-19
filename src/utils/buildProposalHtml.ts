@@ -13,7 +13,8 @@ import {
   SECTION_LABELS,
 } from '@/domain/prices'
 import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
-import proposalHeaderBannerUrl from '@/assets/logo_cabecalho_padrao.gif'
+/** URL do asset pelo Vite (`/assets/...png`) — dentro de iframe `srcDoc` ou não. */
+import proposalHeaderBannerUrl from '@/assets/result_logo_cabecalho_padrao.png'
 import { formatCurrency } from '@/utils/currency'
 
 interface ProposalHtmlOptions {
@@ -60,6 +61,26 @@ function escapeHtml(s: string): string {
 /** Para usar caminho de asset dentro de `url('…')` em CSS */
 function escapeCssSingleQuotedString(s: string): string {
   return s.replace(/\\/g, '/').replace(/'/g, "\\'")
+}
+
+/** Em documentos gerados (`iframe` + `srcDoc`), `url(/assets/…)` pode não resolver para o servidor da app; usar URL absoluta. */
+function resolveEmbeddedAssetCssUrl(bundleUrlFromVite: string): string {
+  const cleaned = bundleUrlFromVite.replace(/[?#].*$/, '')
+  if (
+    typeof window === 'undefined' ||
+    cleaned.startsWith('data:')
+  ) {
+    return cleaned
+  }
+  try {
+    const base =
+      cleaned.startsWith('/') || /^https?:\/\//i.test(cleaned)
+        ? `${window.location.origin}/`
+        : window.location.href
+    return new URL(cleaned, base).href
+  } catch {
+    return cleaned
+  }
 }
 
 function formatInteger(value: number): string {
@@ -470,7 +491,9 @@ export function buildProposalHtml(
   const compositionBlocks = buildCompositionBlocks(input, calc)
   const compositionBlocksHtml = renderCompositionBlocksHtml(compositionBlocks)
 
-  const headerBannerCssUrl = escapeCssSingleQuotedString(proposalHeaderBannerUrl)
+  const headerBannerCssUrl = escapeCssSingleQuotedString(
+    resolveEmbeddedAssetCssUrl(proposalHeaderBannerUrl),
+  )
 
   const distributionHtml = distribution
     .map(
@@ -539,7 +562,7 @@ export function buildProposalHtml(
       box-shadow: var(--shadow);
     }
 
-    /* Faixa do banner (GIF já inclui logo CSERVICE) */
+    /* Faixa do banner (PNG já inclui logo CSERVICE) */
     .section-header-banner {
       width: 100%;
       height: 88px;
@@ -845,6 +868,8 @@ export function buildProposalHtml(
       font-size: 10px;
       font-weight: 500;
       color: #4a5568;
+    background: #fcfcfc;
+    border: 1px solid #e6e6e6;
     }
     .scope-card__keyword--muted {
       background: #f0f2f5;
@@ -874,13 +899,14 @@ export function buildProposalHtml(
       gap: 4px;
     }
     .scope-card__service-tag {
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #f0f2f5;
-      font-size: 10px;
-      font-weight: 500;
-      color: #4a5568;
-    }
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #fcfcfc;
+    border: 1px solid #e6e6e6;
+    font-size: 10px;
+    font-weight: 500;
+    color: #4a5568;
+}
     .scope-card__service-tag--muted {
       color: #8e9aa0;
     }

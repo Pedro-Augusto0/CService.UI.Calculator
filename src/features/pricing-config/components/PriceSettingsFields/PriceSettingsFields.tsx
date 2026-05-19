@@ -245,17 +245,19 @@ function MatterSection({
         )
       })}
 
-      <article className="config-base-card config-base-card--stacked">
-        <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
-          <Star size={22} strokeWidth={1.85} />
-        </div>
-        <div className="config-base-card__copy">
-          <h3 className="config-base-card__title">
-            {MATTER_SERVICE_LABELS.avaliacao}
-          </h3>
-          <p className="config-base-card__desc">
-            {SERVICE_DESCRIPTIONS.avaliacao}
-          </p>
+      <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
+        <div className="config-base-card__lead">
+          <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
+            <Star size={22} strokeWidth={1.85} />
+          </div>
+          <div className="config-base-card__copy">
+            <h3 className="config-base-card__title">
+              {MATTER_SERVICE_LABELS.avaliacao}
+            </h3>
+            <p className="config-base-card__desc">
+              {SERVICE_DESCRIPTIONS.avaliacao}
+            </p>
+          </div>
         </div>
         <div className="config-base-card__field config-base-card__field--full">
           <SelectField
@@ -388,16 +390,18 @@ function FrequencyCard({
 }) {
   const tone = CARD_TONES[toneIndex % CARD_TONES.length]
   return (
-    <article className="config-base-card config-base-card--stacked">
-      <div
-        className={`config-base-card__icon config-base-card__icon--${tone}`}
-        aria-hidden
-      >
-        <Icon size={22} strokeWidth={1.85} />
-      </div>
-      <div className="config-base-card__copy">
-        <h3 className="config-base-card__title">{title}</h3>
-        <p className="config-base-card__desc">{description}</p>
+    <article className="config-base-card config-base-card--stacked config-base-card--stacked-fields">
+      <div className="config-base-card__lead">
+        <div
+          className={`config-base-card__icon config-base-card__icon--${tone}`}
+          aria-hidden
+        >
+          <Icon size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">{title}</h3>
+          <p className="config-base-card__desc">{description}</p>
+        </div>
       </div>
       <div className="freq-grid">
         {REPORT_FREQUENCIES.map((f) => (
@@ -474,15 +478,17 @@ function AdditionalsSection({
         </div>
       </PriceConfigCard>
 
-      <article className="config-base-card config-base-card--stacked">
-        <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
-          <Antenna size={22} strokeWidth={1.85} />
-        </div>
-        <div className="config-base-card__copy">
-          <h3 className="config-base-card__title">Monitoramento de Mídias Sociais</h3>
-          <p className="config-base-card__desc">
-            Faixas por quantidade de posts. O comercial escolhe a faixa em combo.
-          </p>
+      <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
+        <div className="config-base-card__lead">
+          <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
+            <Antenna size={22} strokeWidth={1.85} />
+          </div>
+          <div className="config-base-card__copy">
+            <h3 className="config-base-card__title">Monitoramento de Mídias Sociais</h3>
+            <p className="config-base-card__desc">
+              Faixas por quantidade de posts. O comercial escolhe a faixa em combo.
+            </p>
+          </div>
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
@@ -500,15 +506,17 @@ function AdditionalsSection({
         </div>
       </article>
 
-      <article className="config-base-card config-base-card--stacked">
-        <div className="config-base-card__icon config-base-card__icon--green" aria-hidden>
-          <Sparkles size={22} strokeWidth={1.85} />
-        </div>
-        <div className="config-base-card__copy">
-          <h3 className="config-base-card__title">Monitoramento de Stories Instagram</h3>
-          <p className="config-base-card__desc">
-            Faixas por quantidade de perfis monitorados.
-          </p>
+      <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
+        <div className="config-base-card__lead">
+          <div className="config-base-card__icon config-base-card__icon--green" aria-hidden>
+            <Sparkles size={22} strokeWidth={1.85} />
+          </div>
+          <div className="config-base-card__copy">
+            <h3 className="config-base-card__title">Monitoramento de Stories Instagram</h3>
+            <p className="config-base-card__desc">
+              Faixas por quantidade de perfis monitorados.
+            </p>
+          </div>
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
@@ -582,15 +590,17 @@ function AdditionalsSection({
         />
       </PriceConfigCard>
 
-      <article className="config-base-card config-base-card--stacked">
-        <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
-          <Users size={22} strokeWidth={1.85} />
-        </div>
-        <div className="config-base-card__copy">
-          <h3 className="config-base-card__title">Destinatários Adicionais</h3>
-          <p className="config-base-card__desc">
-            Preço fixo por faixa de destinatários extras (+10, +25, +50, +100).
-          </p>
+      <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
+        <div className="config-base-card__lead">
+          <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
+            <Users size={22} strokeWidth={1.85} />
+          </div>
+          <div className="config-base-card__copy">
+            <h3 className="config-base-card__title">Destinatários Adicionais</h3>
+            <p className="config-base-card__desc">
+              Preço fixo por faixa de destinatários extras (+10, +25, +50, +100).
+            </p>
+          </div>
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
@@ -676,15 +686,17 @@ function OutrosSection({
   }
 
   return (
-    <article className="config-base-card config-base-card--stacked">
-      <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
-        <CalendarRange size={22} strokeWidth={1.85} />
-      </div>
-      <div className="config-base-card__copy">
-        <h3 className="config-base-card__title">Validade da proposta</h3>
-        <p className="config-base-card__desc">
-          Opções (em dias) que o comercial poderá selecionar na proposta. Ordem reflete a ordem do combo.
-        </p>
+    <article className="config-base-card config-base-card--stacked config-base-card--stacked-fields">
+      <div className="config-base-card__lead">
+        <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
+          <CalendarRange size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">Validade da proposta</h3>
+          <p className="config-base-card__desc">
+            Opções (em dias) que o comercial poderá selecionar na proposta. Ordem reflete a ordem do combo.
+          </p>
+        </div>
       </div>
       <div className="validade-list">
         {draft.validadeOptions.length === 0 ? (

@@ -11,6 +11,7 @@ import {
 import type { CalculationInput, CalculationResult } from '@/domain/types'
 import type { ProposalAction, ProposalState } from './lib/proposalActions'
 import { createInitialProposalState, proposalReducer } from './lib/proposalReducer'
+import { loadStoredPricingConfig } from './lib/pricingConfigStore'
 import {
   calculateProposalState,
   createSavedProposalId,
@@ -54,11 +55,18 @@ interface ProposalContextValue {
 const ProposalContext = createContext<ProposalContextValue | null>(null)
 
 export function ProposalProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(
-    proposalReducer,
-    undefined,
-    createInitialProposalState,
-  )
+  const [state, dispatch] = useReducer(proposalReducer, undefined, () => {
+    const stored = loadStoredPricingConfig()
+    return createInitialProposalState(
+      stored
+        ? {
+            prices: stored.prices,
+            precoBaseMensal: stored.precoBaseMensal,
+            pricingConfigSavedAt: stored.pricingConfigSavedAt,
+          }
+        : {},
+    )
+  })
   const [savedProposals, setSavedProposals] = useState<SavedProposalRecord[]>(() =>
     loadSavedProposals(),
   )

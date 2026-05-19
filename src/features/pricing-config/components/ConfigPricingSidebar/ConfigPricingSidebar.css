@@ -1,6 +1,6 @@
 .config-sidebar {
   flex-shrink: 0;
-  width: min(320px, 100%);
+  width: min(340px, 100%);
   position: sticky;
   top: 16px;
   align-self: flex-start;
@@ -142,31 +142,51 @@
 }
 
 .config-sidebar__acc-detail li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding: 7px 0;
-  border-bottom: 1px solid rgb(248 250 252);
-}
-
-.config-sidebar__acc-detail li:last-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 6px 12px;
+  align-items: start;
+  padding: 7px 10px;
   border-bottom: none;
 }
 
+.config-sidebar__acc-detail li:nth-child(odd) {
+  background: rgb(248 250 252 / 55%);
+}
+
+.config-sidebar__acc-detail li + li {
+  margin-top: 1px;
+}
+
 .config-sidebar__acc-detail-label {
-  font-size: 0.71875rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-muted);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: rgb(71 85 105);
   min-width: 0;
+  word-break: break-word;
+}
+
+.config-sidebar__acc-detail-label:only-child {
+  grid-column: 1 / -1;
+  font-weight: 500;
+  color: rgb(100 116 139);
 }
 
 .config-sidebar__acc-detail-value {
   font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1.45;
   font-variant-numeric: tabular-nums;
   color: rgb(15 23 42);
-  white-space: nowrap;
+  text-align: left;
+  justify-self: stretch;
+  max-width: 100%;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-line;
 }
 
 .config-sidebar__tip {

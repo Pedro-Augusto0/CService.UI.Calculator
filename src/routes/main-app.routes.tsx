@@ -276,7 +276,11 @@ export function MainAppRoutes() {
       <AppShell
         stepper={
           route === 'wizard' ? (
-            <Stepper steps={STEPPER_STEPS} currentIndex={step} />
+            <Stepper
+              steps={STEPPER_STEPS}
+              currentIndex={step}
+              onStepChange={(i) => dispatch({ type: 'SET_STEP', step: i })}
+            />
           ) : null
         }
         rightAside={

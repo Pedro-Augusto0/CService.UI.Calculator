@@ -7,6 +7,7 @@ import {
 } from '@/domain/prices'
 import type { ConfigTabId } from '@/features/pricing-config/types'
 import { CONFIG_TABS } from '@/pages/price-configuration/lib/priceConfigurationPageLib'
+import { persistPricingConfig } from '@/features/proposal/lib/pricingConfigStore'
 
 export interface UsePriceConfigurationPageArgs {
   draftPrices: Prices
@@ -50,11 +51,16 @@ export function usePriceConfigurationPage({
   }
 
   function handleSave() {
+    const prices = structuredClone(draftPrices)
+    const precoBaseMensal = draftPrecoBaseMensal
+    const pricingConfigSavedAt = Date.now()
     dispatch({
       type: 'COMMIT_PRICING_CONFIG',
-      prices: structuredClone(draftPrices),
-      precoBaseMensal: draftPrecoBaseMensal,
+      prices,
+      precoBaseMensal,
+      savedAt: pricingConfigSavedAt,
     })
+    persistPricingConfig({ prices, precoBaseMensal, pricingConfigSavedAt })
   }
 
   return {

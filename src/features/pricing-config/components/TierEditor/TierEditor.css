@@ -10,7 +10,7 @@
 
 .tier-editor__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -52,7 +52,7 @@
 
 .tier-editor__row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   padding: 12px;
   border-radius: var(--radius-sm);
@@ -62,8 +62,8 @@
 
 .tier-editor__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }

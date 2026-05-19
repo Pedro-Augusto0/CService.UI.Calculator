@@ -314,7 +314,7 @@ export function proposalReducer(
         ...state,
         prices: structuredClone(action.prices),
         precoBaseMensal: Math.max(0, action.precoBaseMensal),
-        pricingConfigSavedAt: Date.now(),
+        pricingConfigSavedAt: action.savedAt ?? Date.now(),
       }
     case 'MARK_PROPOSAL_SAVED':
       return {
