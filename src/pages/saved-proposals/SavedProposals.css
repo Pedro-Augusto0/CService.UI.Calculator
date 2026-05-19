@@ -430,24 +430,8 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 55%);
 }
 
-.saved-page__company-icon--0 {
-  background: linear-gradient(180deg, rgb(242 253 247), rgb(233 250 239));
-  color: #16a34a;
-}
-
-.saved-page__company-icon--1 {
-  background: linear-gradient(180deg, rgb(242 253 247), rgb(233 250 239));
-  color: #16a34a;
-}
-
-.saved-page__company-icon--2 {
-  background: linear-gradient(180deg, rgb(242 253 247), rgb(233 250 239));
-  color: #16a34a;
-}
-
-.saved-page__company-icon--3 {
-  background: linear-gradient(180deg, rgb(242 253 247), rgb(233 250 239));
-  color: #16a34a;
+.saved-page__company-icon--0, .saved-page__company-icon--1, .saved-page__company-icon--2, .saved-page__company-icon--3 {
+  color: #666666;
 }
 
 .saved-page__company-name {

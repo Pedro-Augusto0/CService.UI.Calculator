@@ -108,7 +108,7 @@ export function MainAppRoutes() {
   )
 
   useEffect(() => {
-    if (route === 'settings' && user && !user.isAdmin) {
+    if (route === 'settings' && user ) {
       clearUrlHash()
       setRoute('wizard')
       setAccessBanner(
@@ -119,7 +119,7 @@ export function MainAppRoutes() {
   }, [route, user])
 
   useEffect(() => {
-    if (route === 'users' && user && !user.isAdmin) {
+    if (route === 'users' && user ) {
       setRoute('wizard')
       setAccessBanner(
         'Você não tem permissão para acessar o gerenciamento de usuários.',
