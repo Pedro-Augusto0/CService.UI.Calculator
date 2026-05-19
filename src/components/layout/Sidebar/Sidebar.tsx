@@ -74,6 +74,13 @@ export function Sidebar({
       isActive: activeRoute === 'templates',
       onClick: () => onNavigate('templates'),
     },
+    // Temporário: configurações visível para todos (antes só em adminItems).
+    {
+      label: 'Configurações',
+      icon: Settings,
+      isActive: activeRoute === 'settings',
+      onClick: () => onNavigate('settings'),
+    },
   ]
 
   const adminItems: SidebarNavItem[] = user?.isAdmin
@@ -89,12 +96,6 @@ export function Sidebar({
           icon: Shield,
           isActive: activeRoute === 'groups',
           onClick: () => onNavigate('groups'),
-        },
-        {
-          label: 'Configurações',
-          icon: Settings,
-          isActive: activeRoute === 'settings',
-          onClick: () => onNavigate('settings'),
         },
       ]
     : []

@@ -73,6 +73,7 @@ export function MainAppRoutes() {
 
   const navigateMain = useCallback(
     (r: MainAppRoute) => {
+      /* Temporário: settings não exige admin — reativar quando voltar o gate.
       if (r === 'settings' && !user?.isAdmin) {
         setAccessBanner(
           'Você não tem permissão para acessar a configuração de preços.',
@@ -80,6 +81,7 @@ export function MainAppRoutes() {
         window.setTimeout(() => setAccessBanner(null), 6500)
         return
       }
+      */
       if (r === 'users' && !user?.isAdmin) {
         setAccessBanner(
           'Você não tem permissão para acessar o gerenciamento de usuários.',
@@ -107,8 +109,9 @@ export function MainAppRoutes() {
     [user],
   )
 
+  /* Temporário: não redirecionar não-admins da tela settings.
   useEffect(() => {
-    if (route === 'settings' && user ) {
+    if (route === 'settings' && user && !user.isAdmin) {
       clearUrlHash()
       setRoute('wizard')
       setAccessBanner(
@@ -117,9 +120,10 @@ export function MainAppRoutes() {
       window.setTimeout(() => setAccessBanner(null), 6500)
     }
   }, [route, user])
+  */
 
   useEffect(() => {
-    if (route === 'users' && user ) {
+    if (route === 'users' && user && !user.isAdmin) {
       setRoute('wizard')
       setAccessBanner(
         'Você não tem permissão para acessar o gerenciamento de usuários.',
@@ -150,6 +154,8 @@ export function MainAppRoutes() {
 
   useEffect(() => {
     if (!readHashConfigPrecos()) return
+    setRoute('settings')
+    /* Temporário: deep link sem exigir admin.
     if (user?.isAdmin) {
       setRoute('settings')
     } else {
@@ -159,11 +165,14 @@ export function MainAppRoutes() {
       )
       window.setTimeout(() => setAccessBanner(null), 6500)
     }
+    */
   }, [user])
 
   useEffect(() => {
     const onHash = () => {
       if (!readHashConfigPrecos()) return
+      setRoute('settings')
+      /* Temporário: hash #config-precos sem exigir admin.
       if (user?.isAdmin) {
         setRoute('settings')
         return
@@ -173,15 +182,22 @@ export function MainAppRoutes() {
         'Você não tem permissão para acessar a configuração de preços.',
       )
       window.setTimeout(() => setAccessBanner(null), 6500)
+      */
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [user])
 
   useEffect(() => {
+    // Temporário: qualquer usuário em settings pode manter o hash (antes só admin).
+    if (route === 'settings') {
+      setHashConfigPrecos()
+    }
+    /*
     if (route === 'settings' && user?.isAdmin) {
       setHashConfigPrecos()
     }
+    */
   }, [route, user])
 
   useEffect(() => {
