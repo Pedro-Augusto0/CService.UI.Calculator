@@ -24,8 +24,8 @@ export interface SavedProposalRow {
   finalPrice: number
   totalVolume: number
   totalKeywords: number
-  visibleServices: string[]
-  hiddenServices: number
+  /** Ordered labels for every selected service (full list for overflow UI). */
+  allServices: string[]
 }
 
 export function useSavedProposalsListing(
@@ -49,8 +49,6 @@ export function useSavedProposalsListing(
         ...calculation.selectedMatterLabels,
         ...collectExtraServices(record),
       ]
-      const visibleServices = services.slice(0, 5)
-
       return {
         record,
         clientName: meta.clientName,
@@ -58,8 +56,7 @@ export function useSavedProposalsListing(
         finalPrice: calculation.finalPrice,
         totalVolume: calculation.totalVolume,
         totalKeywords: calculation.totalKeywords,
-        visibleServices,
-        hiddenServices: Math.max(0, services.length - visibleServices.length),
+        allServices: services,
       }
     })
   }, [savedProposals])

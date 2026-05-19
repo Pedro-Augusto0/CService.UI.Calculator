@@ -10,7 +10,7 @@ export function closeParentDetails(target: EventTarget | null) {
 export function closeOpenMenus(except?: HTMLDetailsElement | null) {
   document
     .querySelectorAll<HTMLDetailsElement>(
-      '.saved-page__status-menu[open], .saved-page__actions-menu[open]',
+      '.saved-page__status-menu[open], .saved-page__actions-menu[open], .saved-page__services-popover[open]',
     )
     .forEach((details) => {
       if (details !== except) {

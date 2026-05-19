@@ -81,7 +81,7 @@ export function useSavedProposalsPage({
       if (!(event.target instanceof HTMLElement)) return
 
       const currentMenu = event.target.closest(
-        '.saved-page__status-menu, .saved-page__actions-menu',
+        '.saved-page__status-menu, .saved-page__actions-menu, .saved-page__services-popover',
       )
 
       closeOpenMenus(

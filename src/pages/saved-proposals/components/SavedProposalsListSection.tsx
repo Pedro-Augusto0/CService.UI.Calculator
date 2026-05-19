@@ -21,6 +21,62 @@ import type { SavedProposalRow } from '@/pages/saved-proposals/hooks/useSavedPro
 import { formatCalendarEdit } from '@/pages/saved-proposals/lib/presentation'
 import { STATUS_LABELS, STATUS_TONE } from '@/pages/saved-proposals/lib/statusMeta'
 
+const SERVICES_PREVIEW_MAX = 2
+
+function SavedProposalServicesSummary({
+  services,
+  onMenuToggle,
+  previewMax = SERVICES_PREVIEW_MAX,
+}: {
+  services: string[]
+  onMenuToggle: (event: React.SyntheticEvent<HTMLDetailsElement>) => void
+  /** Inline chips before "+N" overflow (grid cards can show more). */
+  previewMax?: number
+}) {
+  if (services.length === 0) {
+    return (
+      <div className="saved-page__services">
+        <span className="saved-page__services-empty">—</span>
+      </div>
+    )
+  }
+
+  const preview =
+    services.length <= previewMax ? services : services.slice(0, previewMax)
+  const overflowCount = services.length - preview.length
+
+  return (
+    <div className="saved-page__services">
+      {preview.map((service, index) => (
+        <span key={`${service}-${index}`} className="saved-page__service-chip">
+          {service}
+        </span>
+      ))}
+      {overflowCount > 0 ? (
+        <details className="saved-page__services-popover" onToggle={onMenuToggle}>
+          <summary
+            className="saved-page__service-chip saved-page__service-chip--ghost saved-page__services-more-summary"
+            aria-label={`Ver todos os ${services.length} serviços incluídos`}
+          >
+            +{overflowCount} {overflowCount === 1 ? 'serviço' : 'serviços'}
+          </summary>
+          <div className="saved-page__services-dropdown">
+            <ul className="saved-page__services-dropdown-list">
+              {services.map((service, index) => (
+                <li key={`${service}-${index}`}>
+                  <span className="saved-page__service-chip saved-page__service-dropdown-chip">
+                    {service}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
+      ) : null}
+    </div>
+  )
+}
+
 export function SavedProposalsListSection({
   rows,
   filteredRows,
@@ -131,18 +187,11 @@ export function SavedProposalsListSection({
 
               <div className="saved-page__services-cell">
                 <span className="saved-page__cell-label">Serviços incluídos</span>
-                <div className="saved-page__services">
-                  {row.visibleServices.map((service) => (
-                    <span key={service} className="saved-page__service-chip">
-                      {service}
-                    </span>
-                  ))}
-                  {row.hiddenServices ? (
-                    <span className="saved-page__service-chip saved-page__service-chip--ghost">
-                      +{row.hiddenServices}
-                    </span>
-                  ) : null}
-                </div>
+                <SavedProposalServicesSummary
+                  services={row.allServices}
+                  onMenuToggle={handleMenuToggle}
+                  previewMax={viewMode === 'grid' ? 5 : SERVICES_PREVIEW_MAX}
+                />
               </div>
 
               <div className="saved-page__price">
