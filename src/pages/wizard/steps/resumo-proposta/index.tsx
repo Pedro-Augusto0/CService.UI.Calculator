@@ -196,9 +196,9 @@ export function ResumoProposta({
 
   const saveMeta = state.lastSavedAt
     ? `Salva localmente em ${new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      }).format(state.lastSavedAt)}.`
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(state.lastSavedAt)}.`
     : 'Ainda não salva no histórico local.'
 
   const modoLabel = state.globalBillingMode === 'fixed' ? 'Fixo' : 'Variável'
@@ -246,6 +246,13 @@ export function ResumoProposta({
                 onClick={() => setStripPicker('billing')}
               >
                 {modoLabel}
+
+                <ChevronDown
+                  size={18}
+                  strokeWidth={2}
+                  className={`resumo-page__coverage-chevron ${coberturaDetalheOpen ? 'resumo-page__coverage-chevron--up' : ''}`}
+                  aria-hidden
+                />
               </button>
             )}
           </div>
@@ -280,6 +287,13 @@ export function ResumoProposta({
                 onClick={() => setStripPicker('validade')}
               >
                 {validadeLabel}
+
+                <ChevronDown
+                  size={18}
+                  strokeWidth={2}
+                  className={`resumo-page__coverage-chevron ${coberturaDetalheOpen ? 'resumo-page__coverage-chevron--up' : ''}`}
+                  aria-hidden
+                />
               </button>
             )}
           </div>
@@ -578,8 +592,8 @@ export function ResumoProposta({
               <strong>
                 {formatCurrency(
                   c.subtotalBeforeModifiers +
-                    c.valorAcrescimoPlantao +
-                    c.valorDescontoAprovacaoAutomatica,
+                  c.valorAcrescimoPlantao +
+                  c.valorDescontoAprovacaoAutomatica,
                 )}
               </strong>
             </div>
