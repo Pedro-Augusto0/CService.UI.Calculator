@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { ConfigPricingSidebar } from '@/features/pricing-config/components/ConfigPricingSidebar'
 import type { ConfigTabId } from '@/features/pricing-config/types'
 import { PreviewProposalModal } from '@/features/pricing-config/components/PreviewProposalModal'
+import { SaveProposalTemplateModal } from '@/features/proposal/components/SaveProposalTemplateModal'
 import { SummaryPanel } from '@/features/pricing-config/components/SummaryPanel'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import {
@@ -57,10 +58,13 @@ export function MainAppRoutes() {
     loadSavedProposal,
     userProposalTemplates,
     bumpUserTemplateUsage,
+    saveCurrentProposal,
+    saveCurrentAsUserTemplate,
   } = useProposal()
   const [route, setRoute] = useState<MainAppRoute>('wizard')
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
   const [pricingDraft, setPricingDraft] = useState<Prices | null>(null)
   const [precoBaseDraft, setPrecoBaseDraft] = useState<number | null>(null)
   const [settingsSidebarSection, setSettingsSidebarSection] =
@@ -277,7 +281,24 @@ export function MainAppRoutes() {
         }
         rightAside={
           route === 'wizard' ? (
-            <SummaryPanel />
+            <SummaryPanel
+              resumoStepActions={
+                step === 3
+                  ? {
+                      onSaveProposal: () => {
+                        saveCurrentProposal()
+                        handleSaveComplete()
+                      },
+                      onDownload: () =>
+                        handleDownload(proposalFilename(state.meta.clientName)),
+                      onOpenSaveTemplate: () => setSaveTemplateOpen(true),
+                      saveProposalLabel: state.savedProposalId
+                        ? 'Atualizar proposta'
+                        : 'Salvar proposta',
+                    }
+                  : undefined
+              }
+            />
           ) : route === 'settings' ? (
             <ConfigPricingSidebar
               prices={pricingDraft ?? state.prices}
@@ -320,6 +341,7 @@ export function MainAppRoutes() {
           <WizardPage
             onDownload={handleDownload}
             onSaveComplete={handleSaveComplete}
+            onOpenSaveTemplate={() => setSaveTemplateOpen(true)}
           />
         )}
       </AppShell>
@@ -328,6 +350,14 @@ export function MainAppRoutes() {
         open={previewOpen}
         html={previewHtml}
         onClose={() => setPreviewOpen(false)}
+      />
+
+      <SaveProposalTemplateModal
+        open={saveTemplateOpen}
+        onClose={() => setSaveTemplateOpen(false)}
+        onSave={(name, description) => {
+          saveCurrentAsUserTemplate(name, description)
+        }}
       />
     </div>
   )

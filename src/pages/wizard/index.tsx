@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { BookMarked } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { SaveProposalTemplateModal } from '@/features/proposal/components/SaveProposalTemplateModal'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import { Escopo } from '@/pages/wizard/steps/escopo'
 import { ResumoProposta } from '@/pages/wizard/steps/resumo-proposta'
@@ -11,11 +9,15 @@ import { TiposMonitoramento } from '@/pages/wizard/steps/tipos-monitoramento'
 interface WizardPageProps {
   onDownload: (filename?: string) => void
   onSaveComplete: () => void
+  onOpenSaveTemplate: () => void
 }
 
-export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
-  const { state, dispatch, saveCurrentAsUserTemplate } = useProposal()
-  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
+export function WizardPage({
+  onDownload,
+  onSaveComplete,
+  onOpenSaveTemplate,
+}: WizardPageProps) {
+  const { state, dispatch } = useProposal()
   const step = state.currentStep
 
   return (
@@ -29,7 +31,7 @@ export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
             onBack={() => dispatch({ type: 'SET_STEP', step: step - 1 })}
             onDownload={onDownload}
             onSaveComplete={onSaveComplete}
-            onOpenSaveTemplate={() => setSaveTemplateOpen(true)}
+            onOpenSaveTemplate={onOpenSaveTemplate}
           />
         ) : null}
       </div>
@@ -47,7 +49,7 @@ export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
             <Button
               variant="ghost"
               type="button"
-              onClick={() => setSaveTemplateOpen(true)}
+              onClick={onOpenSaveTemplate}
             >
               <BookMarked size={16} strokeWidth={2} aria-hidden />
               Salvar como modelo
@@ -61,14 +63,6 @@ export function WizardPage({ onDownload, onSaveComplete }: WizardPageProps) {
           </Button>
         </div>
       ) : null}
-
-      <SaveProposalTemplateModal
-        open={saveTemplateOpen}
-        onClose={() => setSaveTemplateOpen(false)}
-        onSave={(name, description) => {
-          saveCurrentAsUserTemplate(name, description)
-        }}
-      />
     </div>
   )
 }

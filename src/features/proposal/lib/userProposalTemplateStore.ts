@@ -4,10 +4,22 @@ import {
 } from './proposalTemplateSnapshot'
 import { createSavedProposalId } from './savedProposalStore'
 
-const STORAGE_KEY = 'cservice.ui.calculator.user-proposal-templates.v1'
+const STORAGE_KEY = 'cservice.ui.calculator.user-proposal-templates.v2'
+const LEGACY_STORAGE_KEYS = ['cservice.ui.calculator.user-proposal-templates.v1']
 
 function hasBrowserStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+}
+
+function clearLegacyStorage() {
+  if (!hasBrowserStorage()) return
+  for (const key of LEGACY_STORAGE_KEYS) {
+    try {
+      window.localStorage.removeItem(key)
+    } catch {
+      // falha silenciosa
+    }
+  }
 }
 
 export interface UserProposalTemplateRecord {
@@ -64,6 +76,7 @@ export function sortUserProposalTemplates(
 
 export function loadUserProposalTemplates(): UserProposalTemplateRecord[] {
   if (!hasBrowserStorage()) return []
+  clearLegacyStorage()
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)

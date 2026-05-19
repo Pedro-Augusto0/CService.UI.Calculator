@@ -110,7 +110,7 @@ export function SaveProposalTemplateModal({
               className="save-template-modal__textarea"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ex.: Inclui texto + clipping, 1 envio/dia, 3 destinatários, sem IA. Use para contas enxutas."
+              placeholder="Ex.: Inclui Centimetragem e Screenshot, sem IA. Use para contas enxutas."
             />
           </div>
           {error ? <p className="save-template-modal__error">{error}</p> : null}

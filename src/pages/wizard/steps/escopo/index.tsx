@@ -1,19 +1,22 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { Building2, BriefcaseBusiness, FileText, Tag, Users } from 'lucide-react'
+import {
+  Building2,
+  BriefcaseBusiness,
+  ChevronDown,
+  FileText,
+  Tag,
+  Users,
+} from 'lucide-react'
 import { Card } from '@/components/ui/Card'
-import { TextField } from '@/components/ui/TextField'
-import { SECTION_KEYS } from '@/domain/types'
+import { FieldGroup, TextField } from '@/components/ui/TextField'
+import { TagInput } from '@/components/ui/TagInput'
+import { SECTION_KEYS, type SectionKey } from '@/domain/types'
 import { SECTION_LABELS } from '@/domain/prices'
-import type { MonitoringServiceKey } from '@/domain/types'
-import { ScopeCategorySection } from '@/features/proposal/components/ScopeCategorySection'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import './Escopo.css'
 
-const META: Record<
-  (typeof SECTION_KEYS)[number],
-  { subtitle: string; icon: ReactNode }
-> = {
+const META: Record<SectionKey, { subtitle: string; icon: ReactNode }> = {
   marcas: {
     subtitle: 'Marcas próprias e derivados.',
     icon: <Tag size={20} strokeWidth={2} />,
@@ -30,8 +33,7 @@ const META: Record<
 
 export function Escopo() {
   const { state, dispatch } = useProposal()
-  const [openSection, setOpenSection] =
-    useState<(typeof SECTION_KEYS)[number] | null>(SECTION_KEYS[0])
+  const [openSection, setOpenSection] = useState<SectionKey | null>(SECTION_KEYS[0])
 
   return (
     <div className="page-etapa escopo-page">
@@ -41,9 +43,9 @@ export function Escopo() {
             <BriefcaseBusiness size={18} strokeWidth={2} />
           </span>
           <div>
-            <h2 className="escopo-page__meta-title">Identificacao da proposta</h2>
+            <h2 className="escopo-page__meta-title">Identificação da proposta</h2>
             <p className="escopo-page__meta-text">
-              Esses dados aparecem na tela de propostas salvas e no nome padrao do arquivo exportado.
+              Esses dados aparecem na tela de propostas salvas e no nome padrão do arquivo exportado.
             </p>
           </div>
         </div>
@@ -76,37 +78,68 @@ export function Escopo() {
       </Card>
 
       <div className="escopo-page__stack">
-        {SECTION_KEYS.map((key, idx) => (
-          <ScopeCategorySection
-            key={key}
-            sectionKey={key}
-            title={SECTION_LABELS[key]}
-            subtitle={META[key].subtitle}
-            leading={<span className="escopo-page__icon">{META[key].icon}</span>}
-            keywords={state.sections[key].keywords}
-            volume={state.sections[key].volume}
-            services={state.sections[key].services}
-            defaultOpen={idx === 0}
-            open={openSection === key}
-            onOpenChange={(nextOpen) => setOpenSection(nextOpen ? key : null)}
-            onKeywordsChange={(keywords) =>
-              dispatch({ type: 'SET_SECTION_KEYWORDS', section: key, keywords })
-            }
-            onVolumeChange={(volume) =>
-              dispatch({ type: 'SET_SECTION_VOLUME', section: key, volume })
-            }
-            onServiceToggle={(service: MonitoringServiceKey) =>
-              dispatch({
-                type: 'TOGGLE_SECTION_SERVICE',
-                section: key,
-                service,
-              })
-            }
-          />
-        ))}
+        {SECTION_KEYS.map((key) => {
+          const open = openSection === key
+          const sec = state.sections[key]
+          return (
+            <Card key={key} className={`scope-cat ${open ? 'scope-cat--open' : ''}`}>
+              <button
+                type="button"
+                className="scope-cat__header"
+                onClick={() => setOpenSection(open ? null : key)}
+                aria-expanded={open}
+              >
+                <span className="scope-cat__heading">
+                  <span className="escopo-page__icon">{META[key].icon}</span>
+                  <span className="scope-cat__copy">
+                    <span className="scope-cat__title">{SECTION_LABELS[key]}</span>
+                    <span className="scope-cat__subtitle">{META[key].subtitle}</span>
+                  </span>
+                </span>
+                <ChevronDown
+                  size={20}
+                  className={`scope-cat__chevron ${open ? 'scope-cat__chevron--up' : ''}`}
+                />
+              </button>
+              {open ? (
+                <div className="scope-cat__body">
+                  <FieldGroup
+                    label="Palavras-chave"
+                    hint="Digite e pressione Enter para criar cada termo."
+                  >
+                    <TagInput
+                      tags={sec.keywords}
+                      onChange={(keywords) =>
+                        dispatch({
+                          type: 'SET_SECTION_KEYWORDS',
+                          section: key,
+                          keywords,
+                        })
+                      }
+                      placeholder="Ex.: Petrobras, Vale…"
+                    />
+                  </FieldGroup>
+                  <TextField
+                    id={`vol-${key}`}
+                    label="Volume estimado (notícias / mês)"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={sec.volume || ''}
+                    onChange={(e) =>
+                      dispatch({
+                        type: 'SET_SECTION_VOLUME',
+                        section: key,
+                        volume: Number.parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                  />
+                </div>
+              ) : null}
+            </Card>
+          )
+        })}
       </div>
-
-     
     </div>
   )
 }

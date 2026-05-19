@@ -1,20 +1,48 @@
 import { useMemo, useState } from 'react'
 import {
+  BookMarked,
   ChevronDown,
   ChevronRight,
   DollarSign,
+  FileBarChart,
+  FilePlus2,
+  FileText,
+  Layers,
   Lock,
   MonitorPlay,
   MoreHorizontal,
   Newspaper,
   Plus,
-  Send,
+  Save,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import { formatCurrency } from '@/utils/currency'
+import {
+  MATTER_SERVICE_LABELS,
+  REGION_LABELS,
+  REPORT_FREQUENCY_LABELS,
+} from '@/domain/prices'
+import { MATTER_SERVICE_KEYS } from '@/domain/types'
+import {
+  buildAdditionalsRows,
+  buildReportRows,
+} from '@/pages/wizard/steps/resumo-proposta/resumoTables'
 import './SummaryPanel.css'
+
+export interface SummaryPanelResumoStepActions {
+  onSaveProposal: () => void
+  onDownload: () => void
+  onOpenSaveTemplate: () => void
+  saveProposalLabel: string
+}
+
+interface SummaryPanelProps {
+  /** Na etapa Resumo: ações da barra lateral (salvar / baixar / modelo). */
+  resumoStepActions?: SummaryPanelResumoStepActions | null
+}
 
 interface ServiceGroup {
   key: string
@@ -31,116 +59,96 @@ function pluralize(count: number, singular: string, plural: string) {
   return `${count} ${count === 1 ? singular : plural}`
 }
 
-function formatBroadcastRegion(region: 'sp_rj' | 'nacional') {
-  return region === 'sp_rj' ? 'SP/RJ' : 'Nacional'
-}
-
-function formatBroadcastFrequency(freq: 'mensal' | 'semanal') {
-  return freq === 'mensal' ? 'Mensal' : 'Semanal'
-}
-
-function formatDailyDeliveries(count: number) {
-  return `${count} ${count === 1 ? 'envio/dia' : 'envios/dia'}`
-}
-
-function formatRecipients(count: number) {
-  return `${count} ${count === 1 ? 'dest.' : 'dest.'}`
-}
-
-export function SummaryPanel() {
+export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
   const { calculation: c, state } = useProposal()
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
+  const isResumoStep = state.currentStep === 3
+
+  const matterLabels = MATTER_SERVICE_KEYS.filter((k) =>
+    state.sections.marcas.services[k] ||
+    state.sections.concorrentes.services[k] ||
+    state.sections.setor.services[k],
+  ).map((k) => MATTER_SERVICE_LABELS[k])
+
+  const reportRowsQuick = useMemo(
+    () => buildReportRows(state.reports, state.prices.reports),
+    [state.reports, state.prices.reports],
+  )
+  const additionalRowsQuick = useMemo(
+    () => buildAdditionalsRows(state.additionals, state.prices.additionals),
+    [state.additionals, state.prices.additionals],
+  )
 
   const serviceGroups = useMemo<ServiceGroup[]>(() => {
-    const additionalLabels = [
-      state.additionals.midiasSociais ? 'Mídias Sociais' : null,
-      state.additionals.alertasWeb ? 'Alertas de Websites' : null,
-      state.additionals.api ? 'Acesso API' : null,
-      state.additionals.stories ? 'Stories' : null,
-      state.additionals.destaques ? 'Destaques da Semana' : null,
+    const a = state.additionals
+    const r = state.reports
+
+    const additionalLabels: string[] = [
+      a.tvEnabled && a.tvRegion ? `TV ${REGION_LABELS[a.tvRegion]}` : null,
+      a.radioEnabled && a.radioRegion ? `Rádio ${REGION_LABELS[a.radioRegion]}` : null,
+      a.midiasSociaisEnabled ? 'Mídias Sociais' : null,
+      a.storiesInstagramEnabled ? 'Stories Instagram' : null,
+      a.alertasWebRealtime ? 'Alertas Web' : null,
+      a.apiCService ? 'API CService' : null,
+      a.newsletterWhatsApp ? 'Newsletter WhatsApp' : null,
+      a.newsletterExtraEnvios > 0
+        ? `${a.newsletterExtraEnvios} newsletter extra${a.newsletterExtraEnvios === 1 ? '' : 's'}`
+        : null,
+      a.destinatariosExtrasEnabled ? 'Destinatários extras' : null,
+      a.curadoriaAprovacaoManual ? 'Curadoria manual' : null,
+      a.plantaoFimSemana ? `Plantão (+${c.plantaoPercent}%)` : null,
+      a.aprovacaoAutomatica ? `Aprovação automática (-${c.aprovacaoAutomaticaPercent}%)` : null,
     ].filter(Boolean) as string[]
 
-    const deliveryLabels = [
-      state.operational.enviosDiarios > 0
-        ? `${state.operational.enviosDiarios} ${state.operational.enviosDiarios === 1 ? 'envio por dia' : 'envios por dia'}`
+    const reportLabels: string[] = [
+      r.executivoEnabled && r.executivoFreq
+        ? `Executivo ${REPORT_FREQUENCY_LABELS[r.executivoFreq].toLowerCase()}`
         : null,
-      state.operational.numDestinatarios > 0
-        ? `${state.operational.numDestinatarios} destinatário${state.operational.numDestinatarios === 1 ? '' : 's'}`
+      r.estrategicoEnabled && r.estrategicoFreq
+        ? `Estratégico ${REPORT_FREQUENCY_LABELS[r.estrategicoFreq].toLowerCase()}`
         : null,
-      state.broadcast.tvEnabled && state.broadcast.tvRegion
-        ? `TV ${formatBroadcastRegion(state.broadcast.tvRegion)}`
-        : null,
-      state.broadcast.radioEnabled && state.broadcast.radioRegion
-        ? `Rádio ${formatBroadcastRegion(state.broadcast.radioRegion)}`
-        : null,
-      state.broadcast.relatorioEnabled && state.broadcast.relatorioFreq
-        ? `Relatório ${formatBroadcastFrequency(state.broadcast.relatorioFreq)}`
-        : null,
-    ].filter(Boolean) as string[]
-
-    const deliverySummaryParts = [
-      state.operational.enviosDiarios > 0
-        ? formatDailyDeliveries(state.operational.enviosDiarios)
-        : null,
-      state.operational.numDestinatarios > 0
-        ? formatRecipients(state.operational.numDestinatarios)
-        : null,
+      r.biEnabled ? 'CService BI' : null,
     ].filter(Boolean) as string[]
 
     return [
       {
-        key: 'monitoramento',
-        title: 'Monitoramento de mídia',
-        emptyLabel: 'Nenhum serviço ativo',
-        items: c.selectedMonitoringLabels,
-        summary: c.selectedMonitoringLabels.length
-          ? pluralize(c.selectedMonitoringLabels.length, 'serviço', 'serviços')
+        key: 'matter',
+        title: 'Serviços por matéria',
+        emptyLabel: 'Nenhum serviço selecionado',
+        items: matterLabels,
+        summary: matterLabels.length
+          ? pluralize(matterLabels.length, 'serviço', 'serviços')
           : 'Nenhum',
         tone: 'blue',
         icon: MonitorPlay,
         chevron: 'down',
       },
       {
-        key: 'adicionais',
-        title: 'Serviços adicionais',
-        emptyLabel: 'Nenhum adicional ativo',
-        items: additionalLabels,
-        summary: additionalLabels.length
-          ? pluralize(additionalLabels.length, 'serviço', 'serviços')
+        key: 'reports',
+        title: 'Relatórios e BI',
+        emptyLabel: 'Nenhum relatório selecionado',
+        items: reportLabels,
+        summary: reportLabels.length
+          ? pluralize(reportLabels.length, 'relatório', 'relatórios')
           : 'Nenhum',
         tone: 'green',
-        icon: Sparkles,
+        icon: FileBarChart,
         chevron: 'down',
       },
       {
-        key: 'distribuicao',
-        title: 'Distribuição e relatórios',
-        emptyLabel: 'Nenhum item configurado',
-        items: deliveryLabels,
-        summary: deliverySummaryParts.length
-          ? deliverySummaryParts.join(' + ')
-          : 'Não configurado',
+        key: 'adicionais',
+        title: 'Adicionais e modificadores',
+        emptyLabel: 'Nenhum adicional ativo',
+        items: additionalLabels,
+        summary: additionalLabels.length
+          ? pluralize(additionalLabels.length, 'item', 'itens')
+          : 'Nenhum',
         tone: 'orange',
-        icon: Send,
+        icon: Sparkles,
         chevron: 'right',
       },
     ]
-  }, [
-    c.selectedMonitoringLabels,
-    state.additionals.alertasWeb,
-    state.additionals.api,
-    state.additionals.destaques,
-    state.additionals.midiasSociais,
-    state.additionals.stories,
-    state.broadcast.radioEnabled,
-    state.broadcast.radioRegion,
-    state.broadcast.relatorioEnabled,
-    state.broadcast.relatorioFreq,
-    state.broadcast.tvEnabled,
-    state.broadcast.tvRegion,
-    state.operational.enviosDiarios,
-    state.operational.numDestinatarios,
-  ])
+  }, [matterLabels, state.additionals, state.reports, c.plantaoPercent, c.aprovacaoAutomaticaPercent])
 
   const lines = [
     {
@@ -149,8 +157,13 @@ export function SummaryPanel() {
       hide: c.breakdownGroups.precoBaseMensal <= 0,
     },
     {
-      label: 'Serviços de monitoramento',
-      value: c.breakdownGroups.servicosMonitoramento,
+      label: 'Serviços por matéria',
+      value: c.breakdownGroups.servicosMateria,
+      hide: false,
+    },
+    {
+      label: 'Relatórios e BI',
+      value: c.breakdownGroups.relatoriosBi,
       hide: false,
     },
     {
@@ -158,17 +171,152 @@ export function SummaryPanel() {
       value: c.breakdownGroups.servicosAdicionais,
       hide: false,
     },
-    {
-      label: 'Relatório analítico',
-      value: c.breakdownGroups.relatorioAnalitico,
-      hide: false,
-    },
   ].filter((x) => !x.hide)
 
-  const subtotalExModifiers = c.volumeMonetaryBase + c.sumServiceValues
+  const financeLedgerLinesResumo = [
+    { label: 'Preço base mensal', value: c.breakdownGroups.precoBaseMensal },
+    { label: 'Serviços por matéria', value: c.breakdownGroups.servicosMateria },
+    { label: 'Relatórios e BI', value: c.breakdownGroups.relatoriosBi },
+    { label: 'Serviços adicionais', value: c.breakdownGroups.servicosAdicionais },
+  ]
 
   function toggleGroup(key: string) {
     setExpandedGroups((current) => (current[key] ? {} : { [key]: true }))
+  }
+
+  if (isResumoStep && resumoStepActions) {
+    return (
+      <aside className="summary-panel summary-panel--wizard-resumo">
+        <div className="summary-panel__resumo-aside-stack">
+          <div className="summary-panel__card summary-panel__card--resumo-finance">
+            <h3 className="summary-panel__finance-heading">Resumo financeiro</h3>
+            <div className="summary-panel__ledger summary-panel__ledger--resumo">
+              {financeLedgerLinesResumo.map((l) => (
+                <div key={l.label} className="summary-panel__ledger-row">
+                  <span className="summary-panel__ledger-label">{l.label}</span>
+                  <span className="summary-panel__ledger-value">
+                    {formatCurrency(l.value)}
+                  </span>
+                </div>
+              ))}
+              <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
+                <span className="summary-panel__ledger-label">Subtotal</span>
+                <span className="summary-panel__ledger-value">
+                  {formatCurrency(c.subtotalBeforeModifiers)}
+                </span>
+              </div>
+              {state.additionals.plantaoFimSemana ? (
+                <div className="summary-panel__ledger-row summary-panel__ledger-row--credit">
+                  <span className="summary-panel__ledger-label">
+                    Plantão incluso (+{c.plantaoPercent}%)
+                  </span>
+                  <span className="summary-panel__ledger-value">
+                    + {formatCurrency(c.valorAcrescimoPlantao)}
+                  </span>
+                </div>
+              ) : null}
+              {state.additionals.aprovacaoAutomatica ? (
+                <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
+                  <span className="summary-panel__ledger-label">
+                    Aprovação automática (−{c.aprovacaoAutomaticaPercent}%)
+                  </span>
+                  <span className="summary-panel__ledger-value">
+                    − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="summary-panel__resumo-total-mensal">
+              <div className="summary-panel__resumo-total-kicker">TOTAL MENSAL</div>
+              <div className="summary-panel__resumo-total-value">
+                {formatCurrency(c.finalPrice)}
+              </div>
+            </div>
+          </div>
+
+          <div className="summary-panel__card summary-panel__card--resumo-quick">
+            <h3 className="summary-panel__quick-heading">Resumo rápido</h3>
+            <div className="summary-panel__quick-grid">
+              <div className="summary-panel__quick-cell">
+                <span className="summary-panel__quick-icon" aria-hidden>
+                  <Plus size={15} strokeWidth={2.2} />
+                </span>
+                <div>
+                  <span className="summary-panel__quick-num">{c.totalKeywords}</span>
+                  <span className="summary-panel__quick-unit"> termos</span>
+                </div>
+              </div>
+              <div className="summary-panel__quick-cell">
+                <span className="summary-panel__quick-icon" aria-hidden>
+                  <Newspaper size={15} strokeWidth={2.1} />
+                </span>
+                <div>
+                  <span className="summary-panel__quick-num">{c.totalVolume}</span>
+                  <span className="summary-panel__quick-unit"> notícias/mês</span>
+                </div>
+              </div>
+              <div className="summary-panel__quick-cell">
+                <span className="summary-panel__quick-icon" aria-hidden>
+                  <Layers size={15} strokeWidth={2} />
+                </span>
+                <div>
+                  <span className="summary-panel__quick-num">{matterLabels.length}</span>
+                  <span className="summary-panel__quick-unit"> serviços</span>
+                </div>
+              </div>
+              <div className="summary-panel__quick-cell">
+                <span className="summary-panel__quick-icon" aria-hidden>
+                  <FileBarChart size={15} strokeWidth={2} />
+                </span>
+                <div>
+                  <span className="summary-panel__quick-num">{reportRowsQuick.length}</span>
+                  <span className="summary-panel__quick-unit"> relatórios</span>
+                </div>
+              </div>
+              <div className="summary-panel__quick-cell summary-panel__quick-cell--wide">
+                <span className="summary-panel__quick-icon" aria-hidden>
+                  <FilePlus2 size={15} strokeWidth={2} />
+                </span>
+                <div>
+                  <span className="summary-panel__quick-num">{additionalRowsQuick.length}</span>
+                  <span className="summary-panel__quick-unit"> itens adicionais</span>
+                </div>
+              </div>
+            </div>
+
+            <hr className="summary-panel__resumo-actions-rule" />
+
+            <div className="summary-panel__resumo-actions">
+              <Button
+                variant="primary"
+                className="summary-panel__resumo-action-btn"
+                onClick={resumoStepActions.onSaveProposal}
+              >
+                <Save size={16} strokeWidth={2.2} aria-hidden />
+                {resumoStepActions.saveProposalLabel}
+              </Button>
+              <Button
+                variant="secondary"
+                className="summary-panel__resumo-action-btn"
+                onClick={resumoStepActions.onDownload}
+              >
+                <FileText size={16} strokeWidth={2.2} aria-hidden />
+                Baixar proposta (HTML)
+              </Button>
+              <button
+                type="button"
+                className="summary-panel__resumo-link-template"
+                onClick={resumoStepActions.onOpenSaveTemplate}
+              >
+                <BookMarked size={15} strokeWidth={2} aria-hidden />
+                Salvar como modelo
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    )
   }
 
   return (
@@ -213,7 +361,10 @@ export function SummaryPanel() {
 
           <section className="summary-panel__block">
             <div className="summary-panel__block-head">
-              <h3 className="summary-panel__section-title">Serviços selecionados</h3>
+              <h3 className="summary-panel__section-title">Itens selecionados</h3>
+              <span className="summary-panel__block-note">
+                {state.globalBillingMode === 'fixed' ? 'Modo: Fixo' : 'Modo: Variável'}
+              </span>
             </div>
 
             <div className="summary-panel__services">
@@ -292,25 +443,35 @@ export function SummaryPanel() {
               <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
                 <span className="summary-panel__ledger-label">Subtotal</span>
                 <span className="summary-panel__ledger-value">
-                  {formatCurrency(subtotalExModifiers)}
+                  {formatCurrency(c.subtotalBeforeModifiers)}
                 </span>
               </div>
-              {state.operational.envioFeriadosFds ? (
+              {state.additionals.plantaoFimSemana ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--credit">
-                  <span className="summary-panel__ledger-label">Acréscimos</span>
+                  <span className="summary-panel__ledger-label">
+                    Plantão (+{c.plantaoPercent}%)
+                  </span>
                   <span className="summary-panel__ledger-value">
-                    + {formatCurrency(c.valorAcrescimoFimDeSemana)}
+                    + {formatCurrency(c.valorAcrescimoPlantao)}
                   </span>
                 </div>
               ) : null}
-              {state.operational.aprovacaoAutomatica ? (
+              {state.additionals.aprovacaoAutomatica ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
-                  <span className="summary-panel__ledger-label">Descontos</span>
+                  <span className="summary-panel__ledger-label">
+                    Aprovação automática (−{c.aprovacaoAutomaticaPercent}%)
+                  </span>
                   <span className="summary-panel__ledger-value">
-                    − {formatCurrency(Math.abs(c.valorImpactoAprovacaoAutomatica))}
+                    − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
                   </span>
                 </div>
               ) : null}
+              <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
+                <span className="summary-panel__ledger-label">Validade</span>
+                <span className="summary-panel__ledger-value">
+                  {state.validadeDias} dia{state.validadeDias === 1 ? '' : 's'}
+                </span>
+              </div>
             </div>
           </section>
 

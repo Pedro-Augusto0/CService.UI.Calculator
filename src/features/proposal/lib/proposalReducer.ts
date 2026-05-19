@@ -1,6 +1,12 @@
 import { DEFAULT_PRECO_BASE_MENSAL, DEFAULT_PRICES } from '@/domain/prices'
 import { defaultSections } from '@/domain/calculations'
-import type { ProposalSections, SectionKey, MonitoringServiceKey } from '@/domain/types'
+import type {
+  AdditionalsState,
+  MatterServiceKey,
+  ProposalSections,
+  ReportsState,
+  SectionKey,
+} from '@/domain/types'
 import { SECTION_KEYS } from '@/domain/types'
 import type { ProposalAction, ProposalState } from './proposalActions'
 
@@ -12,9 +18,47 @@ export interface ProposalStateSeed {
   pricingConfigSavedAt?: number
 }
 
+const EMPTY_REPORTS: ReportsState = {
+  executivoEnabled: false,
+  executivoFreq: null,
+  estrategicoEnabled: false,
+  estrategicoFreq: null,
+  biEnabled: false,
+}
+
+const EMPTY_ADDITIONALS: AdditionalsState = {
+  radioEnabled: false,
+  radioRegion: null,
+  tvEnabled: false,
+  tvRegion: null,
+  midiasSociaisEnabled: false,
+  midiasSociaisTierId: null,
+  storiesInstagramEnabled: false,
+  storiesInstagramTierId: null,
+  alertasWebRealtime: false,
+  apiCService: false,
+  newsletterWhatsApp: false,
+  newsletterExtraEnvios: 0,
+  destinatariosExtrasEnabled: false,
+  destinatariosExtrasTierId: null,
+  plantaoFimSemana: false,
+  curadoriaAprovacaoManual: false,
+  aprovacaoAutomatica: false,
+}
+
+export function emptyReports(): ReportsState {
+  return { ...EMPTY_REPORTS }
+}
+
+export function emptyAdditionals(): AdditionalsState {
+  return { ...EMPTY_ADDITIONALS }
+}
+
 export function createInitialProposalState(
   seed: ProposalStateSeed = {},
 ): ProposalState {
+  const prices = structuredClone(seed.prices ?? DEFAULT_PRICES)
+  const validadeDias = prices.validadeOptions[0] ?? 30
   return {
     currentStep: 0,
     meta: {
@@ -22,29 +66,13 @@ export function createInitialProposalState(
       proposalName: '',
     },
     sections: defaultSections(),
-    broadcast: {
-      tvEnabled: false,
-      tvRegion: '',
-      radioEnabled: false,
-      radioRegion: '',
-      relatorioEnabled: false,
-      relatorioFreq: '',
-    },
-    additionals: {
-      midiasSociais: false,
-      alertasWeb: false,
-      api: false,
-      stories: false,
-      destaques: false,
-    },
-    operational: {
-      enviosDiarios: 1,
-      numDestinatarios: 5,
-      envioFeriadosFds: false,
-      aprovacaoAutomatica: false,
-    },
+    globalBillingMode: 'variable',
+    avaliacaoTierId: null,
+    reports: emptyReports(),
+    additionals: emptyAdditionals(),
+    validadeDias,
     precoBaseMensal: seed.precoBaseMensal ?? DEFAULT_PRECO_BASE_MENSAL,
-    prices: structuredClone(seed.prices ?? DEFAULT_PRICES),
+    prices,
     applyServicesToAll: false,
     activeScopeTab: 'marcas',
     savedProposalId: null,
@@ -56,7 +84,7 @@ export function createInitialProposalState(
 function applyServiceValueToSections(
   sections: ProposalSections,
   targets: SectionKey[],
-  service: MonitoringServiceKey,
+  service: MatterServiceKey,
   value: boolean,
 ): ProposalSections {
   const next = { ...sections }
@@ -119,28 +147,156 @@ export function proposalReducer(
       const targets: SectionKey[] = state.applyServicesToAll
         ? [...SECTION_KEYS]
         : [action.section]
+      const sections = applyServiceValueToSections(
+        state.sections,
+        targets,
+        action.service,
+        nextValue,
+      )
+      const next: ProposalState = { ...state, sections }
+      if (action.service === 'avaliacao' && !nextValue) {
+        const anyOn = SECTION_KEYS.some((k) => sections[k].services.avaliacao)
+        if (!anyOn) next.avaliacaoTierId = null
+      }
+      return next
+    }
+    case 'SET_APPLY_SERVICES_TO_ALL':
+      return { ...state, applyServicesToAll: action.value }
+    case 'SET_ACTIVE_SCOPE_TAB':
+      return { ...state, activeScopeTab: action.section }
+    case 'SET_GLOBAL_BILLING_MODE':
+      return { ...state, globalBillingMode: action.mode }
+    case 'SET_AVALIACAO_TIER':
+      return { ...state, avaliacaoTierId: action.tierId }
+    case 'SET_REPORTS':
+      return { ...state, reports: { ...state.reports, ...action.patch } }
+    case 'TOGGLE_REPORT_EXECUTIVO':
       return {
         ...state,
-        sections: applyServiceValueToSections(
-          state.sections,
-          targets,
-          action.service,
-          nextValue,
-        ),
+        reports: {
+          ...state.reports,
+          executivoEnabled: action.enabled,
+          executivoFreq: action.enabled ? state.reports.executivoFreq : null,
+        },
       }
-    }
-    case 'SET_BROADCAST':
-      return { ...state, broadcast: { ...state.broadcast, ...action.patch } }
+    case 'SET_REPORT_EXECUTIVO_FREQ':
+      return {
+        ...state,
+        reports: { ...state.reports, executivoFreq: action.freq },
+      }
+    case 'TOGGLE_REPORT_ESTRATEGICO':
+      return {
+        ...state,
+        reports: {
+          ...state.reports,
+          estrategicoEnabled: action.enabled,
+          estrategicoFreq: action.enabled ? state.reports.estrategicoFreq : null,
+        },
+      }
+    case 'SET_REPORT_ESTRATEGICO_FREQ':
+      return {
+        ...state,
+        reports: { ...state.reports, estrategicoFreq: action.freq },
+      }
+    case 'TOGGLE_BI':
+      return { ...state, reports: { ...state.reports, biEnabled: action.enabled } }
     case 'SET_ADDITIONALS':
       return {
         ...state,
         additionals: { ...state.additionals, ...action.patch },
       }
-    case 'SET_OPERATIONAL':
+    case 'TOGGLE_RADIO':
       return {
         ...state,
-        operational: { ...state.operational, ...action.patch },
+        additionals: {
+          ...state.additionals,
+          radioEnabled: action.enabled,
+          radioRegion: action.enabled ? state.additionals.radioRegion : null,
+        },
       }
+    case 'SET_RADIO_REGION':
+      return {
+        ...state,
+        additionals: { ...state.additionals, radioRegion: action.region },
+      }
+    case 'TOGGLE_TV':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          tvEnabled: action.enabled,
+          tvRegion: action.enabled ? state.additionals.tvRegion : null,
+        },
+      }
+    case 'SET_TV_REGION':
+      return {
+        ...state,
+        additionals: { ...state.additionals, tvRegion: action.region },
+      }
+    case 'TOGGLE_MIDIAS_SOCIAIS':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          midiasSociaisEnabled: action.enabled,
+          midiasSociaisTierId: action.enabled
+            ? state.additionals.midiasSociaisTierId
+            : null,
+        },
+      }
+    case 'SET_MIDIAS_SOCIAIS_TIER':
+      return {
+        ...state,
+        additionals: { ...state.additionals, midiasSociaisTierId: action.tierId },
+      }
+    case 'TOGGLE_STORIES_INSTAGRAM':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          storiesInstagramEnabled: action.enabled,
+          storiesInstagramTierId: action.enabled
+            ? state.additionals.storiesInstagramTierId
+            : null,
+        },
+      }
+    case 'SET_STORIES_INSTAGRAM_TIER':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          storiesInstagramTierId: action.tierId,
+        },
+      }
+    case 'TOGGLE_DESTINATARIOS_EXTRAS':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          destinatariosExtrasEnabled: action.enabled,
+          destinatariosExtrasTierId: action.enabled
+            ? state.additionals.destinatariosExtrasTierId
+            : null,
+        },
+      }
+    case 'SET_DESTINATARIOS_EXTRAS_TIER':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          destinatariosExtrasTierId: action.tierId,
+        },
+      }
+    case 'SET_NEWSLETTER_EXTRA_ENVIOS':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          newsletterExtraEnvios: Math.max(0, Math.floor(action.value)),
+        },
+      }
+    case 'SET_VALIDADE_DIAS':
+      return { ...state, validadeDias: Math.max(0, Math.floor(action.dias)) }
     case 'SET_PRECO_BASE_MENSAL':
       return {
         ...state,
@@ -160,10 +316,6 @@ export function proposalReducer(
         precoBaseMensal: Math.max(0, action.precoBaseMensal),
         pricingConfigSavedAt: Date.now(),
       }
-    case 'SET_APPLY_SERVICES_TO_ALL':
-      return { ...state, applyServicesToAll: action.value }
-    case 'SET_ACTIVE_SCOPE_TAB':
-      return { ...state, activeScopeTab: action.section }
     case 'MARK_PROPOSAL_SAVED':
       return {
         ...state,

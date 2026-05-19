@@ -1,29 +1,27 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Camera,
+  ClipboardCheck,
   FileBarChart,
-  FileText,
   Gauge,
   Highlighter,
   Newspaper,
   RadioTower,
   Sparkles,
-  Star,
   Tv as TvIcon,
 } from 'lucide-react'
-import { MONITORING_LABELS } from '@/domain/prices'
-import type { MonitoringServiceKey } from '@/domain/types'
-import { MONITORING_SERVICE_KEYS } from '@/domain/types'
+import { MATTER_SERVICE_SHORT_LABELS, REGION_LABELS } from '@/domain/prices'
+import type { MatterServiceKey } from '@/domain/types'
+import { MATTER_SERVICE_KEYS } from '@/domain/types'
 import type { ProposalTemplateSnapshot } from './proposalTemplateSnapshot'
 
-const MONITORING_ICONS: Record<MonitoringServiceKey, LucideIcon> = {
-  texto: FileText,
+const MATTER_ICONS: Record<MatterServiceKey, LucideIcon> = {
   centimetragem: Newspaper,
   grifo: Highlighter,
   score: Gauge,
-  avaliacao: Star,
   ia: Sparkles,
   screenshot: Camera,
+  avaliacao: ClipboardCheck,
 }
 
 export interface TemplateCardChip {
@@ -39,72 +37,57 @@ export interface TemplateCardContent {
   extras: string[]
 }
 
-function monitoringChipLabel(key: MonitoringServiceKey): string {
-  if (key === 'centimetragem') return 'Clipping'
-  return MONITORING_LABELS[key]
-}
-
-function regionShort(region: string) {
-  if (region === 'sp_rj') return 'SP/RJ'
-  if (region === 'nacional') return 'Nacional'
-  return region
-}
-
 export function templateCardContentFromSnapshot(
   s: ProposalTemplateSnapshot,
 ): TemplateCardContent {
   const chips: TemplateCardChip[] = []
   const sec = s.sections.marcas
 
-  for (const k of MONITORING_SERVICE_KEYS) {
+  for (const k of MATTER_SERVICE_KEYS) {
     if (!sec.services[k]) continue
     chips.push({
-      id: `mon-${k}`,
-      label: monitoringChipLabel(k),
-      Icon: MONITORING_ICONS[k],
+      id: `mat-${k}`,
+      label: MATTER_SERVICE_SHORT_LABELS[k],
+      Icon: MATTER_ICONS[k],
     })
   }
 
-  const b = s.broadcast
-  if (b.relatorioEnabled && b.relatorioFreq) {
-    chips.push({
-      id: 'relatorio',
-      label: 'Relatório',
-      Icon: FileBarChart,
-    })
+  const r = s.reports
+  if (r.executivoEnabled && r.executivoFreq) {
+    chips.push({ id: 'rep-exec', label: 'Executivo', Icon: FileBarChart })
+  }
+  if (r.estrategicoEnabled && r.estrategicoFreq) {
+    chips.push({ id: 'rep-estr', label: 'Estratégico', Icon: FileBarChart })
   }
 
-  if (b.tvEnabled && b.tvRegion) {
-    chips.push({
-      id: 'tv',
-      label: `TV ${regionShort(b.tvRegion)}`,
-      Icon: TvIcon,
-    })
+  const a = s.additionals
+  if (a.tvEnabled && a.tvRegion) {
+    chips.push({ id: 'tv', label: `TV ${REGION_LABELS[a.tvRegion]}`, Icon: TvIcon })
   }
-
-  if (b.radioEnabled && b.radioRegion) {
+  if (a.radioEnabled && a.radioRegion) {
     chips.push({
       id: 'radio',
-      label: `Rádio ${regionShort(b.radioRegion)}`,
+      label: `Rádio ${REGION_LABELS[a.radioRegion]}`,
       Icon: RadioTower,
     })
   }
 
-  const op = s.operational
   const extras: string[] = []
-  const a = s.additionals
-  if (a.api) extras.push('API')
-  if (a.alertasWeb) extras.push('Alertas')
-  if (a.midiasSociais) extras.push('Mídias sociais')
-  if (a.stories) extras.push('Stories')
-  if (a.destaques) extras.push('Destaques')
+  if (a.apiCService) extras.push('API')
+  if (a.alertasWebRealtime) extras.push('Alertas')
+  if (a.midiasSociaisEnabled) extras.push('Mídias sociais')
+  if (a.storiesInstagramEnabled) extras.push('Stories')
+  if (a.newsletterWhatsApp) extras.push('Newsletter')
+  if (a.curadoriaAprovacaoManual) extras.push('Curadoria')
 
   return {
     includedChips: chips,
     includedCount: chips.length,
     distribution: {
-      envios: `${op.enviosDiarios} ${op.enviosDiarios === 1 ? 'envio por dia' : 'envios por dia'}`,
-      destinatarios: `${op.numDestinatarios} destinatário${op.numDestinatarios === 1 ? '' : 's'}`,
+      envios: a.newsletterWhatsApp ? 'Newsletter WhatsApp' : 'Entrega padrão',
+      destinatarios: a.destinatariosExtrasEnabled
+        ? 'Destinatários extras configurados'
+        : 'Lista padrão',
     },
     extras,
   }

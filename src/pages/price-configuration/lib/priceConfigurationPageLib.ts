@@ -1,23 +1,22 @@
 import {
+  CalendarClock,
   FileBarChart,
   FileCog,
   HeartHandshake,
-  Settings,
-  Share2,
+  Layers,
   type LucideIcon,
 } from 'lucide-react'
 import type { ConfigTabId } from '@/features/pricing-config/types'
-import type { PriceSettingsSection } from '@/features/pricing-config/components/PriceSettingsFields'
 
 export const TAB_PANEL_INFO: Record<Exclude<ConfigTabId, 'base'>, string> = {
-  services:
-    'Estes valores definem o quanto cada tipo de monitoramento contribui para o total da proposta. Mantenha a coerência com o pacote comercial ofertado.',
-  distribution:
-    'Os valores de TV e rádio são cobranças fixas por praça. Atualize-os quando negociar novas tabelas com veículos.',
+  matter:
+    'Para cada serviço, escolha o modo de cobrança (fixo, variável ou ambos) e configure os valores. O comercial usa estes valores na proposta sem editar.',
   reports:
-    'Relatórios recorrentes aparecem como linhas fixas na proposta; o preço deve refletir o esforço analítico.',
-  extras:
-    'Franquias, excessos e APIs alteram o resultado final. Revise estes parâmetros quando mudar políticas de uso.',
+    'Relatórios são cobrados por frequência. CService BI tem setup único + manutenção mensal recorrente.',
+  additionals:
+    'Adicionais cobrados como fixo, faixa ou percentual sobre o total. As faixas podem ser editadas conforme a evolução comercial.',
+  outros:
+    'Opções de validade da proposta em dias. O comercial escolhe uma das opções cadastradas aqui ao montar a proposta.',
 }
 
 export interface ConfigTabItem {
@@ -26,52 +25,46 @@ export interface ConfigTabItem {
   title: string
   description: string
   icon: LucideIcon
-  visibleSections: PriceSettingsSection[]
 }
 
 export const CONFIG_TABS: ConfigTabItem[] = [
   {
     id: 'base',
-    label: 'Base de cálculo',
-    title: 'Base de cálculo',
+    label: 'Preço Base',
+    title: 'Preço base mensal',
     description:
-      'Parâmetros principais que formam a base para todos os cálculos.',
+      'Valor mínimo mensal obrigatório aplicado a todas as propostas.',
     icon: FileCog,
-    visibleSections: [],
   },
   {
-    id: 'services',
-    label: 'Serviços monitorados',
-    title: 'Serviços monitorados',
+    id: 'matter',
+    label: 'Serviços por Matéria',
+    title: 'Serviços por Matéria',
     description:
-      'Valores unitários cobrados por tipo de serviço no núcleo de monitoramento.',
-    icon: Share2,
-    visibleSections: ['services'],
-  },
-  {
-    id: 'distribution',
-    label: 'Distribuição',
-    title: 'Distribuição',
-    description:
-      'TV e rádio por praça — coberturas fixas que entram na proposta.',
-    icon: Settings,
-    visibleSections: ['broadcast'],
+      'Modo de cobrança e valores dos 6 serviços do catálogo. Avaliação possui faixas por quantidade de campos.',
+    icon: Layers,
   },
   {
     id: 'reports',
-    label: 'Relatórios',
-    title: 'Relatórios',
-    description: 'Preços dos entregáveis analíticos recorrentes.',
+    label: 'Relatórios e BI',
+    title: 'Relatórios, Análises e BI',
+    description:
+      'Relatório Executivo (PowerPoint), Estratégico (HTML) e CService BI (setup e manutenção).',
     icon: FileBarChart,
-    visibleSections: ['reports'],
   },
   {
-    id: 'extras',
-    label: 'Extras',
-    title: 'Extras',
+    id: 'additionals',
+    label: 'Serviços Adicionais',
+    title: 'Serviços adicionais',
     description:
-      'Adicionais, franquias e parâmetros que ajustam o total da proposta.',
+      'Rádio, TV, mídias sociais, stories, alertas, API, newsletter e modificadores percentuais.',
     icon: HeartHandshake,
-    visibleSections: ['additionals'],
+  },
+  {
+    id: 'outros',
+    label: 'Outros',
+    title: 'Outros parâmetros',
+    description: 'Opções de validade da proposta.',
+    icon: CalendarClock,
   },
 ]

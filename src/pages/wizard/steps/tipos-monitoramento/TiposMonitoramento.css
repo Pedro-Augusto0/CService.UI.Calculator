@@ -51,6 +51,14 @@
   color: var(--color-muted);
 }
 
+.tipos-page__aval {
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgb(203 213 225);
+  background: rgb(248 250 252 / 50%);
+}
+
 .tipos-page__info {
   margin-top: 12px;
   padding: 12px 14px;

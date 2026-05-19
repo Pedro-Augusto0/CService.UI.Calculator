@@ -1,15 +1,20 @@
 import type { SavedProposalRecord } from '@/features/proposal/lib/savedProposalStore'
 
 export function collectExtraServices(record: SavedProposalRecord) {
+  const a = record.state.additionals
+  const r = record.state.reports
   const labels = [
-    record.state.additionals.midiasSociais ? 'Mídias Sociais' : null,
-    record.state.additionals.alertasWeb ? 'Alertas WebSites' : null,
-    record.state.additionals.api ? 'API' : null,
-    record.state.additionals.stories ? 'Stories' : null,
-    record.state.additionals.destaques ? 'Destaques' : null,
-    record.state.broadcast.tvEnabled ? 'TV' : null,
-    record.state.broadcast.radioEnabled ? 'Rádio' : null,
-    record.state.broadcast.relatorioEnabled ? 'Relatório' : null,
+    a.midiasSociaisEnabled ? 'Mídias Sociais' : null,
+    a.storiesInstagramEnabled ? 'Stories Instagram' : null,
+    a.alertasWebRealtime ? 'Alertas web' : null,
+    a.apiCService ? 'API CService' : null,
+    a.newsletterWhatsApp ? 'Newsletter WhatsApp' : null,
+    a.curadoriaAprovacaoManual ? 'Curadoria manual' : null,
+    a.tvEnabled ? 'TV' : null,
+    a.radioEnabled ? 'Rádio' : null,
+    r.executivoEnabled ? 'Relatório Executivo' : null,
+    r.estrategicoEnabled ? 'Relatório Estratégico' : null,
+    r.biEnabled ? 'CService BI' : null,
   ]
 
   return labels.filter(Boolean) as string[]

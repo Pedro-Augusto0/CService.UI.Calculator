@@ -1,73 +1,60 @@
-import { MONITORING_LABELS } from '@/domain/prices'
+import {
+  MATTER_SERVICE_LABELS,
+  REGION_LABELS,
+  REPORT_FREQUENCY_LABELS,
+} from '@/domain/prices'
 import type { ProposalTemplateSnapshot } from './proposalTemplateSnapshot'
-import { MONITORING_SERVICE_KEYS } from '@/domain/types'
+import { MATTER_SERVICE_KEYS } from '@/domain/types'
 
 export interface TemplateDescription {
   serviceCount: number
-  /** Linhas curtas para o bloco “O que inclui” no cartão */
   includeLines: string[]
-}
-
-function regionLabel(region: string) {
-  if (region === 'sp_rj') return 'SP/RJ'
-  if (region === 'nacional') return 'Nacional'
-  return region
-}
-
-function freqLabel(freq: string) {
-  if (freq === 'semanal') return 'semanal'
-  if (freq === 'mensal') return 'mensal'
-  return freq
 }
 
 export function describeTemplateSnapshot(
   snapshot: ProposalTemplateSnapshot,
 ): TemplateDescription {
   const sec = snapshot.sections.marcas
-  const activeServices = MONITORING_SERVICE_KEYS.filter((k) => sec.services[k])
-  const labels = activeServices.map((k) => MONITORING_LABELS[k])
+  const activeServices = MATTER_SERVICE_KEYS.filter((k) => sec.services[k])
+  const labels = activeServices.map((k) => MATTER_SERVICE_LABELS[k])
 
   const lines: string[] = []
 
   if (labels.length) {
-    lines.push(`Monitoramento: ${labels.join(', ')}.`)
+    lines.push(`Serviços por matéria: ${labels.join(', ')}.`)
   } else {
-    lines.push('Monitoramento: nenhum tipo selecionado.')
+    lines.push('Serviços por matéria: nenhum selecionado.')
   }
 
-  const op = snapshot.operational
-  lines.push(
-    `Distribuição: ${op.enviosDiarios} ${op.enviosDiarios === 1 ? 'envio' : 'envios'} por dia · ${op.numDestinatarios} destinatário${op.numDestinatarios === 1 ? '' : 's'}.`,
-  )
-
-  const b = snapshot.broadcast
-  const bc: string[] = []
-  if (b.tvEnabled && b.tvRegion) {
-    bc.push(`TV (${regionLabel(b.tvRegion)})`)
+  const r = snapshot.reports
+  const reportItems: string[] = []
+  if (r.executivoEnabled && r.executivoFreq) {
+    reportItems.push(`Executivo ${REPORT_FREQUENCY_LABELS[r.executivoFreq].toLowerCase()}`)
   }
-  if (b.radioEnabled && b.radioRegion) {
-    bc.push(`Rádio (${regionLabel(b.radioRegion)})`)
+  if (r.estrategicoEnabled && r.estrategicoFreq) {
+    reportItems.push(`Estratégico ${REPORT_FREQUENCY_LABELS[r.estrategicoFreq].toLowerCase()}`)
   }
-  if (b.relatorioEnabled && b.relatorioFreq) {
-    bc.push(`Relatório ${freqLabel(b.relatorioFreq)}`)
-  }
-  if (bc.length) {
-    lines.push(`Broadcast e relatório: ${bc.join(' · ')}.`)
+  if (r.biEnabled) reportItems.push('CService BI')
+  if (reportItems.length) {
+    lines.push(`Relatórios: ${reportItems.join(' · ')}.`)
   }
 
   const a = snapshot.additionals
   const extras: string[] = []
-  if (a.midiasSociais) extras.push('Mídias sociais')
-  if (a.alertasWeb) extras.push('Alertas web')
-  if (a.api) extras.push('API')
-  if (a.stories) extras.push('Stories')
-  if (a.destaques) extras.push('Destaques da semana')
+  if (a.tvEnabled && a.tvRegion) extras.push(`TV ${REGION_LABELS[a.tvRegion]}`)
+  if (a.radioEnabled && a.radioRegion) extras.push(`Rádio ${REGION_LABELS[a.radioRegion]}`)
+  if (a.midiasSociaisEnabled) extras.push('Mídias sociais')
+  if (a.storiesInstagramEnabled) extras.push('Stories Instagram')
+  if (a.alertasWebRealtime) extras.push('Alertas web')
+  if (a.apiCService) extras.push('API CService')
+  if (a.newsletterWhatsApp) extras.push('Newsletter WhatsApp')
+  if (a.curadoriaAprovacaoManual) extras.push('Curadoria manual')
   if (extras.length) {
-    lines.push(`Extras: ${extras.join(', ')}.`)
+    lines.push(`Adicionais: ${extras.join(', ')}.`)
   }
 
   if (snapshot.applyServicesToAll) {
-    lines.push('Serviços de monitoramento replicados em marcas, concorrentes e setor.')
+    lines.push('Serviços de matéria replicados em marcas, concorrentes e setor.')
   }
 
   return {
@@ -76,11 +63,11 @@ export function describeTemplateSnapshot(
   }
 }
 
-export function monitoringServiceLabelsFromSnapshot(
+export function matterServiceLabelsFromSnapshot(
   snapshot: ProposalTemplateSnapshot,
 ): string[] {
   const sec = snapshot.sections.marcas
-  return MONITORING_SERVICE_KEYS.filter((k) => sec.services[k]).map(
-    (k) => MONITORING_LABELS[k],
+  return MATTER_SERVICE_KEYS.filter((k) => sec.services[k]).map(
+    (k) => MATTER_SERVICE_LABELS[k],
   )
 }

@@ -46,7 +46,7 @@ export function useSavedProposalsListing(
       const meta = resolveProposalMeta(record.state)
       const calculation = calculateProposalState(record.state)
       const services = [
-        ...calculation.selectedMonitoringLabels,
+        ...calculation.selectedMatterLabels,
         ...collectExtraServices(record),
       ]
       const visibleServices = services.slice(0, 5)

@@ -1,57 +1,78 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
-  BarChart3,
+  Antenna,
+  AtSign,
   Bell,
-  BookOpen,
-  ChevronsRight,
+  BookOpenCheck,
+  Briefcase,
+  Camera,
+  CalendarRange,
   ClipboardCheck,
   Cpu,
   FileBarChart,
-  Hash,
+  FileText,
+  Gauge,
   Highlighter,
-  Image as ImageIcon,
+  Mail,
+  Percent,
+  Plus,
   Radio,
-  Ruler,
+  Send,
   Sparkles,
   Star,
-  TrendingUp,
+  Trash2,
   Tv,
-  Type,
+  Users,
 } from 'lucide-react'
-import { PtDecimalField, PtIntegerField } from '@/components/ui/PtDecimalField'
-import { MONITORING_LABELS, type Prices } from '@/domain/prices'
-import { MONITORING_SERVICE_KEYS, type MonitoringServiceKey } from '@/domain/types'
+import { Button } from '@/components/ui/Button'
+import { PtDecimalField } from '@/components/ui/PtDecimalField'
+import { TextField } from '@/components/ui/TextField'
+import { SelectField } from '@/components/ui/SelectField'
+import {
+  BILLING_MODE_LABELS,
+  MATTER_SERVICE_LABELS,
+  REPORT_FREQUENCY_LABELS,
+  type AvaliacaoTier,
+  type MatterServiceConfig,
+  type Prices,
+  type RangeTier,
+} from '@/domain/prices'
+import {
+  MATTER_SERVICE_KEYS,
+  REPORT_FREQUENCIES,
+  type BillingMode,
+  type MatterServiceKey,
+} from '@/domain/types'
+import { TierEditor } from '@/features/pricing-config/components/TierEditor'
+import './PriceSettingsFields.css'
 
 const CARD_TONES = ['blue', 'green', 'orange'] as const
 
-const SERVICE_ICONS: Record<MonitoringServiceKey, LucideIcon> = {
-  texto: Type,
-  centimetragem: Ruler,
+const SERVICE_ICONS: Record<MatterServiceKey, LucideIcon> = {
+  centimetragem: FileText,
   grifo: Highlighter,
-  score: Star,
-  avaliacao: ClipboardCheck,
+  score: Gauge,
   ia: Sparkles,
-  screenshot: ImageIcon,
+  screenshot: Camera,
+  avaliacao: ClipboardCheck,
 }
 
-const SERVICE_DESCRIPTIONS: Record<MonitoringServiceKey, string> = {
-  texto: 'Tarifa unitária aplicada ao monitoramento veiculado em texto corrido.',
-  centimetragem: 'Valor por centimetragem ou espaço editorial equivalente.',
-  grifo: 'Sobretaxa por menções em grifo ou destaque tipográfico.',
-  score: 'Custo por processamento ou exibição do score de relevância.',
-  avaliacao: 'Valor da avaliação qualitativa ou parecer sobre publicações.',
-  ia: 'Tarifa dos serviços que utilizam analítica ou assistência por IA.',
-  screenshot: 'Valor por captura ou preservação visual da menção.',
+const SERVICE_DESCRIPTIONS: Record<MatterServiceKey, string> = {
+  centimetragem:
+    'Centimetragem ou valoração editorial — preço fixo, por volume ou ambos.',
+  grifo:
+    'Destaque tipográfico em trechos relevantes — preço fixo, por volume ou ambos.',
+  score:
+    'Pontuação de relevância da matéria — preço fixo, por volume ou ambos.',
+  ia: 'Enriquecimento por IA (relevância, sentimento, contexto) — preço fixo, por volume ou ambos.',
+  screenshot:
+    'Captura visual da publicação — preço fixo, por volume ou ambos.',
+  avaliacao:
+    'Classificação customizada por quantidade de campos — preço por faixa, com modo fixo, variável ou ambos.',
 }
 
-interface PriceSettingsFieldsProps {
-  draft: Prices
-  patch: <K extends keyof Prices>(key: K, value: Prices[K]) => void
-  visibleSections?: PriceSettingsSection[]
-}
-
-export type PriceSettingsSection = 'services' | 'broadcast' | 'reports' | 'additionals'
+const BILLING_MODE_OPTIONS: BillingMode[] = ['fixed', 'variable', 'both']
 
 function PriceConfigCard({
   toneIndex,
@@ -84,300 +105,623 @@ function PriceConfigCard({
   )
 }
 
+function ModeBillingFields({
+  idPrefix,
+  config,
+  onChange,
+}: {
+  idPrefix: string
+  config: MatterServiceConfig
+  onChange: (next: MatterServiceConfig) => void
+}) {
+  const showFixed = config.mode === 'fixed' || config.mode === 'both'
+  const showVariable = config.mode === 'variable' || config.mode === 'both'
+
+  return (
+    <div className="matter-card__mode-fields">
+      <SelectField
+        dense
+        id={`${idPrefix}-mode`}
+        label="Modo de cobrança"
+        value={config.mode}
+        onChange={(e) =>
+          onChange({ ...config, mode: e.target.value as BillingMode })
+        }
+      >
+        {BILLING_MODE_OPTIONS.map((m) => (
+          <option key={m} value={m}>
+            {BILLING_MODE_LABELS[m]}
+          </option>
+        ))}
+      </SelectField>
+      {showFixed ? (
+        <PtDecimalField
+          id={`${idPrefix}-fixed`}
+          label="Valor fixo (R$)"
+          value={config.fixedPrice}
+          onCommit={(n) => onChange({ ...config, fixedPrice: n })}
+        />
+      ) : null}
+      {showVariable ? (
+        <PtDecimalField
+          id={`${idPrefix}-var`}
+          label="Por volume (R$ / notícia)"
+          value={config.variablePrice}
+          onCommit={(n) => onChange({ ...config, variablePrice: n })}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+interface PriceSettingsFieldsProps {
+  draft: Prices
+  patch: <K extends keyof Prices>(key: K, value: Prices[K]) => void
+  section: 'matter' | 'reports' | 'additionals' | 'outros'
+}
+
+function newAvaliacaoTier(): AvaliacaoTier {
+  return {
+    id: `aval-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+    label: 'Nova faixa',
+    fieldCount: 0,
+    fixedPrice: 0,
+    variablePrice: 0,
+  }
+}
+
+function newRangeTier(prefix: string): RangeTier {
+  return {
+    id: `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+    label: 'Nova faixa',
+    upTo: 0,
+    price: 0,
+  }
+}
+
 export function PriceSettingsFields({
   draft,
   patch,
-  visibleSections = ['services', 'broadcast', 'reports', 'additionals'],
+  section,
 }: PriceSettingsFieldsProps) {
-  const visible = new Set(visibleSections)
-  let toneIndex = 0
+  if (section === 'matter') return <MatterSection draft={draft} patch={patch} />
+  if (section === 'reports') return <ReportsSection draft={draft} patch={patch} />
+  if (section === 'additionals')
+    return <AdditionalsSection draft={draft} patch={patch} />
+  return <OutrosSection draft={draft} patch={patch} />
+}
+
+function MatterSection({
+  draft,
+  patch,
+}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
+  const matter = draft.matterServices
+  let tone = 0
+
+  function updateMatter<K extends Exclude<MatterServiceKey, 'avaliacao'>>(
+    key: K,
+    next: MatterServiceConfig,
+  ) {
+    patch('matterServices', {
+      ...matter,
+      [key]: next,
+    })
+  }
+
+  function updateAvaliacaoMode(mode: BillingMode) {
+    patch('matterServices', {
+      ...matter,
+      avaliacao: { ...matter.avaliacao, mode },
+    })
+  }
+
+  function updateAvaliacaoTiers(tiers: AvaliacaoTier[]) {
+    patch('matterServices', {
+      ...matter,
+      avaliacao: { ...matter.avaliacao, tiers },
+    })
+  }
 
   return (
     <>
-      {visible.has('services')
-        ? MONITORING_SERVICE_KEYS.map((k) => {
-            const Icon = SERVICE_ICONS[k]
-            const idx = toneIndex++
-            return (
-              <PriceConfigCard
-                key={k}
-                toneIndex={idx}
-                Icon={Icon}
-                title={MONITORING_LABELS[k]}
-                description={SERVICE_DESCRIPTIONS[k]}
-              >
-                <PtDecimalField
-                  id={`config-service-${k}`}
-                  label="Valor (R$)"
-                  value={draft.servicePrices[k]}
-                  onCommit={(n) =>
-                    patch('servicePrices', {
-                      ...draft.servicePrices,
-                      [k]: n,
-                    })
-                  }
-                />
-              </PriceConfigCard>
-            )
-          })
-        : null}
+      {MATTER_SERVICE_KEYS.filter((k) => k !== 'avaliacao').map((k) => {
+        const Icon = SERVICE_ICONS[k]
+        const idx = tone++
+        const config = matter[k] as MatterServiceConfig
+        return (
+          <PriceConfigCard
+            key={k}
+            toneIndex={idx}
+            Icon={Icon}
+            title={MATTER_SERVICE_LABELS[k]}
+            description={SERVICE_DESCRIPTIONS[k]}
+          >
+            <ModeBillingFields
+              idPrefix={`config-matter-${k}`}
+              config={config}
+              onChange={(next) => updateMatter(k as Exclude<MatterServiceKey, 'avaliacao'>, next)}
+            />
+          </PriceConfigCard>
+        )
+      })}
 
-      {visible.has('broadcast') ? (
-        <>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Tv}
-            title="TV SP+RJ"
-            description="Valor fixo mensal para inclusão da cobertura de televisão nas praças São Paulo e Rio de Janeiro."
+      <article className="config-base-card config-base-card--stacked">
+        <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
+          <Star size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">
+            {MATTER_SERVICE_LABELS.avaliacao}
+          </h3>
+          <p className="config-base-card__desc">
+            {SERVICE_DESCRIPTIONS.avaliacao}
+          </p>
+        </div>
+        <div className="config-base-card__field config-base-card__field--full">
+          <SelectField
+            dense
+            id="config-aval-mode"
+            label="Modo de cobrança (aplicado a todas as faixas)"
+            value={matter.avaliacao.mode}
+            onChange={(e) => updateAvaliacaoMode(e.target.value as BillingMode)}
           >
-            <PtDecimalField
-              id="config-broadcast-tv-sp-rj"
-              label="Valor (R$)"
-              value={draft.broadcast.tv.sp_rj}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  tv: { ...draft.broadcast.tv, sp_rj: n },
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Tv}
-            title="TV Nacional"
-            description="Preço da distribuição em televisão com alcance em nível nacional."
-          >
-            <PtDecimalField
-              id="config-broadcast-tv-nacional"
-              label="Valor (R$)"
-              value={draft.broadcast.tv.nacional}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  tv: { ...draft.broadcast.tv, nacional: n },
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Radio}
-            title="Rádio SP+RJ"
-            description="Valor para spots ou inserções em rádio nas praças SP e RJ."
-          >
-            <PtDecimalField
-              id="config-broadcast-radio-sp-rj"
-              label="Valor (R$)"
-              value={draft.broadcast.radio.sp_rj}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  radio: { ...draft.broadcast.radio, sp_rj: n },
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Radio}
-            title="Rádio Nacional"
-            description="Preço da cobertura em rádio com abrangência nacional."
-          >
-            <PtDecimalField
-              id="config-broadcast-radio-nacional"
-              label="Valor (R$)"
-              value={draft.broadcast.radio.nacional}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  radio: { ...draft.broadcast.radio, nacional: n },
-                })
-              }
-            />
-          </PriceConfigCard>
-        </>
-      ) : null}
-
-      {visible.has('reports') ? (
-        <>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={FileBarChart}
-            title="Relatório mensal"
-            description="Valor do relatório analítico entregue com periodicidade mensal."
-          >
-            <PtDecimalField
-              id="config-report-mensal"
-              label="Valor (R$)"
-              value={draft.broadcast.relatorio.mensal}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  relatorio: {
-                    ...draft.broadcast.relatorio,
-                    mensal: n,
-                  },
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={BarChart3}
-            title="Relatório semanal"
-            description="Valor do relatório analítico com atualização semanal."
-          >
-            <PtDecimalField
-              id="config-report-semanal"
-              label="Valor (R$)"
-              value={draft.broadcast.relatorio.semanal}
-              onCommit={(n) =>
-                patch('broadcast', {
-                  ...draft.broadcast,
-                  relatorio: {
-                    ...draft.broadcast.relatorio,
-                    semanal: n,
-                  },
-                })
-              }
-            />
-          </PriceConfigCard>
-        </>
-      ) : null}
-
-      {visible.has('additionals') ? (
-        <>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Hash}
-            title="Posts inclusos (mídias sociais)"
-            description="Quantidade de posts de redes sociais cobertos pela mensalidade sem cobrança extra."
-          >
-            <PtIntegerField
-              id="config-extra-posts-inclusos"
-              label="Quantidade"
-              value={draft.additionals.midiasSociaisIncludedPosts}
-              min={0}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  midiasSociaisIncludedPosts: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={ChevronsRight}
-            title="Passo do excedente (posts)"
-            description="Tamanho do bloco de posts usado para calcular cobrança quando há excesso."
-          >
-            <PtIntegerField
-              id="config-extra-posts-step"
-              label="Quantidade"
-              value={draft.additionals.midiasSociaisExcessPostsStep}
-              min={1}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  midiasSociaisExcessPostsStep: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={TrendingUp}
-            title="Preço por passo excedente"
-            description="Valor cobrado a cada passo de posts além da franquia inclusa."
-          >
-            <PtDecimalField
-              id="config-extra-excesso-step-price"
-              label="Valor (R$)"
-              value={draft.additionals.midiasSociaisExcessPricePerStep}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  midiasSociaisExcessPricePerStep: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Bell}
-            title="Alertas web · envio extra"
-            description="Tarifa aplicada por envio adicional nos alertas pela web."
-          >
-            <PtDecimalField
-              id="config-extra-alertas-envio"
-              label="Valor (R$)"
-              value={draft.additionals.alertasWebPricePerExtraEnvio}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  alertasWebPricePerExtraEnvio: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Cpu}
-            title="API"
-            description="Valor mensal ou unitário para disponibilização do acesso via API."
-          >
-            <PtDecimalField
-              id="config-extra-api"
-              label="Valor (R$)"
-              value={draft.additionals.api}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  api: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={BookOpen}
-            title="Stories"
-            description="Preço relacionado ao monitoramento ou entrega em formato stories."
-          >
-            <PtDecimalField
-              id="config-extra-stories"
-              label="Valor (R$)"
-              value={draft.additionals.stories}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  stories: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-          <PriceConfigCard
-            toneIndex={toneIndex++}
-            Icon={Sparkles}
-            title="Destaques da semana"
-            description="Valor do add-on de curadoria ou destaque semanal do conteúdo."
-          >
-            <PtDecimalField
-              id="config-extra-destaques"
-              label="Valor (R$)"
-              value={draft.additionals.destaques}
-              onCommit={(n) =>
-                patch('additionals', {
-                  ...draft.additionals,
-                  destaques: n,
-                })
-              }
-            />
-          </PriceConfigCard>
-        </>
-      ) : null}
+            {BILLING_MODE_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {BILLING_MODE_LABELS[m]}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+        <div className="matter-card__tiers">
+          <TierEditor<AvaliacaoTier>
+            title="Faixas por quantidade de campos"
+            description="Faixas que o comercial seleciona como combo na proposta (item 5.1 do documento)."
+            tiers={matter.avaliacao.tiers}
+            onChange={updateAvaliacaoTiers}
+            createTier={newAvaliacaoTier}
+            columns={[
+              { key: 'label', label: 'Rótulo', type: 'text' },
+              { key: 'fieldCount', label: 'Quant. campos', type: 'integer' },
+              { key: 'fixedPrice', label: 'Valor fixo (R$)', type: 'decimal' },
+              {
+                key: 'variablePrice',
+                label: 'Por volume (R$)',
+                type: 'decimal',
+              },
+            ]}
+          />
+        </div>
+      </article>
     </>
+  )
+}
+
+function ReportsSection({
+  draft,
+  patch,
+}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
+  const reports = draft.reports
+  let tone = 0
+
+  return (
+    <>
+      <FrequencyCard
+        toneIndex={tone++}
+        Icon={FileBarChart}
+        title="Relatório Executivo CService (PowerPoint)"
+        description="Preço por frequência de entrega. O comercial seleciona a frequência contratada na proposta."
+        prices={reports.executivo.byFrequency}
+        idPrefix="config-rep-exec"
+        onChange={(next) =>
+          patch('reports', {
+            ...reports,
+            executivo: { byFrequency: next },
+          })
+        }
+      />
+      <FrequencyCard
+        toneIndex={tone++}
+        Icon={FileBarChart}
+        title="Relatório Estratégico de Mídia (HTML)"
+        description="Preço por frequência de entrega. Mesma lógica do relatório executivo, formato HTML."
+        prices={reports.estrategico.byFrequency}
+        idPrefix="config-rep-estr"
+        onChange={(next) =>
+          patch('reports', {
+            ...reports,
+            estrategico: { byFrequency: next },
+          })
+        }
+      />
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={BookOpenCheck}
+        title="CService BI"
+        description="Setup único + manutenção mensal recorrente."
+      >
+        <div className="matter-card__mode-fields">
+          <PtDecimalField
+            id="config-bi-setup"
+            label="Setup (R$)"
+            value={reports.bi.setupPrice}
+            onCommit={(n) =>
+              patch('reports', {
+                ...reports,
+                bi: { ...reports.bi, setupPrice: n },
+              })
+            }
+          />
+          <PtDecimalField
+            id="config-bi-maint"
+            label="Manutenção mensal (R$)"
+            value={reports.bi.monthlyMaintenance}
+            onCommit={(n) =>
+              patch('reports', {
+                ...reports,
+                bi: { ...reports.bi, monthlyMaintenance: n },
+              })
+            }
+          />
+        </div>
+      </PriceConfigCard>
+    </>
+  )
+}
+
+function FrequencyCard({
+  toneIndex,
+  Icon,
+  title,
+  description,
+  prices,
+  idPrefix,
+  onChange,
+}: {
+  toneIndex: number
+  Icon: LucideIcon
+  title: string
+  description: string
+  prices: Record<string, number>
+  idPrefix: string
+  onChange: (next: Record<string, number>) => void
+}) {
+  const tone = CARD_TONES[toneIndex % CARD_TONES.length]
+  return (
+    <article className="config-base-card config-base-card--stacked">
+      <div
+        className={`config-base-card__icon config-base-card__icon--${tone}`}
+        aria-hidden
+      >
+        <Icon size={22} strokeWidth={1.85} />
+      </div>
+      <div className="config-base-card__copy">
+        <h3 className="config-base-card__title">{title}</h3>
+        <p className="config-base-card__desc">{description}</p>
+      </div>
+      <div className="freq-grid">
+        {REPORT_FREQUENCIES.map((f) => (
+          <PtDecimalField
+            key={f}
+            id={`${idPrefix}-${f}`}
+            label={`${REPORT_FREQUENCY_LABELS[f]} (R$)`}
+            value={prices[f] ?? 0}
+            onCommit={(n) => onChange({ ...prices, [f]: n })}
+          />
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function AdditionalsSection({
+  draft,
+  patch,
+}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
+  const a = draft.additionals
+  let tone = 0
+
+  function update<K extends keyof Prices['additionals']>(
+    key: K,
+    value: Prices['additionals'][K],
+  ) {
+    patch('additionals', { ...a, [key]: value })
+  }
+
+  return (
+    <>
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Radio}
+        title="Monitoramento Rádio"
+        description="SP+RJ e Nacional. As regiões são mutuamente exclusivas na proposta."
+      >
+        <div className="matter-card__mode-fields">
+          <PtDecimalField
+            id="config-radio-sprj"
+            label="SP + RJ (R$)"
+            value={a.radio.spRj}
+            onCommit={(n) => update('radio', { ...a.radio, spRj: n })}
+          />
+          <PtDecimalField
+            id="config-radio-nac"
+            label="Nacional (R$)"
+            value={a.radio.nacional}
+            onCommit={(n) => update('radio', { ...a.radio, nacional: n })}
+          />
+        </div>
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Tv}
+        title="Monitoramento TV"
+        description="SP+RJ e Nacional. As regiões são mutuamente exclusivas na proposta."
+      >
+        <div className="matter-card__mode-fields">
+          <PtDecimalField
+            id="config-tv-sprj"
+            label="SP + RJ (R$)"
+            value={a.tv.spRj}
+            onCommit={(n) => update('tv', { ...a.tv, spRj: n })}
+          />
+          <PtDecimalField
+            id="config-tv-nac"
+            label="Nacional (R$)"
+            value={a.tv.nacional}
+            onCommit={(n) => update('tv', { ...a.tv, nacional: n })}
+          />
+        </div>
+      </PriceConfigCard>
+
+      <article className="config-base-card config-base-card--stacked">
+        <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
+          <Antenna size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">Monitoramento de Mídias Sociais</h3>
+          <p className="config-base-card__desc">
+            Faixas por quantidade de posts. O comercial escolhe a faixa em combo.
+          </p>
+        </div>
+        <div className="matter-card__tiers">
+          <TierEditor<RangeTier>
+            title="Faixas (posts)"
+            description="Exemplos: até 100 posts, até 250 posts."
+            tiers={a.midiasSociais.tiers}
+            onChange={(tiers) => update('midiasSociais', { tiers })}
+            createTier={() => newRangeTier('ms')}
+            columns={[
+              { key: 'label', label: 'Rótulo', type: 'text' },
+              { key: 'upTo', label: 'Até X posts', type: 'integer' },
+              { key: 'price', label: 'Valor (R$)', type: 'decimal' },
+            ]}
+          />
+        </div>
+      </article>
+
+      <article className="config-base-card config-base-card--stacked">
+        <div className="config-base-card__icon config-base-card__icon--green" aria-hidden>
+          <Sparkles size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">Monitoramento de Stories Instagram</h3>
+          <p className="config-base-card__desc">
+            Faixas por quantidade de perfis monitorados.
+          </p>
+        </div>
+        <div className="matter-card__tiers">
+          <TierEditor<RangeTier>
+            title="Faixas (perfis)"
+            description="Exemplos: até 100 perfis, até 250 perfis."
+            tiers={a.storiesInstagram.tiers}
+            onChange={(tiers) => update('storiesInstagram', { tiers })}
+            createTier={() => newRangeTier('sg')}
+            columns={[
+              { key: 'label', label: 'Rótulo', type: 'text' },
+              { key: 'upTo', label: 'Até X perfis', type: 'integer' },
+              { key: 'price', label: 'Valor (R$)', type: 'decimal' },
+            ]}
+          />
+        </div>
+      </article>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Bell}
+        title="Alertas Web em Tempo Real"
+        description="Cobrança fixa mensal."
+      >
+        <PtDecimalField
+          id="config-alertas-web-realtime"
+          label="Valor (R$)"
+          value={a.alertasWebRealtime}
+          onCommit={(n) => update('alertasWebRealtime', n)}
+        />
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Cpu}
+        title="Integração via API CService"
+        description="Cobrança fixa mensal pela integração."
+      >
+        <PtDecimalField
+          id="config-api-cservice"
+          label="Valor (R$)"
+          value={a.apiCService}
+          onCommit={(n) => update('apiCService', n)}
+        />
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Mail}
+        title="Envio de Newsletter via WhatsApp"
+        description="Cobrança fixa mensal."
+      >
+        <PtDecimalField
+          id="config-news-wpp"
+          label="Valor (R$)"
+          value={a.newsletterWhatsApp}
+          onCommit={(n) => update('newsletterWhatsApp', n)}
+        />
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Send}
+        title="Newsletter Adicional"
+        description="Valor fixo por envio adicional além do incluso no pacote."
+      >
+        <PtDecimalField
+          id="config-news-extra"
+          label="Valor por envio extra (R$)"
+          value={a.newsletterExtraEnvio}
+          onCommit={(n) => update('newsletterExtraEnvio', n)}
+        />
+      </PriceConfigCard>
+
+      <article className="config-base-card config-base-card--stacked">
+        <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
+          <Users size={22} strokeWidth={1.85} />
+        </div>
+        <div className="config-base-card__copy">
+          <h3 className="config-base-card__title">Destinatários Adicionais</h3>
+          <p className="config-base-card__desc">
+            Preço fixo por faixa de destinatários extras (+10, +25, +50, +100).
+          </p>
+        </div>
+        <div className="matter-card__tiers">
+          <TierEditor<RangeTier>
+            title="Faixas (destinatários adicionais)"
+            description="O comercial escolhe a faixa em combo."
+            tiers={a.destinatariosExtras.tiers}
+            onChange={(tiers) => update('destinatariosExtras', { tiers })}
+            createTier={() => newRangeTier('de')}
+            columns={[
+              { key: 'label', label: 'Rótulo', type: 'text' },
+              { key: 'upTo', label: 'Quantidade extra', type: 'integer' },
+              { key: 'price', label: 'Valor (R$)', type: 'decimal' },
+            ]}
+          />
+        </div>
+      </article>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Percent}
+        title="Plantão Finais de Semana e Feriados"
+        description="Percentual configurável aplicado como acréscimo sobre o subtotal."
+      >
+        <PtDecimalField
+          id="config-plantao"
+          label="Acréscimo (%)"
+          value={a.plantaoPercent}
+          onCommit={(n) => update('plantaoPercent', n)}
+        />
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Briefcase}
+        title="Curadoria e Aprovação Manual de Newsletter"
+        description="Valor fixo mensal."
+      >
+        <PtDecimalField
+          id="config-curadoria"
+          label="Valor (R$)"
+          value={a.curadoriaAprovacaoManual}
+          onCommit={(n) => update('curadoriaAprovacaoManual', n)}
+        />
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={AtSign}
+        title="Aprovação / Envio Automático"
+        description="Percentual de desconto aplicado sobre o total quando o comercial habilita esta opção."
+      >
+        <PtDecimalField
+          id="config-aprov"
+          label="Desconto (%)"
+          value={a.aprovacaoAutomaticaPercent}
+          onCommit={(n) => update('aprovacaoAutomaticaPercent', n)}
+        />
+      </PriceConfigCard>
+    </>
+  )
+}
+
+function OutrosSection({
+  draft,
+  patch,
+}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
+  function addOption() {
+    patch('validadeOptions', [...draft.validadeOptions, 30])
+  }
+
+  function updateOption(index: number, value: number) {
+    patch(
+      'validadeOptions',
+      draft.validadeOptions.map((v, i) => (i === index ? value : v)),
+    )
+  }
+
+  function removeOption(index: number) {
+    patch(
+      'validadeOptions',
+      draft.validadeOptions.filter((_, i) => i !== index),
+    )
+  }
+
+  return (
+    <article className="config-base-card config-base-card--stacked">
+      <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
+        <CalendarRange size={22} strokeWidth={1.85} />
+      </div>
+      <div className="config-base-card__copy">
+        <h3 className="config-base-card__title">Validade da proposta</h3>
+        <p className="config-base-card__desc">
+          Opções (em dias) que o comercial poderá selecionar na proposta. Ordem reflete a ordem do combo.
+        </p>
+      </div>
+      <div className="validade-list">
+        {draft.validadeOptions.length === 0 ? (
+          <p className="validade-list__empty">
+            Nenhuma opção cadastrada. Clique em "Nova opção" para adicionar.
+          </p>
+        ) : (
+          draft.validadeOptions.map((value, idx) => (
+            <div key={idx} className="validade-list__row">
+              <TextField
+                dense
+                id={`config-validade-${idx}`}
+                label={`Opção ${idx + 1} (dias)`}
+                type="number"
+                min={0}
+                step={1}
+                value={value || ''}
+                onChange={(e) =>
+                  updateOption(idx, Number.parseInt(e.target.value, 10) || 0)
+                }
+              />
+              <button
+                type="button"
+                className="validade-list__remove"
+                onClick={() => removeOption(idx)}
+                aria-label={`Remover opção ${idx + 1}`}
+              >
+                <Trash2 size={16} strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+          ))
+        )}
+        <Button variant="secondary" type="button" onClick={addOption}>
+          <Plus size={16} strokeWidth={2} aria-hidden />
+          Nova opção
+        </Button>
+      </div>
+    </article>
   )
 }

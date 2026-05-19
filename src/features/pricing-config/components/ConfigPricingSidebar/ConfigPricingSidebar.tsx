@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  CalendarRange,
   Calculator,
   ChevronDown,
   FileBarChart,
   HeartHandshake,
+  Layers,
   Lightbulb,
-  Settings,
-  Share2,
   type LucideIcon,
 } from 'lucide-react'
 import type { ConfigTabId } from '@/features/pricing-config/types'
-import { MONITORING_LABELS, type Prices } from '@/domain/prices'
-import { MONITORING_SERVICE_KEYS } from '@/domain/types'
+import {
+  BILLING_MODE_LABELS,
+  MATTER_SERVICE_SHORT_LABELS,
+  REPORT_FREQUENCY_LABELS,
+  type Prices,
+} from '@/domain/prices'
+import { MATTER_SERVICE_KEYS, REPORT_FREQUENCIES } from '@/domain/types'
 import { formatCurrency } from '@/utils/currency'
 import './ConfigPricingSidebar.css'
 
@@ -19,7 +24,6 @@ interface ConfigPricingSidebarProps {
   prices: Prices
   precoBaseMensal: number
   pricingSavedAt: number
-  /** Aba ativa no painel principal — destaca a linha correspondente sem repetir o formulário. */
   focusSection?: ConfigTabId
 }
 
@@ -33,68 +37,100 @@ export function ConfigPricingSidebar({
   const [openKey, setOpenKey] = useState<string>('base')
 
   useEffect(() => {
-    const map: Record<ConfigTabId, string> = {
-      base: 'base',
-      services: 'services',
-      distribution: 'distribution',
-      reports: 'reports',
-      extras: 'extras',
-    }
-    if (focusSection) setOpenKey(map[focusSection])
+    if (focusSection) setOpenKey(focusSection)
   }, [focusSection])
 
-  const broadcastCount: number =
-    Object.keys(prices.broadcast.tv).length + Object.keys(prices.broadcast.radio).length
-  const reportsCount: number = Object.keys(prices.broadcast.relatorio).length
-  const extrasCount: number = Object.keys(prices.additionals).length
-  const servicesConfigured: number = MONITORING_SERVICE_KEYS.length
-
-  const broadcastItems = useMemo(
-    () => [
-      { label: 'TV SP/RJ', value: formatCurrency(prices.broadcast.tv.sp_rj) },
-      { label: 'TV Nacional', value: formatCurrency(prices.broadcast.tv.nacional) },
-      { label: 'Rádio SP/RJ', value: formatCurrency(prices.broadcast.radio.sp_rj) },
-      { label: 'Rádio Nacional', value: formatCurrency(prices.broadcast.radio.nacional) },
-    ],
-    [prices.broadcast],
-  )
-
-  const serviceItems = useMemo(
-    () =>
-      MONITORING_SERVICE_KEYS.map((k) => ({
-        label: MONITORING_LABELS[k],
-        value: formatCurrency(prices.servicePrices[k]),
-      })),
-    [prices.servicePrices],
-  )
+  const matterItems = useMemo(() => {
+    return MATTER_SERVICE_KEYS.map((k) => {
+      if (k === 'avaliacao') {
+        const conf = prices.matterServices.avaliacao
+        const tierCount = conf.tiers.length
+        return {
+          label: MATTER_SERVICE_SHORT_LABELS[k],
+          value: `${BILLING_MODE_LABELS[conf.mode]} · ${tierCount} faixa${tierCount === 1 ? '' : 's'}`,
+        }
+      }
+      const conf = prices.matterServices[k]
+      const parts: string[] = [BILLING_MODE_LABELS[conf.mode]]
+      if (conf.mode === 'fixed' || conf.mode === 'both') {
+        parts.push(`F: ${formatCurrency(conf.fixedPrice)}`)
+      }
+      if (conf.mode === 'variable' || conf.mode === 'both') {
+        parts.push(`V: ${formatCurrency(conf.variablePrice)}`)
+      }
+      return {
+        label: MATTER_SERVICE_SHORT_LABELS[k],
+        value: parts.join(' · '),
+      }
+    })
+  }, [prices.matterServices])
 
   const reportItems = useMemo(
     () => [
-      { label: 'Relatório mensal', value: formatCurrency(prices.broadcast.relatorio.mensal) },
-      { label: 'Relatório semanal', value: formatCurrency(prices.broadcast.relatorio.semanal) },
+      ...REPORT_FREQUENCIES.map((f) => ({
+        label: `Executivo · ${REPORT_FREQUENCY_LABELS[f]}`,
+        value: formatCurrency(prices.reports.executivo.byFrequency[f]),
+      })),
+      ...REPORT_FREQUENCIES.map((f) => ({
+        label: `Estratégico · ${REPORT_FREQUENCY_LABELS[f]}`,
+        value: formatCurrency(prices.reports.estrategico.byFrequency[f]),
+      })),
+      { label: 'BI · Setup', value: formatCurrency(prices.reports.bi.setupPrice) },
+      {
+        label: 'BI · Manutenção',
+        value: formatCurrency(prices.reports.bi.monthlyMaintenance),
+      },
     ],
-    [prices.broadcast.relatorio],
+    [prices.reports],
   )
 
-  const extrasItems = useMemo(
-    () => [
+  const additionalsItems = useMemo(() => {
+    const a = prices.additionals
+    return [
+      { label: 'Rádio SP/RJ', value: formatCurrency(a.radio.spRj) },
+      { label: 'Rádio Nacional', value: formatCurrency(a.radio.nacional) },
+      { label: 'TV SP/RJ', value: formatCurrency(a.tv.spRj) },
+      { label: 'TV Nacional', value: formatCurrency(a.tv.nacional) },
       {
-        label: 'Mídias sociais · posts',
-        value: `${prices.additionals.midiasSociaisIncludedPosts}`,
+        label: 'Mídias sociais',
+        value: `${a.midiasSociais.tiers.length} faixa${a.midiasSociais.tiers.length === 1 ? '' : 's'}`,
       },
       {
-        label: `Excedente · ${prices.additionals.midiasSociaisExcessPostsStep} posts`,
-        value: formatCurrency(prices.additionals.midiasSociaisExcessPricePerStep),
+        label: 'Stories Instagram',
+        value: `${a.storiesInstagram.tiers.length} faixa${a.storiesInstagram.tiers.length === 1 ? '' : 's'}`,
+      },
+      { label: 'Alertas web', value: formatCurrency(a.alertasWebRealtime) },
+      { label: 'API CService', value: formatCurrency(a.apiCService) },
+      { label: 'Newsletter WhatsApp', value: formatCurrency(a.newsletterWhatsApp) },
+      {
+        label: 'Newsletter extra',
+        value: formatCurrency(a.newsletterExtraEnvio),
       },
       {
-        label: 'Alertas web · envio extra',
-        value: formatCurrency(prices.additionals.alertasWebPricePerExtraEnvio),
+        label: 'Destinatários extras',
+        value: `${a.destinatariosExtras.tiers.length} faixa${a.destinatariosExtras.tiers.length === 1 ? '' : 's'}`,
       },
-      { label: 'API', value: formatCurrency(prices.additionals.api) },
-      { label: 'Stories', value: formatCurrency(prices.additionals.stories) },
-      { label: 'Destaques da semana', value: formatCurrency(prices.additionals.destaques) },
-    ],
-    [prices.additionals],
+      { label: 'Plantão', value: `${a.plantaoPercent}%` },
+      {
+        label: 'Curadoria manual',
+        value: formatCurrency(a.curadoriaAprovacaoManual),
+      },
+      {
+        label: 'Aprovação automática',
+        value: `${a.aprovacaoAutomaticaPercent}%`,
+      },
+    ]
+  }, [prices.additionals])
+
+  const outrosItems = useMemo(
+    () =>
+      prices.validadeOptions.length
+        ? prices.validadeOptions.map((d) => ({
+            label: `Validade · ${d} dia${d === 1 ? '' : 's'}`,
+            value: '',
+          }))
+        : [{ label: 'Nenhuma opção cadastrada', value: '' }],
+    [prices.validadeOptions],
   )
 
   function toggle(key: string) {
@@ -113,63 +149,49 @@ export function ConfigPricingSidebar({
     {
       key: 'base',
       tab: 'base',
-      label: 'Base de cálculo',
-      summary: null,
+      label: 'Preço base',
+      summary: formatCurrency(precoBaseMensal),
       Icon: Calculator,
       tone: 'purple',
       items: [
         { label: 'Preço base mensal', value: formatCurrency(precoBaseMensal) },
-        { label: 'Preço por volume', value: formatCurrency(prices.volumePrice) },
-        { label: 'Destinatário-envio-dia', value: formatCurrency(prices.destinatarioPrice) },
       ],
     },
     {
-      key: 'services',
-      tab: 'services',
-      label: 'Serviços monitorados',
-      summary:
-        servicesConfigured === 1
-          ? '1 serviço configurado'
-          : `${servicesConfigured} serviços configurados`,
-      Icon: Share2,
+      key: 'matter',
+      tab: 'matter',
+      label: 'Serviços por Matéria',
+      summary: `${MATTER_SERVICE_KEYS.length} serviços`,
+      Icon: Layers,
       tone: 'green',
-      items: serviceItems,
-    },
-    {
-      key: 'distribution',
-      tab: 'distribution',
-      label: 'Distribuição',
-      summary:
-        broadcastCount === 1
-          ? '1 canal configurado'
-          : `${broadcastCount} canais configurados`,
-      Icon: Settings,
-      tone: 'orange',
-      items: broadcastItems,
+      items: matterItems,
     },
     {
       key: 'reports',
       tab: 'reports',
-      label: 'Relatórios',
-      summary:
-        reportsCount === 1
-          ? '1 relatório configurado'
-          : `${reportsCount} relatórios configurados`,
+      label: 'Relatórios e BI',
+      summary: '2 relatórios + BI',
       Icon: FileBarChart,
       tone: 'blue',
       items: reportItems,
     },
     {
-      key: 'extras',
-      tab: 'extras',
-      label: 'Extras',
-      summary:
-        extrasCount === 1
-          ? '1 adicional configurado'
-          : `${extrasCount} adicionais configurados`,
+      key: 'additionals',
+      tab: 'additionals',
+      label: 'Adicionais',
+      summary: null,
       Icon: HeartHandshake,
+      tone: 'orange',
+      items: additionalsItems,
+    },
+    {
+      key: 'outros',
+      tab: 'outros',
+      label: 'Outros',
+      summary: `${prices.validadeOptions.length} opções de validade`,
+      Icon: CalendarRange,
       tone: 'purple',
-      items: extrasItems,
+      items: outrosItems,
     },
   ]
 
@@ -178,7 +200,7 @@ export function ConfigPricingSidebar({
       <header className="config-sidebar__head">
         <h2 className="config-sidebar__title">Resumo da tabela de preços</h2>
         <p className="config-sidebar__sub">
-          Visualização rápida dos principais valores.
+          Visualização rápida do catálogo da Fase 1.
         </p>
       </header>
 
@@ -219,10 +241,12 @@ export function ConfigPricingSidebar({
               </button>
               {expanded ? (
                 <ul className="config-sidebar__acc-detail">
-                  {items.map((row) => (
-                    <li key={row.label}>
+                  {items.map((row, idx) => (
+                    <li key={`${row.label}-${idx}`}>
                       <span className="config-sidebar__acc-detail-label">{row.label}</span>
-                      <span className="config-sidebar__acc-detail-value">{row.value}</span>
+                      {row.value ? (
+                        <span className="config-sidebar__acc-detail-value">{row.value}</span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -239,7 +263,7 @@ export function ConfigPricingSidebar({
         <div className="config-sidebar__tip-copy">
           <strong className="config-sidebar__tip-title">Dica</strong>
           <p className="config-sidebar__tip-text">
-            Mantenha seus parâmetros sempre atualizados para obter propostas mais precisas.
+            Faixas e modos de cobrança podem ser ajustados sem alterar o código.
           </p>
         </div>
       </div>

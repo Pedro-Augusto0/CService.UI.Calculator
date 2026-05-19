@@ -1,42 +1,39 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Camera,
-  FileText,
+  ClipboardCheck,
   Gauge,
   Highlighter,
-  Ruler,
+  Newspaper,
   Sparkles,
-  Star,
 } from 'lucide-react'
-import type { MonitoringServiceKey } from '@/domain/types'
-import { MONITORING_SERVICE_KEYS } from '@/domain/types'
-import { MONITORING_LABELS } from '@/domain/prices'
+import type { MatterServiceKey } from '@/domain/types'
+import { MATTER_SERVICE_KEYS } from '@/domain/types'
+import { MATTER_SERVICE_LABELS } from '@/domain/prices'
 import './ServiceToggleGrid.css'
 
-const ICONS: Record<MonitoringServiceKey, LucideIcon> = {
-  texto: FileText,
-  centimetragem: Ruler,
+const ICONS: Record<MatterServiceKey, LucideIcon> = {
+  centimetragem: Newspaper,
   grifo: Highlighter,
   score: Gauge,
-  avaliacao: Star,
   ia: Sparkles,
   screenshot: Camera,
+  avaliacao: ClipboardCheck,
 }
 
-const DESCRIPTIONS: Record<MonitoringServiceKey, string> = {
-  texto: 'News clipping em texto integral.',
-  centimetragem: 'Cálculo de centimetragem de coluna.',
+const DESCRIPTIONS: Record<MatterServiceKey, string> = {
+  centimetragem: 'Centimetragem ou valoração editorial.',
   grifo: 'Destaque dos trechos mais relevantes.',
-  score: 'Pontuação de relevância do conteúdo.',
-  avaliacao: 'Análise qualitativa / crítica.',
-  ia: 'Análises automatizadas com IA.',
-  screenshot: 'Captura visual da matéria.',
+  score: 'Pontuação de relevância da matéria.',
+  ia: 'Enriquecimento com IA (sentimento, contexto).',
+  screenshot: 'Captura visual da publicação.',
+  avaliacao: 'Classificação customizada com faixa de campos.',
 }
 
 interface ServiceToggleGridProps {
   variant?: 'compact' | 'large'
-  selected: Record<MonitoringServiceKey, boolean>
-  onToggle: (key: MonitoringServiceKey) => void
+  selected: Record<MatterServiceKey, boolean>
+  onToggle: (key: MatterServiceKey) => void
 }
 
 export function ServiceToggleGrid({
@@ -50,8 +47,8 @@ export function ServiceToggleGrid({
       : 'service-grid service-grid--compact'
 
   return (
-    <div className={cls} role="group" aria-label="Serviços de monitoramento">
-      {MONITORING_SERVICE_KEYS.map((key) => {
+    <div className={cls} role="group" aria-label="Serviços por matéria">
+      {MATTER_SERVICE_KEYS.map((key) => {
         const Icon = ICONS[key]
         const on = selected[key]
         const itemCls = [
@@ -72,7 +69,7 @@ export function ServiceToggleGrid({
             <span className="service-grid__icon">
               <Icon size={variant === 'large' ? 22 : 18} strokeWidth={1.75} />
             </span>
-            <span className="service-grid__label">{MONITORING_LABELS[key]}</span>
+            <span className="service-grid__label">{MATTER_SERVICE_LABELS[key]}</span>
             {variant === 'large' ? (
               <span className="service-grid__desc">{DESCRIPTIONS[key]}</span>
             ) : null}

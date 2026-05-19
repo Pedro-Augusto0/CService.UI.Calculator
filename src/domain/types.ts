@@ -1,63 +1,75 @@
 export const SECTION_KEYS = ['marcas', 'concorrentes', 'setor'] as const
 export type SectionKey = (typeof SECTION_KEYS)[number]
 
-export const MONITORING_SERVICE_KEYS = [
-  'texto',
+/** Modo de cobrança configurado pelo administrador para um serviço por matéria. */
+export type BillingMode = 'fixed' | 'variable' | 'both'
+
+/** Toggle global escolhido pelo comercial no Resumo da Proposta. */
+export type GlobalBillingMode = 'fixed' | 'variable'
+
+export const REPORT_FREQUENCIES = [
+  'semanal',
+  'quinzenal',
+  'mensal',
+  'trimestral',
+  'semestral',
+  'anual',
+] as const
+export type ReportFrequency = (typeof REPORT_FREQUENCIES)[number]
+
+/**
+ * Catálogo dos 6 serviços por matéria conforme item 5 do documento da Fase 1.
+ * "Texto" foi removido — monitoramento textual faz parte do pacote base.
+ */
+export const MATTER_SERVICE_KEYS = [
   'centimetragem',
   'grifo',
   'score',
-  'avaliacao',
   'ia',
   'screenshot',
+  'avaliacao',
 ] as const
-export type MonitoringServiceKey = (typeof MONITORING_SERVICE_KEYS)[number]
+export type MatterServiceKey = (typeof MATTER_SERVICE_KEYS)[number]
 
-export const SERVICE_VALUE_KEYS = [
-  ...MONITORING_SERVICE_KEYS,
-  'tv',
-  'radio',
-  'relatorio',
-  'midias_sociais',
-  'alertas_web',
-  'api',
-  'stories',
-  'destaques',
-  'envios',
-] as const
-export type ServiceValueKey = (typeof SERVICE_VALUE_KEYS)[number]
-
-export type ServiceValues = Record<ServiceValueKey, number>
+/** Região para itens mutuamente exclusivos (Rádio e TV). */
+export type RegionKey = 'spRj' | 'nacional'
 
 export interface SectionConfig {
   keywords: string[]
   volume: number
-  services: Record<MonitoringServiceKey, boolean>
+  services: Record<MatterServiceKey, boolean>
 }
 
 export type ProposalSections = Record<SectionKey, SectionConfig>
 
-export interface BroadcastState {
-  tvEnabled: boolean
-  tvRegion: '' | 'sp_rj' | 'nacional'
-  radioEnabled: boolean
-  radioRegion: '' | 'sp_rj' | 'nacional'
-  relatorioEnabled: boolean
-  relatorioFreq: '' | 'mensal' | 'semanal'
+export interface ReportsState {
+  executivoEnabled: boolean
+  executivoFreq: ReportFrequency | null
+  estrategicoEnabled: boolean
+  estrategicoFreq: ReportFrequency | null
+  biEnabled: boolean
 }
 
 export interface AdditionalsState {
-  midiasSociais: boolean
-  alertasWeb: boolean
-  api: boolean
-  stories: boolean
-  destaques: boolean
-}
-
-export interface OperationalState {
-  enviosDiarios: number
-  numDestinatarios: number
-  /** Newsletter dias úteis vs 30 dias + modificador +25% no preço */
-  envioFeriadosFds: boolean
+  radioEnabled: boolean
+  radioRegion: RegionKey | null
+  tvEnabled: boolean
+  tvRegion: RegionKey | null
+  midiasSociaisEnabled: boolean
+  midiasSociaisTierId: string | null
+  storiesInstagramEnabled: boolean
+  storiesInstagramTierId: string | null
+  alertasWebRealtime: boolean
+  apiCService: boolean
+  newsletterWhatsApp: boolean
+  /** Quantidade de envios adicionais cobrados como fixo por envio. */
+  newsletterExtraEnvios: number
+  destinatariosExtrasEnabled: boolean
+  destinatariosExtrasTierId: string | null
+  /** Acréscimo percentual sobre o total (item 7.11). */
+  plantaoFimSemana: boolean
+  curadoriaAprovacaoManual: boolean
+  /** Desconto percentual sobre o total (item 7.13). */
   aprovacaoAutomatica: boolean
 }
 
@@ -68,44 +80,46 @@ export interface ProposalMeta {
 
 export interface CalculationInput {
   sections: ProposalSections
-  broadcast: BroadcastState
+  globalBillingMode: GlobalBillingMode
+  avaliacaoTierId: string | null
+  reports: ReportsState
   additionals: AdditionalsState
-  operational: OperationalState
   precoBaseMensal: number
-}
-
-export interface PriceBreakdownLine {
-  key: string
-  label: string
-  amount: number
+  validadeDias: number
 }
 
 export interface CalculationResult {
   totalKeywords: number
   totalVolume: number
   hasActiveServices: boolean
-  serviceValues: ServiceValues
-  /** PB = totalVolume * volumePrice */
-  volumeMonetaryBase: number
-  /** Soma de todos os campos em serviceValues */
-  sumServiceValues: number
-  /** PB + S (sem preço base mensal, antes dos modificadores) */
+  /** Valor monetário por serviço por matéria selecionado (já resolvido por modo). */
+  matterServiceValues: Record<MatterServiceKey, number>
+  /** Soma de todos os Serviços por Matéria. */
+  matterServicesTotal: number
+  /** Soma dos Relatórios e BI selecionados. */
+  reportsTotal: number
+  /** Soma dos Adicionais (fixos, faixas, fixo por envio extra). */
+  additionalsTotal: number
+  /** Soma antes da aplicação dos modificadores percentuais. */
   subtotalBeforeModifiers: number
-  /** Multiplicador fins de semana/feriados (1 ou 1.25) */
-  factorWeekend: number
-  /** Multiplicador aprovação automática (1 ou 0.6) */
-  factorAutoApproval: number
-  /** (PB + S) * fatores, ainda sem preço base mensal */
-  priceAfterModifiersBeforeMonthlyBase: number
-  valorAcrescimoFimDeSemana: number
-  valorImpactoAprovacaoAutomatica: number
-  /** Preço final numérico */
+  /** % configurado pelo admin aplicado quando plantão está ligado. */
+  plantaoPercent: number
+  /** % configurado pelo admin aplicado como desconto quando aprovação automática está ligada. */
+  aprovacaoAutomaticaPercent: number
+  factorPlantao: number
+  factorAprovacaoAutomatica: number
+  valorAcrescimoPlantao: number
+  valorDescontoAprovacaoAutomatica: number
   finalPrice: number
-  selectedMonitoringLabels: string[]
+  /** Modo efetivo escolhido na proposta (eco do toggle). */
+  globalBillingMode: GlobalBillingMode
+  /** Rótulos dos serviços por matéria selecionados (para chips). */
+  selectedMatterLabels: string[]
+  /** Agrupamento usado por SummaryPanel e exportação HTML. */
   breakdownGroups: {
     precoBaseMensal: number
-    servicosMonitoramento: number
+    servicosMateria: number
+    relatoriosBi: number
     servicosAdicionais: number
-    relatorioAnalitico: number
   }
 }

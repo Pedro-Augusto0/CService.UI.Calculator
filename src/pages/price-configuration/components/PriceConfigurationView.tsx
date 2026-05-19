@@ -1,12 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import {
-  BarChart3,
-  Calculator,
-  Info,
-  Mail,
-  RotateCcw,
-  Save,
-} from 'lucide-react'
+import { Calculator, Info, RotateCcw, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PtDecimalField } from '@/components/ui/PtDecimalField'
 import { PriceSettingsFields } from '@/features/pricing-config/components/PriceSettingsFields'
@@ -84,7 +77,7 @@ export function PriceConfigurationView({
                 <div className="config-base-card__copy">
                   <h3 className="config-base-card__title">Preço base mensal</h3>
                   <p className="config-base-card__desc">
-                    Valor fixo aplicado mensalmente a todas as propostas.
+                    Valor mínimo mensal obrigatório aplicado a todas as propostas (item 4 do documento).
                   </p>
                 </div>
                 <div className="config-base-card__field">
@@ -97,62 +90,13 @@ export function PriceConfigurationView({
                 </div>
               </article>
 
-              <article className="config-base-card">
-                <div
-                  className="config-base-card__icon config-base-card__icon--green"
-                  aria-hidden
-                >
-                  <BarChart3 size={22} strokeWidth={1.85} />
-                </div>
-                <div className="config-base-card__copy">
-                  <h3 className="config-base-card__title">Preço por volume (R$)</h3>
-                  <p className="config-base-card__desc">
-                    Multiplicador aplicado sobre a soma mensal das notícias monitoradas.
-                  </p>
-                </div>
-                <div className="config-base-card__field">
-                  <PtDecimalField
-                    id="config-volume-price"
-                    label="Multiplicador"
-                    value={draftPrices.volumePrice}
-                    onCommit={(n) => patch('volumePrice', n)}
-                  />
-                </div>
-              </article>
-
-              <article className="config-base-card">
-                <div
-                  className="config-base-card__icon config-base-card__icon--orange"
-                  aria-hidden
-                >
-                  <Mail size={22} strokeWidth={1.85} />
-                </div>
-                <div className="config-base-card__copy">
-                  <h3 className="config-base-card__title">
-                    Preço destinatário-envio-dia (R$)
-                  </h3>
-                  <p className="config-base-card__desc">
-                    Valor aplicado quando há envios para destinatários recorrentes
-                    (newsletter).
-                  </p>
-                </div>
-                <div className="config-base-card__field">
-                  <PtDecimalField
-                    id="config-destinatario-price"
-                    label="Valor"
-                    value={draftPrices.destinatarioPrice}
-                    onCommit={(n) => patch('destinatarioPrice', n)}
-                  />
-                </div>
-              </article>
-
               <div className="config-page__info-callout" role="status">
                 <span className="config-page__info-callout-icon" aria-hidden>
                   <Info size={20} strokeWidth={2} />
                 </span>
                 <p className="config-page__info-callout-text">
-                  Esses valores são a base para o cálculo de todos os serviços e adicionais.
-                  Alterações aqui impactam diretamente o resultado final das propostas.
+                  O preço base é somado ao final da composição, depois dos modificadores percentuais
+                  de plantão e aprovação automática.
                 </p>
               </div>
             </div>
@@ -161,7 +105,7 @@ export function PriceConfigurationView({
               <PriceSettingsFields
                 draft={draftPrices}
                 patch={patch}
-                visibleSections={activeTabItem.visibleSections}
+                section={activeTab}
               />
               <div className="config-page__info-callout" role="status">
                 <span className="config-page__info-callout-icon" aria-hidden>

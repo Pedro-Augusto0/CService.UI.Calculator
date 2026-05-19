@@ -1,10 +1,21 @@
 import { defaultSections } from '@/domain/calculations'
-import type { MonitoringServiceKey, ProposalSections } from '@/domain/types'
-import { MONITORING_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
+import { DEFAULT_PRICES } from '@/domain/prices'
+import type {
+  AdditionalsState,
+  MatterServiceKey,
+  ProposalSections,
+  ReportsState,
+} from '@/domain/types'
+import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
 import type { ProposalState } from './proposalActions'
 import type { ProposalTemplateSnapshot } from './proposalTemplateSnapshot'
 import { proposalSnapshotToState } from './proposalTemplateSnapshot'
-import { createInitialProposalState, type ProposalStateSeed } from './proposalReducer'
+import {
+  createInitialProposalState,
+  emptyAdditionals,
+  emptyReports,
+  type ProposalStateSeed,
+} from './proposalReducer'
 
 export const PROPOSAL_TEMPLATE_IDS = [
   'basic',
@@ -20,7 +31,6 @@ export type BuiltinTemplateCategory = 'monitoramento' | 'tv-radio' | 'digital'
 export interface BuiltinTemplateCardMeta {
   id: ProposalTemplateId
   name: string
-  /** Texto orientando o usuário sobre quando usar o modelo */
   description: string
   category: BuiltinTemplateCategory
   accent: 'violet' | 'green' | 'orange' | 'blue'
@@ -34,7 +44,7 @@ export const BUILTIN_TEMPLATE_CARDS: BuiltinTemplateCardMeta[] = [
     id: 'basic',
     name: 'Monitoramento Básico',
     description:
-      'Pacote inicial para acompanhar notícias em texto integral e clipping objetivo.',
+      'Pacote inicial para acompanhar notícias com centimetragem e captura de tela.',
     category: 'monitoramento',
     accent: 'violet',
     tierLabel: 'Básico',
@@ -45,7 +55,7 @@ export const BUILTIN_TEMPLATE_CARDS: BuiltinTemplateCardMeta[] = [
     id: 'premium',
     name: 'Monitoramento Premium',
     description:
-      'Todos os serviços de leitura com IA e relatórios analíticos. Ideal para operações que precisam de interpretação e insights.',
+      'Catálogo completo de Serviços por Matéria com IA, Score e Avaliação. Inclui relatórios analíticos.',
     category: 'monitoramento',
     accent: 'green',
     tierLabel: 'Avançado',
@@ -56,7 +66,7 @@ export const BUILTIN_TEMPLATE_CARDS: BuiltinTemplateCardMeta[] = [
     id: 'tv-radio',
     name: 'TV + Rádio',
     description:
-      'Monitoramento textual combinado com TV e rádio em SP/RJ e relatório semanal. Use quando a proposta precisa de presença em broadcast tradicional além do clipping digital.',
+      'Monitoramento de matéria combinado com TV e rádio em SP/RJ e relatório executivo semanal.',
     category: 'tv-radio',
     accent: 'orange',
     tierLabel: 'Broadcast',
@@ -67,7 +77,7 @@ export const BUILTIN_TEMPLATE_CARDS: BuiltinTemplateCardMeta[] = [
     id: 'digital',
     name: 'Digital Completo',
     description:
-      'Foco em ambiente digital: monitoramento com IA e pacote de extras (API, alertas web, mídias sociais, stories). A taxa de envio e destinatários já vem calibrada para rotina mais intensa.',
+      'Foco em ambiente digital: matéria com IA, mídias sociais, stories, alertas e integração via API.',
     category: 'digital',
     accent: 'blue',
     tierLabel: 'Digital',
@@ -80,27 +90,16 @@ export function isProposalTemplateId(id: string): id is ProposalTemplateId {
   return (PROPOSAL_TEMPLATE_IDS as readonly string[]).includes(id)
 }
 
-const BROADCAST_OFF: ProposalState['broadcast'] = {
-  tvEnabled: false,
-  tvRegion: '',
-  radioEnabled: false,
-  radioRegion: '',
-  relatorioEnabled: false,
-  relatorioFreq: '',
-}
-
-function monitoringFromFlags(
-  enabled: Partial<Record<MonitoringServiceKey, boolean>>,
-): Record<MonitoringServiceKey, boolean> {
-  const services = {} as Record<MonitoringServiceKey, boolean>
-  for (const k of MONITORING_SERVICE_KEYS) {
-    services[k] = enabled[k] ?? false
-  }
+function matterFlags(
+  enabled: Partial<Record<MatterServiceKey, boolean>>,
+): Record<MatterServiceKey, boolean> {
+  const services = {} as Record<MatterServiceKey, boolean>
+  for (const k of MATTER_SERVICE_KEYS) services[k] = enabled[k] ?? false
   return services
 }
 
-function sectionsFromMonitoring(
-  services: Record<MonitoringServiceKey, boolean>,
+function sectionsFromMatter(
+  services: Record<MatterServiceKey, boolean>,
 ): ProposalSections {
   const base = defaultSections()
   for (const sk of SECTION_KEYS) {
@@ -114,85 +113,94 @@ function sectionsFromMonitoring(
   return base
 }
 
-const TEMPLATE_DEFS: Record<
-  ProposalTemplateId,
-  {
-    sections: Record<MonitoringServiceKey, boolean>
-    operational: Partial<ProposalState['operational']>
-    broadcast: ProposalState['broadcast']
-    additionals: Partial<ProposalState['additionals']>
-    applyServicesToAll: boolean
-  }
-> = {
+interface TemplateDef {
+  services: Record<MatterServiceKey, boolean>
+  avaliacaoTierId: string | null
+  reports: ReportsState
+  additionals: AdditionalsState
+  applyServicesToAll: boolean
+}
+
+const DEFAULT_AVAL_TIER = DEFAULT_PRICES.matterServices.avaliacao.tiers[1]?.id ?? null
+
+const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
   basic: {
-    sections: monitoringFromFlags({
-      texto: true,
+    services: matterFlags({
       centimetragem: true,
       screenshot: true,
     }),
-    operational: { enviosDiarios: 1, numDestinatarios: 3 },
-    broadcast: BROADCAST_OFF,
-    additionals: {},
+    avaliacaoTierId: null,
+    reports: emptyReports(),
+    additionals: emptyAdditionals(),
     applyServicesToAll: true,
   },
   premium: {
-    sections: monitoringFromFlags({
-      texto: true,
+    services: matterFlags({
+      centimetragem: true,
       grifo: true,
       score: true,
-      avaliacao: true,
       ia: true,
       screenshot: true,
+      avaliacao: true,
     }),
-    operational: { enviosDiarios: 2, numDestinatarios: 10 },
-    broadcast: {
-      ...BROADCAST_OFF,
-      relatorioEnabled: true,
-      relatorioFreq: 'semanal',
+    avaliacaoTierId: DEFAULT_AVAL_TIER,
+    reports: {
+      ...emptyReports(),
+      executivoEnabled: true,
+      executivoFreq: 'semanal',
     },
     additionals: {
-      api: true,
-      alertasWeb: true,
-      midiasSociais: true,
+      ...emptyAdditionals(),
+      apiCService: true,
+      alertasWebRealtime: true,
+      midiasSociaisEnabled: true,
+      midiasSociaisTierId:
+        DEFAULT_PRICES.additionals.midiasSociais.tiers[0]?.id ?? null,
     },
     applyServicesToAll: true,
   },
   'tv-radio': {
-    sections: monitoringFromFlags({
-      texto: true,
+    services: matterFlags({
       centimetragem: true,
       grifo: true,
       score: true,
       screenshot: true,
     }),
-    operational: { enviosDiarios: 1, numDestinatarios: 5 },
-    broadcast: {
-      tvEnabled: true,
-      tvRegion: 'sp_rj',
-      radioEnabled: true,
-      radioRegion: 'sp_rj',
-      relatorioEnabled: true,
-      relatorioFreq: 'semanal',
+    avaliacaoTierId: null,
+    reports: {
+      ...emptyReports(),
+      executivoEnabled: true,
+      executivoFreq: 'semanal',
     },
-    additionals: {},
+    additionals: {
+      ...emptyAdditionals(),
+      tvEnabled: true,
+      tvRegion: 'spRj',
+      radioEnabled: true,
+      radioRegion: 'spRj',
+    },
     applyServicesToAll: true,
   },
   digital: {
-    sections: monitoringFromFlags({
-      texto: true,
+    services: matterFlags({
       centimetragem: true,
       grifo: true,
       score: true,
       screenshot: true,
       ia: true,
     }),
-    operational: { enviosDiarios: 2, numDestinatarios: 8 },
-    broadcast: BROADCAST_OFF,
+    avaliacaoTierId: null,
+    reports: emptyReports(),
     additionals: {
-      api: true,
-      alertasWeb: true,
-      midiasSociais: true,
-      stories: true,
+      ...emptyAdditionals(),
+      apiCService: true,
+      alertasWebRealtime: true,
+      midiasSociaisEnabled: true,
+      midiasSociaisTierId:
+        DEFAULT_PRICES.additionals.midiasSociais.tiers[0]?.id ?? null,
+      storiesInstagramEnabled: true,
+      storiesInstagramTierId:
+        DEFAULT_PRICES.additionals.storiesInstagram.tiers[0]?.id ?? null,
     },
     applyServicesToAll: true,
   },
@@ -205,16 +213,12 @@ export function getBuiltinTemplateSnapshot(
   const initial = createInitialProposalState()
 
   return {
-    sections: sectionsFromMonitoring(def.sections),
-    broadcast: { ...def.broadcast },
-    additionals: {
-      ...initial.additionals,
-      ...def.additionals,
-    },
-    operational: {
-      ...initial.operational,
-      ...def.operational,
-    },
+    sections: sectionsFromMatter(def.services),
+    globalBillingMode: 'variable',
+    avaliacaoTierId: def.avaliacaoTierId,
+    reports: { ...def.reports },
+    additionals: { ...def.additionals },
+    validadeDias: initial.validadeDias,
     applyServicesToAll: def.applyServicesToAll,
     activeScopeTab: 'marcas',
   }

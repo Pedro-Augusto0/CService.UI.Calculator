@@ -1,309 +1,442 @@
 import {
+  Antenna,
+  BadgePercent,
+  Bell,
   ChevronDown,
+  Cpu,
   FileBarChart,
-  RadioTower,
-  Settings2,
+  Hash,
+  Send,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { SelectField } from '@/components/ui/SelectField'
+import { TextField } from '@/components/ui/TextField'
 import { Toggle } from '@/components/ui/Toggle'
-import { OperationalParams } from '@/features/proposal/components/OperationalParams'
+import { REPORT_FREQUENCIES, type RegionKey, type ReportFrequency } from '@/domain/types'
+import { REGION_LABELS, REPORT_FREQUENCY_LABELS } from '@/domain/prices'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import './ServicosAdicionais.css'
 
+type SectionKey = 'broadcast' | 'reports' | 'social' | 'distribution' | 'others' | 'modifiers'
+
+interface AccordionSectionProps {
+  open: boolean
+  onToggle: () => void
+  icon: LucideIcon
+  title: string
+  children: ReactNode
+}
+
+function AccordionSection({
+  open,
+  onToggle,
+  icon: Icon,
+  title,
+  children,
+}: AccordionSectionProps) {
+  return (
+    <Card
+      className={`add-page__accordion ${open ? 'add-page__accordion--open' : ''}`}
+    >
+      <button
+        type="button"
+        className="add-page__accordion-head"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="add-page__accordion-title-wrap">
+          <span className="add-page__accordion-icon" aria-hidden>
+            <Icon size={16} strokeWidth={2} />
+          </span>
+          <span className="add-page__accordion-title">{title}</span>
+        </span>
+        <ChevronDown
+          size={20}
+          className={`add-page__accordion-chevron ${open ? 'add-page__accordion-chevron--up' : ''}`}
+        />
+      </button>
+      {open ? <div className="add-page__accordion-body">{children}</div> : null}
+    </Card>
+  )
+}
+
+function RegionButtons({
+  region,
+  disabled,
+  onChange,
+}: {
+  region: RegionKey | null
+  disabled: boolean
+  onChange: (region: RegionKey | null) => void
+}) {
+  function pick(next: RegionKey) {
+    onChange(region === next ? null : next)
+  }
+  return (
+    <div className="add-page__region-buttons" role="group" aria-label="Região">
+      <button
+        type="button"
+        className={`add-page__region ${region === 'spRj' ? 'add-page__region--on' : ''}`}
+        disabled={disabled}
+        onClick={() => pick('spRj')}
+      >
+        {REGION_LABELS.spRj}
+      </button>
+      <button
+        type="button"
+        className={`add-page__region ${region === 'nacional' ? 'add-page__region--on' : ''}`}
+        disabled={disabled}
+        onClick={() => pick('nacional')}
+      >
+        {REGION_LABELS.nacional}
+      </button>
+    </div>
+  )
+}
+
 export function ServicosAdicionais() {
   const { state, dispatch } = useProposal()
-  const b = state.broadcast
   const a = state.additionals
-  const op = state.operational
-  const [openSection, setOpenSection] = useState<
-    'broadcast' | 'relatorio' | 'outros' | 'operacional' | null
-  >('broadcast')
+  const r = state.reports
+  const prices = state.prices
 
-  function toggleSection(
-    section: 'broadcast' | 'relatorio' | 'outros' | 'operacional',
-  ) {
-    setOpenSection((current) => (current === section ? null : section))
+  const [openSection, setOpenSection] = useState<SectionKey | null>('broadcast')
+  function toggleSection(s: SectionKey) {
+    setOpenSection((prev) => (prev === s ? null : s))
   }
 
   return (
     <div className="page-etapa add-page">
-      <Card
-        className={`add-page__accordion ${openSection === 'broadcast' ? 'add-page__accordion--open' : ''}`}
+      <AccordionSection
+        open={openSection === 'broadcast'}
+        onToggle={() => toggleSection('broadcast')}
+        icon={Antenna}
+        title="Rádio e TV"
       >
-        <button
-          type="button"
-          className="add-page__accordion-head"
-          onClick={() => toggleSection('broadcast')}
-          aria-expanded={openSection === 'broadcast'}
-        >
-          <span className="add-page__accordion-title-wrap">
-            <span className="add-page__accordion-icon" aria-hidden>
-              <RadioTower size={16} strokeWidth={2} />
-            </span>
-            <span className="add-page__accordion-title">Broadcast</span>
-          </span>
-          <ChevronDown
-            size={20}
-            className={`add-page__accordion-chevron ${openSection === 'broadcast' ? 'add-page__accordion-chevron--up' : ''}`}
-          />
-        </button>
-        {openSection === 'broadcast' ? (
-          <div className="add-page__accordion-body">
-            <div className="add-page__grid">
-              <Card className="add-page__bc">
-                <Toggle
-                  checked={b.tvEnabled}
-                  onChange={(v) =>
-                    dispatch({
-                      type: 'SET_BROADCAST',
-                      patch: {
-                        tvEnabled: v,
-                        tvRegion: v ? b.tvRegion : '',
-                      },
-                    })
-                  }
-                  label="TV"
-                  description="Cobrança fixa regional."
-                />
-                <SelectField
-                  dense
-                  id="tv-reg"
-                  label="Região"
-                  disabled={!b.tvEnabled}
-                  value={b.tvRegion}
-                  onChange={(e) =>
-                    dispatch({
-                      type: 'SET_BROADCAST',
-                      patch: {
-                        tvRegion: e.target.value as typeof b.tvRegion,
-                      },
-                    })
-                  }
-                >
-                  <option value="">Selecione…</option>
-                  <option value="sp_rj">SP + RJ</option>
-                  <option value="nacional">Nacional</option>
-                </SelectField>
-              </Card>
+        <div className="add-page__grid">
+          <Card className="add-page__bc">
+            <Toggle
+              checked={a.radioEnabled}
+              onChange={(v) => dispatch({ type: 'TOGGLE_RADIO', enabled: v })}
+              label="Monitoramento Rádio"
+              description="Cobrança fixa regional (mutuamente exclusiva)."
+            />
+            <RegionButtons
+              region={a.radioRegion}
+              disabled={!a.radioEnabled}
+              onChange={(region) => dispatch({ type: 'SET_RADIO_REGION', region })}
+            />
+          </Card>
 
-              <Card className="add-page__bc">
-                <Toggle
-                  checked={b.radioEnabled}
-                  onChange={(v) =>
-                    dispatch({
-                      type: 'SET_BROADCAST',
-                      patch: {
-                        radioEnabled: v,
-                        radioRegion: v ? b.radioRegion : '',
-                      },
-                    })
-                  }
-                  label="Rádio"
-                  description="Cobrança fixa regional."
-                />
-                <SelectField
-                  dense
-                  id="radio-reg"
-                  label="Região"
-                  disabled={!b.radioEnabled}
-                  value={b.radioRegion}
-                  onChange={(e) =>
-                    dispatch({
-                      type: 'SET_BROADCAST',
-                      patch: {
-                        radioRegion: e.target.value as typeof b.radioRegion,
-                      },
-                    })
-                  }
-                >
-                  <option value="">Selecione…</option>
-                  <option value="sp_rj">SP + RJ</option>
-                  <option value="nacional">Nacional</option>
-                </SelectField>
-              </Card>
-            </div>
-          </div>
-        ) : null}
-      </Card>
+          <Card className="add-page__bc">
+            <Toggle
+              checked={a.tvEnabled}
+              onChange={(v) => dispatch({ type: 'TOGGLE_TV', enabled: v })}
+              label="Monitoramento TV"
+              description="Cobrança fixa regional (mutuamente exclusiva)."
+            />
+            <RegionButtons
+              region={a.tvRegion}
+              disabled={!a.tvEnabled}
+              onChange={(region) => dispatch({ type: 'SET_TV_REGION', region })}
+            />
+          </Card>
+        </div>
+      </AccordionSection>
 
-      <Card
-        className={`add-page__accordion ${openSection === 'relatorio' ? 'add-page__accordion--open' : ''}`}
+      <AccordionSection
+        open={openSection === 'reports'}
+        onToggle={() => toggleSection('reports')}
+        icon={FileBarChart}
+        title="Relatórios e BI"
       >
-        <button
-          type="button"
-          className="add-page__accordion-head"
-          onClick={() => toggleSection('relatorio')}
-          aria-expanded={openSection === 'relatorio'}
-        >
-          <span className="add-page__accordion-title-wrap">
-            <span className="add-page__accordion-icon" aria-hidden>
-              <FileBarChart size={16} strokeWidth={2} />
-            </span>
-            <span className="add-page__accordion-title">Relatório Analítico</span>
-          </span>
-          <ChevronDown
-            size={20}
-            className={`add-page__accordion-chevron ${openSection === 'relatorio' ? 'add-page__accordion-chevron--up' : ''}`}
-          />
-        </button>
-        {openSection === 'relatorio' ? (
-          <div className="add-page__accordion-body">
-            <div className="add-page__rel">
-              <Toggle
-                checked={b.relatorioEnabled}
-                onChange={(v) =>
-                  dispatch({
-                    type: 'SET_BROADCAST',
-                    patch: {
-                      relatorioEnabled: v,
-                      relatorioFreq: v ? b.relatorioFreq : '',
-                    },
-                  })
-                }
-                label="Relatório analítico"
-                description="Frequência contratada, valor fixo."
-              />
-              <SelectField
-                dense
-                id="rel-freq"
-                label="Frequência"
-                disabled={!b.relatorioEnabled}
-                value={b.relatorioFreq}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_BROADCAST',
-                    patch: {
-                      relatorioFreq: e.target.value as typeof b.relatorioFreq,
-                    },
-                  })
-                }
-              >
-                <option value="">Selecione…</option>
-                <option value="mensal">Mensal</option>
-                <option value="semanal">Semanal</option>
-              </SelectField>
-            </div>
-          </div>
-        ) : null}
-      </Card>
-
-      <Card
-        className={`add-page__accordion ${openSection === 'outros' ? 'add-page__accordion--open' : ''}`}
-      >
-        <button
-          type="button"
-          className="add-page__accordion-head"
-          onClick={() => toggleSection('outros')}
-          aria-expanded={openSection === 'outros'}
-        >
-          <span className="add-page__accordion-title-wrap">
-            <span className="add-page__accordion-icon" aria-hidden>
-              <Sparkles size={16} strokeWidth={2} />
-            </span>
-            <span className="add-page__accordion-title">Outros Serviços</span>
-          </span>
-          <ChevronDown
-            size={20}
-            className={`add-page__accordion-chevron ${openSection === 'outros' ? 'add-page__accordion-chevron--up' : ''}`}
-          />
-        </button>
-        {openSection === 'outros' ? (
-          <div className="add-page__accordion-body">
-            <div className="add-page__other">
-              <Toggle
-                checked={a.midiasSociais}
-                onChange={(v) =>
-                  dispatch({ type: 'SET_ADDITIONALS', patch: { midiasSociais: v } })
-                }
-                label="Mídias Sociais"
-                description="Franquia por posts/mês; excedente em blocos."
-              />
-              <Toggle
-                checked={a.alertasWeb}
-                onChange={(v) =>
-                  dispatch({ type: 'SET_ADDITIONALS', patch: { alertasWeb: v } })
-                }
-                label="Alertas de WebSites"
-                description="Envios extras geram acréscimo."
-              />
-              <Toggle
-                checked={a.api}
-                onChange={(v) =>
-                  dispatch({ type: 'SET_ADDITIONALS', patch: { api: v } })
-                }
-                label="Acesso API"
-                description="Valor fixo mensal."
-              />
-              <Toggle
-                checked={a.stories}
-                onChange={(v) =>
-                  dispatch({ type: 'SET_ADDITIONALS', patch: { stories: v } })
-                }
-                label="Stories"
-                description="Pacote fixo."
-              />
-              <Toggle
-                checked={a.destaques}
-                onChange={(v) =>
-                  dispatch({ type: 'SET_ADDITIONALS', patch: { destaques: v } })
-                }
-                label="Destaques da Semana"
-                description="Curadoria semanal - fixo."
-              />
-            </div>
-          </div>
-        ) : null}
-      </Card>
-
-      <Card
-        className={`add-page__accordion ${openSection === 'operacional' ? 'add-page__accordion--open' : ''}`}
-      >
-        <button
-          type="button"
-          className="add-page__accordion-head"
-          onClick={() => toggleSection('operacional')}
-          aria-expanded={openSection === 'operacional'}
-        >
-          <span className="add-page__accordion-title-wrap">
-            <span className="add-page__accordion-icon" aria-hidden>
-              <Settings2 size={16} strokeWidth={2} />
-            </span>
-            <span className="add-page__accordion-title">Parâmetros Operacionais</span>
-          </span>
-          <ChevronDown
-            size={20}
-            className={`add-page__accordion-chevron ${openSection === 'operacional' ? 'add-page__accordion-chevron--up' : ''}`}
-          />
-        </button>
-        {openSection === 'operacional' ? (
-          <div className="add-page__accordion-body">
-            <OperationalParams
-              enviosDiarios={op.enviosDiarios}
-              numDestinatarios={op.numDestinatarios}
-              envioFeriadosFds={op.envioFeriadosFds}
-              aprovacaoAutomatica={op.aprovacaoAutomatica}
-              onEnviosDiarios={(n) =>
-                dispatch({ type: 'SET_OPERATIONAL', patch: { enviosDiarios: n } })
+        <div className="add-page__grid">
+          <Card className="add-page__bc">
+            <Toggle
+              checked={r.executivoEnabled}
+              onChange={(v) =>
+                dispatch({ type: 'TOGGLE_REPORT_EXECUTIVO', enabled: v })
               }
-              onNumDestinatarios={(n) =>
-                dispatch({ type: 'SET_OPERATIONAL', patch: { numDestinatarios: n } })
-              }
-              onEnvioFeriadosFds={(v) =>
-                dispatch({ type: 'SET_OPERATIONAL', patch: { envioFeriadosFds: v } })
-              }
-              onAprovacaoAutomatica={(v) =>
+              label="Relatório Executivo CService"
+              description="Apresentação em PowerPoint."
+            />
+            <SelectField
+              dense
+              id="rep-exec-freq"
+              label="Frequência"
+              disabled={!r.executivoEnabled}
+              value={r.executivoFreq ?? ''}
+              onChange={(e) =>
                 dispatch({
-                  type: 'SET_OPERATIONAL',
-                  patch: { aprovacaoAutomatica: v },
+                  type: 'SET_REPORT_EXECUTIVO_FREQ',
+                  freq: (e.target.value as ReportFrequency) || null,
+                })
+              }
+            >
+              <option value="">Selecione…</option>
+              {REPORT_FREQUENCIES.map((f) => (
+                <option key={f} value={f}>
+                  {REPORT_FREQUENCY_LABELS[f]}
+                </option>
+              ))}
+            </SelectField>
+          </Card>
+
+          <Card className="add-page__bc">
+            <Toggle
+              checked={r.estrategicoEnabled}
+              onChange={(v) =>
+                dispatch({ type: 'TOGGLE_REPORT_ESTRATEGICO', enabled: v })
+              }
+              label="Relatório Estratégico de Mídia"
+              description="Entrega em formato HTML."
+            />
+            <SelectField
+              dense
+              id="rep-estr-freq"
+              label="Frequência"
+              disabled={!r.estrategicoEnabled}
+              value={r.estrategicoFreq ?? ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_REPORT_ESTRATEGICO_FREQ',
+                  freq: (e.target.value as ReportFrequency) || null,
+                })
+              }
+            >
+              <option value="">Selecione…</option>
+              {REPORT_FREQUENCIES.map((f) => (
+                <option key={f} value={f}>
+                  {REPORT_FREQUENCY_LABELS[f]}
+                </option>
+              ))}
+            </SelectField>
+          </Card>
+
+          <Card className="add-page__bc">
+            <Toggle
+              checked={r.biEnabled}
+              onChange={(v) => dispatch({ type: 'TOGGLE_BI', enabled: v })}
+              label="CService BI"
+              description="Setup único + manutenção mensal."
+            />
+          </Card>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        open={openSection === 'social'}
+        onToggle={() => toggleSection('social')}
+        icon={Sparkles}
+        title="Mídias Sociais e Stories"
+      >
+        <div className="add-page__grid">
+          <Card className="add-page__bc">
+            <Toggle
+              checked={a.midiasSociaisEnabled}
+              onChange={(v) =>
+                dispatch({ type: 'TOGGLE_MIDIAS_SOCIAIS', enabled: v })
+              }
+              label="Monitoramento de Mídias Sociais"
+              description="Selecione a faixa por quantidade de posts."
+            />
+            <SelectField
+              dense
+              id="ms-tier"
+              label="Faixa (posts)"
+              disabled={!a.midiasSociaisEnabled}
+              value={a.midiasSociaisTierId ?? ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_MIDIAS_SOCIAIS_TIER',
+                  tierId: e.target.value || null,
+                })
+              }
+            >
+              <option value="">Selecione…</option>
+              {prices.additionals.midiasSociais.tiers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </SelectField>
+          </Card>
+
+          <Card className="add-page__bc">
+            <Toggle
+              checked={a.storiesInstagramEnabled}
+              onChange={(v) =>
+                dispatch({ type: 'TOGGLE_STORIES_INSTAGRAM', enabled: v })
+              }
+              label="Stories Instagram"
+              description="Selecione a faixa por quantidade de perfis."
+            />
+            <SelectField
+              dense
+              id="sg-tier"
+              label="Faixa (perfis)"
+              disabled={!a.storiesInstagramEnabled}
+              value={a.storiesInstagramTierId ?? ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_STORIES_INSTAGRAM_TIER',
+                  tierId: e.target.value || null,
+                })
+              }
+            >
+              <option value="">Selecione…</option>
+              {prices.additionals.storiesInstagram.tiers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </SelectField>
+          </Card>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        open={openSection === 'distribution'}
+        onToggle={() => toggleSection('distribution')}
+        icon={Send}
+        title="Distribuição da Newsletter"
+      >
+        <div className="add-page__other">
+          <Toggle
+            checked={a.newsletterWhatsApp}
+            onChange={(v) =>
+              dispatch({
+                type: 'SET_ADDITIONALS',
+                patch: { newsletterWhatsApp: v },
+              })
+            }
+            label="Envio de Newsletter via WhatsApp"
+            description="Cobrança fixa mensal."
+          />
+          <div className="add-page__inline">
+            <Hash size={16} strokeWidth={2} aria-hidden />
+            <TextField
+              dense
+              id="news-extra"
+              label="Newsletters adicionais (qtd. envios extras)"
+              type="number"
+              min={0}
+              step={1}
+              value={a.newsletterExtraEnvios || ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_NEWSLETTER_EXTRA_ENVIOS',
+                  value: Number.parseInt(e.target.value, 10) || 0,
                 })
               }
             />
           </div>
-        ) : null}
-      </Card>
+
+          <Card className="add-page__bc">
+            <Toggle
+              checked={a.destinatariosExtrasEnabled}
+              onChange={(v) =>
+                dispatch({ type: 'TOGGLE_DESTINATARIOS_EXTRAS', enabled: v })
+              }
+              label="Destinatários Adicionais"
+              description="Faixa fixa de destinatários extras."
+            />
+            <SelectField
+              dense
+              id="de-tier"
+              label="Faixa"
+              disabled={!a.destinatariosExtrasEnabled}
+              value={a.destinatariosExtrasTierId ?? ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_DESTINATARIOS_EXTRAS_TIER',
+                  tierId: e.target.value || null,
+                })
+              }
+            >
+              <option value="">Selecione…</option>
+              {prices.additionals.destinatariosExtras.tiers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </SelectField>
+          </Card>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        open={openSection === 'others'}
+        onToggle={() => toggleSection('others')}
+        icon={Cpu}
+        title="Outros adicionais"
+      >
+        <div className="add-page__other">
+          <Toggle
+            checked={a.alertasWebRealtime}
+            onChange={(v) =>
+              dispatch({ type: 'SET_ADDITIONALS', patch: { alertasWebRealtime: v } })
+            }
+            label="Alertas Web em Tempo Real"
+            description="Cobrança fixa mensal."
+          />
+          <Toggle
+            checked={a.apiCService}
+            onChange={(v) =>
+              dispatch({ type: 'SET_ADDITIONALS', patch: { apiCService: v } })
+            }
+            label="Integração via API CService"
+            description="Cobrança fixa mensal."
+          />
+          <Toggle
+            checked={a.curadoriaAprovacaoManual}
+            onChange={(v) =>
+              dispatch({
+                type: 'SET_ADDITIONALS',
+                patch: { curadoriaAprovacaoManual: v },
+              })
+            }
+            label="Curadoria e Aprovação Manual"
+            description="Cobrança fixa mensal."
+          />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        open={openSection === 'modifiers'}
+        onToggle={() => toggleSection('modifiers')}
+        icon={BadgePercent}
+        title="Modificadores percentuais"
+      >
+        <div className="add-page__other">
+          <Toggle
+            checked={a.plantaoFimSemana}
+            onChange={(v) =>
+              dispatch({ type: 'SET_ADDITIONALS', patch: { plantaoFimSemana: v } })
+            }
+            label="Plantão Finais de Semana e Feriados"
+            description={`+${prices.additionals.plantaoPercent}% sobre o subtotal.`}
+          />
+          <Toggle
+            checked={a.aprovacaoAutomatica}
+            onChange={(v) =>
+              dispatch({ type: 'SET_ADDITIONALS', patch: { aprovacaoAutomatica: v } })
+            }
+            label="Aprovação / Envio Automático"
+            description={`Desconto de ${prices.additionals.aprovacaoAutomaticaPercent}% aplicado após o plantão.`}
+          />
+        </div>
+      </AccordionSection>
+
+      <p className="add-page__hint">
+        <Bell size={14} strokeWidth={2} aria-hidden /> O modo de cobrança (Fixo
+        ou Variável) dos Serviços por Matéria é escolhido no próximo passo
+        (Resumo da Proposta).
+      </p>
     </div>
   )
 }

@@ -1,9 +1,10 @@
 import { Toggle } from '@/components/ui/Toggle'
 import { Card } from '@/components/ui/Card'
+import { SelectField } from '@/components/ui/SelectField'
 import { ServiceToggleGrid } from '@/features/proposal/components/ServiceToggleGrid'
 import { SECTION_KEYS } from '@/domain/types'
+import type { MatterServiceKey } from '@/domain/types'
 import { SECTION_LABELS } from '@/domain/prices'
-import type { MonitoringServiceKey } from '@/domain/types'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import './TiposMonitoramento.css'
 
@@ -11,6 +12,10 @@ export function TiposMonitoramento() {
   const { state, dispatch } = useProposal()
   const tab = state.activeScopeTab
   const sec = state.sections[tab]
+  const avaliacaoSelected = SECTION_KEYS.some(
+    (k) => state.sections[k].services.avaliacao,
+  )
+  const avaliacaoTiers = state.prices.matterServices.avaliacao.tiers
 
   return (
     <div className="page-etapa tipos-page">
@@ -47,17 +52,16 @@ export function TiposMonitoramento() {
         </div>
 
         <div className="tipos-page__services-head">
-          <h2 className="tipos-page__services-title">Serviços disponíveis</h2>
+          <h2 className="tipos-page__services-title">Serviços por matéria</h2>
           <p className="tipos-page__services-sub">
-            Selecione os formatos de entrega e análise aplicados ao volume deste
-            escopo.
+            Selecione os serviços que serão aplicados a este escopo. 
           </p>
         </div>
 
         <ServiceToggleGrid
           variant="large"
           selected={sec.services}
-          onToggle={(service: MonitoringServiceKey) =>
+          onToggle={(service: MatterServiceKey) =>
             dispatch({
               type: 'TOGGLE_SECTION_SERVICE',
               section: tab,
@@ -65,12 +69,37 @@ export function TiposMonitoramento() {
             })
           }
         />
+
+        {avaliacaoSelected ? (
+          <div className="tipos-page__aval">
+            <SelectField
+              dense
+              id="aval-tier"
+              label="Faixa da Avaliação (quantidade de campos)"
+              hint="Tabelas configuradas pelo administrador."
+              value={state.avaliacaoTierId ?? ''}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_AVALIACAO_TIER',
+                  tierId: e.target.value || null,
+                })
+              }
+            >
+              <option value="">Selecione uma faixa…</option>
+              {avaliacaoTiers.map((tier) => (
+                <option key={tier.id} value={tier.id}>
+                  {tier.label} ({tier.fieldCount} campos)
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        ) : null}
       </Card>
 
       <div className="tipos-page__info">
-        Os serviços marcados multiplicam o volume estimado deste escopo (
-        <strong>{sec.volume} notícias/mês</strong>) pelos respectivos preços
-        unitários configurados.
+        Os serviços marcados se aplicam ao volume estimado deste escopo (
+        <strong>{sec.volume} notícias/mês</strong>) e ao volume total. Use o toggle
+        Fixo/Variável no Resumo da Proposta para alternar o modo de cobrança ao vivo.
       </div>
     </div>
   )

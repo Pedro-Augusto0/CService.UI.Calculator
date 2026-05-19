@@ -2,7 +2,12 @@ import { updateCalculations } from '@/domain/calculations'
 import type { CalculationInput, CalculationResult, ProposalMeta } from '@/domain/types'
 import type { ProposalState } from './proposalActions'
 
-const STORAGE_KEY = 'cservice.ui.calculator.saved-proposals.v1'
+/**
+ * V2 = schema da Fase 1 (catálogo novo + modos de cobrança).
+ * Propostas em V1 são descartadas porque a tabela de preços e o estado mudaram.
+ */
+const STORAGE_KEY = 'cservice.ui.calculator.saved-proposals.v2'
+const LEGACY_STORAGE_KEYS = ['cservice.ui.calculator.saved-proposals.v1']
 const FIRST_PROPOSAL_NUMBER = 251
 
 export const SAVED_PROPOSAL_STATUSES = [
@@ -27,8 +32,30 @@ function hasBrowserStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 }
 
+function clearLegacyStorage() {
+  if (!hasBrowserStorage()) return
+  for (const key of LEGACY_STORAGE_KEYS) {
+    try {
+      window.localStorage.removeItem(key)
+    } catch {
+      // falha silenciosa
+    }
+  }
+}
+
 function isSavedProposalStatus(value: unknown): value is SavedProposalStatus {
   return typeof value === 'string' && SAVED_PROPOSAL_STATUSES.includes(value as SavedProposalStatus)
+}
+
+function isCurrentSchemaState(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v.globalBillingMode === 'string' &&
+    Boolean(v.reports) &&
+    Boolean(v.additionals) &&
+    typeof v.validadeDias === 'number'
+  )
 }
 
 function isSavedProposalRecord(value: unknown): value is SavedProposalRecord {
@@ -41,8 +68,7 @@ function isSavedProposalRecord(value: unknown): value is SavedProposalRecord {
     typeof candidate.createdAt === 'number' &&
     typeof candidate.updatedAt === 'number' &&
     isSavedProposalStatus(candidate.status) &&
-    Boolean(candidate.state) &&
-    typeof candidate.state === 'object'
+    isCurrentSchemaState(candidate.state)
   )
 }
 
@@ -52,6 +78,7 @@ export function sortSavedProposals(records: SavedProposalRecord[]): SavedProposa
 
 export function loadSavedProposals(): SavedProposalRecord[] {
   if (!hasBrowserStorage()) return []
+  clearLegacyStorage()
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -112,10 +139,12 @@ export function resolveProposalMeta(state: ProposalState): ProposalMeta {
 export function toCalculationInputFromState(state: ProposalState): CalculationInput {
   return {
     sections: state.sections,
-    broadcast: state.broadcast,
+    globalBillingMode: state.globalBillingMode,
+    avaliacaoTierId: state.avaliacaoTierId,
+    reports: state.reports,
     additionals: state.additionals,
-    operational: state.operational,
     precoBaseMensal: state.precoBaseMensal,
+    validadeDias: state.validadeDias,
   }
 }
 

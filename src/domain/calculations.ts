@@ -1,66 +1,110 @@
-import type { Prices } from './prices'
-import { MONITORING_LABELS } from './prices'
+import type { Prices, RangeTier } from './prices'
+import { MATTER_SERVICE_LABELS } from './prices'
 import type {
+  AdditionalsState,
   CalculationInput,
   CalculationResult,
-  MonitoringServiceKey,
+  GlobalBillingMode,
+  MatterServiceKey,
+  ReportsState,
   SectionKey,
-  ServiceValues,
 } from './types'
-import { MONITORING_SERVICE_KEYS, SECTION_KEYS, SERVICE_VALUE_KEYS } from './types'
+import { MATTER_SERVICE_KEYS, SECTION_KEYS } from './types'
 
-export function emptyServiceValues(): ServiceValues {
-  const o = {} as ServiceValues
-  for (const k of SERVICE_VALUE_KEYS) {
-    o[k] = 0
-  }
+function emptyMatterValues(): Record<MatterServiceKey, number> {
+  const o = {} as Record<MatterServiceKey, number>
+  for (const k of MATTER_SERVICE_KEYS) o[k] = 0
   return o
 }
 
-function sumServiceValues(sv: ServiceValues): number {
-  let t = 0
-  for (const k of SERVICE_VALUE_KEYS) {
-    t += sv[k]
-  }
-  return t
+/**
+ * Resolve o modo de cobrança efetivo para um serviço por matéria:
+ * - 'fixed' ou 'variable' configurados pelo admin sempre prevalecem.
+ * - 'both' segue o toggle global escolhido na proposta.
+ */
+export function effectiveMode(
+  configMode: 'fixed' | 'variable' | 'both',
+  toggle: GlobalBillingMode,
+): GlobalBillingMode {
+  if (configMode === 'both') return toggle
+  return configMode
 }
 
-function monitoringSum(sv: ServiceValues): number {
-  let t = 0
-  for (const k of MONITORING_SERVICE_KEYS) {
-    t += sv[k]
-  }
-  return t
+function findTier(tiers: RangeTier[], id: string | null): RangeTier | null {
+  if (!id) return null
+  return tiers.find((t) => t.id === id) ?? null
 }
 
-function additionalsDisplaySum(sv: ServiceValues): number {
-  return (
-    sv.tv +
-    sv.radio +
-    sv.midias_sociais +
-    sv.alertas_web +
-    sv.api +
-    sv.stories +
-    sv.destaques +
-    sv.envios
+function additionalsBucket(
+  additionals: AdditionalsState,
+  prices: Prices,
+): number {
+  const a = additionals
+  const p = prices.additionals
+  let total = 0
+
+  if (a.radioEnabled && a.radioRegion) {
+    total += p.radio[a.radioRegion]
+  }
+  if (a.tvEnabled && a.tvRegion) {
+    total += p.tv[a.tvRegion]
+  }
+  if (a.midiasSociaisEnabled) {
+    const tier = findTier(p.midiasSociais.tiers, a.midiasSociaisTierId)
+    if (tier) total += tier.price
+  }
+  if (a.storiesInstagramEnabled) {
+    const tier = findTier(p.storiesInstagram.tiers, a.storiesInstagramTierId)
+    if (tier) total += tier.price
+  }
+  if (a.alertasWebRealtime) total += p.alertasWebRealtime
+  if (a.apiCService) total += p.apiCService
+  if (a.newsletterWhatsApp) total += p.newsletterWhatsApp
+  if (a.newsletterExtraEnvios > 0) {
+    total += a.newsletterExtraEnvios * p.newsletterExtraEnvio
+  }
+  if (a.destinatariosExtrasEnabled) {
+    const tier = findTier(p.destinatariosExtras.tiers, a.destinatariosExtrasTierId)
+    if (tier) total += tier.price
+  }
+  if (a.curadoriaAprovacaoManual) total += p.curadoriaAprovacaoManual
+
+  return total
+}
+
+function reportsBucket(reports: ReportsState, prices: Prices): number {
+  let total = 0
+  if (reports.executivoEnabled && reports.executivoFreq) {
+    total += prices.reports.executivo.byFrequency[reports.executivoFreq] ?? 0
+  }
+  if (reports.estrategicoEnabled && reports.estrategicoFreq) {
+    total += prices.reports.estrategico.byFrequency[reports.estrategicoFreq] ?? 0
+  }
+  if (reports.biEnabled) {
+    total += prices.reports.bi.setupPrice + prices.reports.bi.monthlyMaintenance
+  }
+  return total
+}
+
+function selectedMatterLabels(
+  matterValues: Record<MatterServiceKey, number>,
+): string[] {
+  return MATTER_SERVICE_KEYS.filter((k) => matterValues[k] > 0).map(
+    (k) => MATTER_SERVICE_LABELS[k],
   )
 }
 
-export function collectSelectedMonitoringLabels(
-  sections: CalculationInput['sections'],
-): string[] {
-  const acc = new Set<MonitoringServiceKey>()
-  for (const sk of SECTION_KEYS) {
-    const sec = sections[sk]
-    for (const svc of MONITORING_SERVICE_KEYS) {
-      if (sec.services[svc]) acc.add(svc)
-    }
-  }
-  return [...acc].map((k) => MONITORING_LABELS[k])
-}
-
 /**
- * Ordem e regras conforme especificação do produto.
+ * Motor de cálculo da proposta — Fase 1.
+ *
+ * Ordem de aplicação:
+ *  1. Soma Serviços por Matéria (modo resolvido por serviço; Avaliação usa faixa).
+ *  2. Soma Relatórios + BI.
+ *  3. Soma Adicionais (fixos, faixas e fixo por envio extra de newsletter).
+ *  4. Subtotal = matterServices + reports + additionals.
+ *  5. Acréscimo Plantão de Finais de Semana/Feriados: × (1 + plantaoPercent/100).
+ *  6. Desconto Aprovação Automática: × (1 - aprovacaoAutomaticaPercent/100).
+ *  7. Preço Base Mensal é somado ao final (mínimo garantido do pacote).
  */
 export function updateCalculations(
   input: CalculationInput,
@@ -68,142 +112,120 @@ export function updateCalculations(
 ): CalculationResult {
   let totalKeywords = 0
   let totalVolume = 0
-  const serviceValues = emptyServiceValues()
-  let hasActiveServices = false
-
-  for (const sectionKey of SECTION_KEYS) {
-    const sec = input.sections[sectionKey]
+  for (const sk of SECTION_KEYS) {
+    const sec = input.sections[sk]
     totalKeywords += sec.keywords.length
     totalVolume += sec.volume
+  }
 
-    if (sec.volume > 0) {
-      for (const svc of MONITORING_SERVICE_KEYS) {
-        if (!sec.services[svc]) continue
-        const unit = prices.servicePrices[svc]
-        const totalServicePrice = unit * sec.volume
-        serviceValues[svc] += totalServicePrice
-        hasActiveServices = true
+  const matterServiceValues = emptyMatterValues()
+  const selectedSet = new Set<MatterServiceKey>()
+  for (const sk of SECTION_KEYS) {
+    const sec = input.sections[sk]
+    for (const svc of MATTER_SERVICE_KEYS) {
+      if (sec.services[svc]) selectedSet.add(svc)
+    }
+  }
+
+  for (const svc of selectedSet) {
+    if (svc === 'avaliacao') {
+      const conf = prices.matterServices.avaliacao
+      const tier =
+        conf.tiers.find((t) => t.id === input.avaliacaoTierId) ?? null
+      if (!tier) continue
+      const mode = effectiveMode(conf.mode, input.globalBillingMode)
+      if (mode === 'fixed') {
+        matterServiceValues.avaliacao += tier.fixedPrice
+      } else {
+        matterServiceValues.avaliacao += tier.variablePrice * totalVolume
       }
+      continue
+    }
+
+    const conf = prices.matterServices[svc]
+    const mode = effectiveMode(conf.mode, input.globalBillingMode)
+    if (mode === 'fixed') {
+      matterServiceValues[svc] += conf.fixedPrice
+    } else {
+      matterServiceValues[svc] += conf.variablePrice * totalVolume
     }
   }
 
-  // Broadcast (atribuição direta)
-  if (input.broadcast.tvEnabled && input.broadcast.tvRegion) {
-    serviceValues.tv = prices.broadcast.tv[input.broadcast.tvRegion]
-  }
-  if (input.broadcast.radioEnabled && input.broadcast.radioRegion) {
-    serviceValues.radio = prices.broadcast.radio[input.broadcast.radioRegion]
-  }
-  if (input.broadcast.relatorioEnabled && input.broadcast.relatorioFreq) {
-    serviceValues.relatorio =
-      prices.broadcast.relatorio[input.broadcast.relatorioFreq]
-  }
-
-  const envios = Math.max(0, Math.floor(Number(input.operational.enviosDiarios) || 0))
-
-  // Serviços adicionais (checkboxes / toggles)
-  if (input.additionals.midiasSociais) {
-    const postsPerMonth = envios * 30
-    const included = prices.additionals.midiasSociaisIncludedPosts
-    if (postsPerMonth > included) {
-      const step = prices.additionals.midiasSociaisExcessPostsStep
-      const excessBlocks = Math.ceil((postsPerMonth - included) / step)
-      serviceValues.midias_sociais =
-        excessBlocks * prices.additionals.midiasSociaisExcessPricePerStep
-    }
-  }
-
-  if (input.additionals.alertasWeb && envios > 1) {
-    serviceValues.alertas_web =
-      (envios - 1) * prices.additionals.alertasWebPricePerExtraEnvio
-  }
-
-  if (input.additionals.api) {
-    serviceValues.api = prices.additionals.api
-  }
-  if (input.additionals.stories) {
-    serviceValues.stories = prices.additionals.stories
-  }
-  if (input.additionals.destaques) {
-    serviceValues.destaques = prices.additionals.destaques
-  }
-
-  const destinatarios = Math.max(
+  const matterServicesTotal = MATTER_SERVICE_KEYS.reduce(
+    (acc, k) => acc + matterServiceValues[k],
     0,
-    Math.floor(Number(input.operational.numDestinatarios) || 0),
   )
 
-  if (envios > 0 && destinatarios > 0) {
-    const dias = input.operational.envioFeriadosFds ? 30 : 22
-    serviceValues.envios =
-      envios * destinatarios * dias * prices.destinatarioPrice
-  }
+  const reportsTotal = reportsBucket(input.reports, prices)
+  const additionalsTotal = additionalsBucket(input.additionals, prices)
 
-  const volumeMonetaryBase = totalVolume * prices.volumePrice
-  const sumSvc = sumServiceValues(serviceValues)
-  const subtotalBeforeModifiers = volumeMonetaryBase + sumSvc
+  const subtotalBeforeModifiers =
+    matterServicesTotal + reportsTotal + additionalsTotal
 
-  const factorWeekend = input.operational.envioFeriadosFds ? 1.25 : 1
-  const factorAutoApproval = input.operational.aprovacaoAutomatica ? 0.6 : 1
+  const plantaoPercent = Math.max(0, prices.additionals.plantaoPercent)
+  const aprovPercent = Math.max(0, prices.additionals.aprovacaoAutomaticaPercent)
 
-  let precoTotal = subtotalBeforeModifiers
-  precoTotal *= factorWeekend
-  const afterWeekend = precoTotal
-  precoTotal *= factorAutoApproval
-  const priceAfterModifiersBeforeMonthlyBase = precoTotal
+  const factorPlantao = input.additionals.plantaoFimSemana
+    ? 1 + plantaoPercent / 100
+    : 1
+  const factorAprovacao = input.additionals.aprovacaoAutomatica
+    ? Math.max(0, 1 - aprovPercent / 100)
+    : 1
 
-  const valorAcrescimoFimDeSemana =
-    factorWeekend > 1 ? afterWeekend - subtotalBeforeModifiers : 0
-  const valorImpactoAprovacaoAutomatica =
-    priceAfterModifiersBeforeMonthlyBase - afterWeekend
+  const afterPlantao = subtotalBeforeModifiers * factorPlantao
+  const afterAprovacao = afterPlantao * factorAprovacao
+
+  const valorAcrescimoPlantao = afterPlantao - subtotalBeforeModifiers
+  const valorDescontoAprovacaoAutomatica = afterAprovacao - afterPlantao
 
   const precoBaseMensal = Math.max(0, Number(input.precoBaseMensal) || 0)
-  const finalPrice = priceAfterModifiersBeforeMonthlyBase + precoBaseMensal
+  const finalPrice = afterAprovacao + precoBaseMensal
 
-  const servicosMonitoramento = volumeMonetaryBase + monitoringSum(serviceValues)
-  const relatorioAnalitico = serviceValues.relatorio
-  const servicosAdicionais = additionalsDisplaySum(serviceValues)
+  const hasActiveServices =
+    matterServicesTotal > 0 || reportsTotal > 0 || additionalsTotal > 0
 
   return {
     totalKeywords,
     totalVolume,
     hasActiveServices,
-    serviceValues,
-    volumeMonetaryBase,
-    sumServiceValues: sumSvc,
+    matterServiceValues,
+    matterServicesTotal,
+    reportsTotal,
+    additionalsTotal,
     subtotalBeforeModifiers,
-    factorWeekend,
-    factorAutoApproval,
-    priceAfterModifiersBeforeMonthlyBase,
-    valorAcrescimoFimDeSemana,
-    valorImpactoAprovacaoAutomatica,
+    plantaoPercent,
+    aprovacaoAutomaticaPercent: aprovPercent,
+    factorPlantao,
+    factorAprovacaoAutomatica: factorAprovacao,
+    valorAcrescimoPlantao,
+    valorDescontoAprovacaoAutomatica,
     finalPrice,
-    selectedMonitoringLabels: collectSelectedMonitoringLabels(input.sections),
+    globalBillingMode: input.globalBillingMode,
+    selectedMatterLabels: selectedMatterLabels(matterServiceValues),
     breakdownGroups: {
       precoBaseMensal,
-      servicosMonitoramento,
-      servicosAdicionais,
-      relatorioAnalitico,
+      servicosMateria: matterServicesTotal,
+      relatoriosBi: reportsTotal,
+      servicosAdicionais: additionalsTotal,
     },
   }
 }
 
-export function defaultSections(): Record<
-  SectionKey,
-  { keywords: string[]; volume: number; services: Record<MonitoringServiceKey, boolean> }
-> {
-  const emptyServices = {} as Record<MonitoringServiceKey, boolean>
-  for (const k of MONITORING_SERVICE_KEYS) {
-    emptyServices[k] = false
-  }
-  const section = () => ({
+export function defaultSections(): Record<SectionKey, {
+  keywords: string[]
+  volume: number
+  services: Record<MatterServiceKey, boolean>
+}> {
+  const emptyServices = {} as Record<MatterServiceKey, boolean>
+  for (const k of MATTER_SERVICE_KEYS) emptyServices[k] = false
+  const make = () => ({
     keywords: [] as string[],
     volume: 0,
     services: { ...emptyServices },
   })
   return {
-    marcas: section(),
-    concorrentes: section(),
-    setor: section(),
+    marcas: make(),
+    concorrentes: make(),
+    setor: make(),
   }
 }

@@ -1,4 +1,1 @@
-export {
-  PriceSettingsFields,
-  type PriceSettingsSection,
-} from './PriceSettingsFields'
+export { PriceSettingsFields } from './PriceSettingsFields'

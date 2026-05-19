@@ -1,8 +1,8 @@
 import type {
   AdditionalsState,
-  BroadcastState,
-  OperationalState,
+  GlobalBillingMode,
   ProposalSections,
+  ReportsState,
   SectionKey,
 } from '@/domain/types'
 import { SECTION_KEYS } from '@/domain/types'
@@ -12,9 +12,11 @@ import { createInitialProposalState, type ProposalStateSeed } from './proposalRe
 /** Parte da proposta reutilizável em modelos (sem cliente, volume ou termos). */
 export interface ProposalTemplateSnapshot {
   sections: ProposalSections
-  broadcast: BroadcastState
+  globalBillingMode: GlobalBillingMode
+  avaliacaoTierId: string | null
+  reports: ReportsState
   additionals: AdditionalsState
-  operational: OperationalState
+  validadeDias: number
   applyServicesToAll: boolean
   activeScopeTab: SectionKey
 }
@@ -33,9 +35,11 @@ export function proposalStateToTemplateSnapshot(
 
   return {
     sections,
-    broadcast: structuredClone(state.broadcast),
+    globalBillingMode: state.globalBillingMode,
+    avaliacaoTierId: state.avaliacaoTierId,
+    reports: structuredClone(state.reports),
     additionals: structuredClone(state.additionals),
-    operational: structuredClone(state.operational),
+    validadeDias: state.validadeDias,
     applyServicesToAll: state.applyServicesToAll,
     activeScopeTab: state.activeScopeTab,
   }
@@ -54,9 +58,11 @@ export function proposalSnapshotToState(
     savedProposalId: null,
     lastSavedAt: null,
     sections: structuredClone(snapshot.sections),
-    broadcast: { ...snapshot.broadcast },
-    additionals: { ...snapshot.additionals },
-    operational: { ...snapshot.operational },
+    globalBillingMode: snapshot.globalBillingMode,
+    avaliacaoTierId: snapshot.avaliacaoTierId,
+    reports: structuredClone(snapshot.reports),
+    additionals: structuredClone(snapshot.additionals),
+    validadeDias: snapshot.validadeDias,
     applyServicesToAll: snapshot.applyServicesToAll,
     activeScopeTab: snapshot.activeScopeTab,
   }
@@ -68,12 +74,12 @@ export function isProposalTemplateSnapshot(value: unknown): value is ProposalTem
   return (
     Boolean(v.sections)
     && typeof v.sections === 'object'
-    && Boolean(v.broadcast)
-    && typeof v.broadcast === 'object'
+    && typeof v.globalBillingMode === 'string'
+    && Boolean(v.reports)
+    && typeof v.reports === 'object'
     && Boolean(v.additionals)
     && typeof v.additionals === 'object'
-    && Boolean(v.operational)
-    && typeof v.operational === 'object'
+    && typeof v.validadeDias === 'number'
     && typeof v.applyServicesToAll === 'boolean'
     && typeof v.activeScopeTab === 'string'
   )

@@ -1,6 +1,6 @@
 export type ConfigTabId =
   | 'base'
-  | 'services'
-  | 'distribution'
+  | 'matter'
   | 'reports'
-  | 'extras'
+  | 'additionals'
+  | 'outros'
