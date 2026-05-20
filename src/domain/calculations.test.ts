@@ -44,6 +44,8 @@ function basePrices(): Prices {
       bi: { setupPrice: 2000, monthlyMaintenance: 500 },
     },
     additionals: {
+      impresso: 120,
+      web: { nacional: 180, internacional: 400 },
       radio: { spRj: 100, nacional: 300 },
       tv: { spRj: 200, nacional: 600 },
       midiasSociais: {
@@ -89,6 +91,9 @@ function baseInput(): CalculationInput {
       biEnabled: false,
     },
     additionals: {
+      impressoEnabled: false,
+      webNacionalEnabled: false,
+      webInternacionalEnabled: false,
       radioEnabled: false,
       radioRegion: null,
       tvEnabled: false,
@@ -210,6 +215,14 @@ describe('updateCalculations', () => {
     input.reports.biEnabled = true
     const r = updateCalculations(input, basePrices())
     expect(r.reportsTotal).toBe(600 + 900 + 2000 + 500)
+  })
+
+  it('impresso e web nacional/internacional somam independentemente', () => {
+    const input = baseInput()
+    input.additionals.impressoEnabled = true
+    input.additionals.webNacionalEnabled = true
+    input.additionals.webInternacionalEnabled = true
+    expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(120 + 180 + 400)
   })
 
   it('rádio cobrado apenas se enabled e com região', () => {

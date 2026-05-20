@@ -9,6 +9,7 @@ import {
   Layers,
   Package,
   Percent,
+  Radar,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -19,7 +20,12 @@ import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
 import type { MatterServiceKey } from '@/domain/types'
 import { formatCurrency } from '@/utils/currency'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
-import { buildAdditionalsRows, buildReportRows } from './resumoTables'
+import {
+  buildAdicionaisExtrasRows,
+  buildMonitoramentosRows,
+  buildReportRows,
+  sumPricedRows,
+} from './resumoTables'
 import './ResumoProposta.css'
 
 interface ResumoPropostaProps {
@@ -46,7 +52,13 @@ function setorResumoLine(keywords: string[]): string {
   return joined.length > 48 ? `${joined.slice(0, 46)}…` : joined
 }
 
-type DetailSectionKey = 'servicos' | 'relatorios' | 'adicionais' | 'ajustes' | 'parametros'
+type DetailSectionKey =
+  | 'servicos'
+  | 'monitoramentos'
+  | 'relatorios'
+  | 'adicionais'
+  | 'ajustes'
+  | 'parametros'
 
 function ResumoCollapseSection({
   title,
@@ -103,6 +115,7 @@ export function ResumoProposta({
   const [coberturaDetalheOpen, setCoberturaDetalheOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState<Record<DetailSectionKey, boolean>>({
     servicos: true,
+    monitoramentos: true,
     relatorios: true,
     adicionais: true,
     ajustes: true,
@@ -119,9 +132,24 @@ export function ResumoProposta({
     [state.reports, state.prices.reports],
   )
 
-  const additionalRows = useMemo(
-    () => buildAdditionalsRows(state.additionals, state.prices.additionals),
+  const monitoramentosRows = useMemo(
+    () => buildMonitoramentosRows(state.additionals, state.prices.additionals),
     [state.additionals, state.prices.additionals],
+  )
+
+  const adicionaisExtrasRows = useMemo(
+    () => buildAdicionaisExtrasRows(state.additionals, state.prices.additionals),
+    [state.additionals, state.prices.additionals],
+  )
+
+  const monitoramentosSubtotal = useMemo(
+    () => sumPricedRows(monitoramentosRows),
+    [monitoramentosRows],
+  )
+
+  const adicionaisExtrasSubtotal = useMemo(
+    () => sumPricedRows(adicionaisExtrasRows),
+    [adicionaisExtrasRows],
   )
 
   const matterRows = useMemo(() => {
@@ -250,7 +278,7 @@ export function ResumoProposta({
                 <ChevronDown
                   size={18}
                   strokeWidth={2}
-                  className={`resumo-page__coverage-chevron ${coberturaDetalheOpen ? 'resumo-page__coverage-chevron--up' : ''}`}
+                  className="resumo-page__coverage-chevron"
                   aria-hidden
                 />
               </button>
@@ -291,7 +319,7 @@ export function ResumoProposta({
                 <ChevronDown
                   size={18}
                   strokeWidth={2}
-                  className={`resumo-page__coverage-chevron ${coberturaDetalheOpen ? 'resumo-page__coverage-chevron--up' : ''}`}
+                  className="resumo-page__coverage-chevron"
                   aria-hidden
                 />
               </button>
@@ -309,7 +337,7 @@ export function ResumoProposta({
             <div>
               <h2 className="resumo-page__coverage-title">Cobertura do monitoramento</h2>
               <p className="resumo-page__coverage-desc">
-                Marcas, concorrentes e setor incluídos no escopo.
+                Próprio, concorrentes e setor incluídos no escopo.
               </p>
             </div>
           </div>
@@ -317,7 +345,7 @@ export function ResumoProposta({
             <div className="resumo-page__coverage-pill">
               <div className="resumo-page__coverage-pill-top">
                 <span className="resumo-page__dot resumo-page__dot--blue" aria-hidden />
-                <span className="resumo-page__coverage-label">Marcas</span>
+                <span className="resumo-page__coverage-label">Próprio</span>
               </div>
               <strong className="resumo-page__coverage-strong">{marcasN}</strong>
             </div>
@@ -461,6 +489,56 @@ export function ResumoProposta({
         </ResumoCollapseSection>
 
         <ResumoCollapseSection
+          title="Monitoramentos"
+          subtitle="Canais de mídia da proposta: impresso, web, broadcast e redes."
+          icon={<Radar size={18} strokeWidth={2} />}
+          iconClassName="resumo-page__section-icon--teal"
+          open={detailOpen.monitoramentos}
+          onToggle={() => toggleDetail('monitoramentos')}
+        >
+          <div className="resumo-page__table-scroll">
+            <table className="resumo-page__data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Canal</th>
+                  <th scope="col">Detalhe</th>
+                  <th scope="col" className="resumo-page__col-num">
+                    Valor mensal na proposta
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {monitoramentosRows.length ? (
+                  monitoramentosRows.map((row) => (
+                    <tr key={row.key}>
+                      <td>{row.label}</td>
+                      <td className="resumo-page__cell-muted">{row.detail}</td>
+                      <td className="resumo-page__col-num">
+                        <strong>{formatCurrency(row.value)}</strong>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="resumo-page__table-empty">
+                      Nenhum canal de monitoramento selecionado.
+                    </td>
+                  </tr>
+                )}
+                <tr className="resumo-page__data-table-foot">
+                  <td colSpan={2}>
+                    <strong>Subtotal monitoramentos</strong>
+                  </td>
+                  <td className="resumo-page__col-num">
+                    <strong>{formatCurrency(monitoramentosSubtotal)}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ResumoCollapseSection>
+
+        <ResumoCollapseSection
           title="Relatórios e BI"
           subtitle="Valores conforme catálogo configurado."
           icon={<FileBarChart size={18} strokeWidth={2} />}
@@ -512,7 +590,7 @@ export function ResumoProposta({
 
         <ResumoCollapseSection
           title="Serviços adicionais"
-          subtitle="Broadcast, API, newsletters e demais itens cobrados separadamente."
+          subtitle="Alertas, API, newsletter, destinatários extras e curadoria."
           icon={<Sparkles size={18} strokeWidth={2} />}
           iconClassName="resumo-page__section-icon--orange"
           open={detailOpen.adicionais}
@@ -530,8 +608,8 @@ export function ResumoProposta({
                 </tr>
               </thead>
               <tbody>
-                {additionalRows.length ? (
-                  additionalRows.map((row) => (
+                {adicionaisExtrasRows.length ? (
+                  adicionaisExtrasRows.map((row) => (
                     <tr key={row.key}>
                       <td>{row.label}</td>
                       <td className="resumo-page__cell-muted">{row.detail}</td>
@@ -549,10 +627,10 @@ export function ResumoProposta({
                 )}
                 <tr className="resumo-page__data-table-foot">
                   <td colSpan={2}>
-                    <strong>Subtotal serviços adicionais</strong>
+                    <strong>Subtotal demais adicionais</strong>
                   </td>
                   <td className="resumo-page__col-num">
-                    <strong>{formatCurrency(c.additionalsTotal)}</strong>
+                    <strong>{formatCurrency(adicionaisExtrasSubtotal)}</strong>
                   </td>
                 </tr>
               </tbody>

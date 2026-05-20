@@ -7,7 +7,12 @@ import type {
 } from '@/domain/types'
 import { SECTION_KEYS } from '@/domain/types'
 import type { ProposalState } from './proposalActions'
-import { createInitialProposalState, type ProposalStateSeed } from './proposalReducer'
+import {
+  coerceLoadedAdditionals,
+  createInitialProposalState,
+  emptyAdditionals,
+  type ProposalStateSeed,
+} from './proposalReducer'
 
 /** Parte da proposta reutilizável em modelos (sem cliente, volume ou termos). */
 export interface ProposalTemplateSnapshot {
@@ -61,7 +66,11 @@ export function proposalSnapshotToState(
     globalBillingMode: snapshot.globalBillingMode,
     avaliacaoTierId: snapshot.avaliacaoTierId,
     reports: structuredClone(snapshot.reports),
-    additionals: structuredClone(snapshot.additionals),
+    additionals: coerceLoadedAdditionals({
+      ...emptyAdditionals(),
+      ...structuredClone(snapshot.additionals),
+    }),
+    wizardVersion: 2,
     validadeDias: snapshot.validadeDias,
     applyServicesToAll: snapshot.applyServicesToAll,
     activeScopeTab: snapshot.activeScopeTab,

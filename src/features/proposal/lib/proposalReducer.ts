@@ -1,16 +1,21 @@
-import { DEFAULT_PRECO_BASE_MENSAL, DEFAULT_PRICES } from '@/domain/prices'
+import {
+  DEFAULT_PRECO_BASE_MENSAL,
+  DEFAULT_PRICES,
+  normalizePrices,
+} from '@/domain/prices'
 import { defaultSections } from '@/domain/calculations'
 import type {
   AdditionalsState,
   MatterServiceKey,
   ProposalSections,
+  RegionKey,
   ReportsState,
   SectionKey,
 } from '@/domain/types'
 import { SECTION_KEYS } from '@/domain/types'
 import type { ProposalAction, ProposalState } from './proposalActions'
 
-export const STEP_COUNT = 4
+export const STEP_COUNT = 5
 
 export interface ProposalStateSeed {
   precoBaseMensal?: number
@@ -27,6 +32,9 @@ const EMPTY_REPORTS: ReportsState = {
 }
 
 const EMPTY_ADDITIONALS: AdditionalsState = {
+  impressoEnabled: false,
+  webNacionalEnabled: false,
+  webInternacionalEnabled: false,
   radioEnabled: false,
   radioRegion: null,
   tvEnabled: false,
@@ -54,10 +62,50 @@ export function emptyAdditionals(): AdditionalsState {
   return { ...EMPTY_ADDITIONALS }
 }
 
+type LegacyAdditionalsInput = Partial<AdditionalsState> & {
+  impressoRegion?: RegionKey | null
+  webEnabled?: boolean
+  webRegion?: RegionKey | null
+}
+
+/** Mescla dados persistidos (incl. formato legado com região em impresso/web). */
+export function coerceLoadedAdditionals(raw: unknown): AdditionalsState {
+  const e = emptyAdditionals()
+  if (!raw || typeof raw !== 'object') return e
+  const r = raw as LegacyAdditionalsInput
+  const webNacional =
+    typeof r.webNacionalEnabled === 'boolean'
+      ? r.webNacionalEnabled
+      : Boolean(r.webEnabled === true && r.webRegion != null)
+  return {
+    ...e,
+    impressoEnabled: Boolean(r.impressoEnabled),
+    webNacionalEnabled: webNacional,
+    webInternacionalEnabled: Boolean(r.webInternacionalEnabled),
+    radioEnabled: Boolean(r.radioEnabled),
+    radioRegion: r.radioRegion ?? null,
+    tvEnabled: Boolean(r.tvEnabled),
+    tvRegion: r.tvRegion ?? null,
+    midiasSociaisEnabled: Boolean(r.midiasSociaisEnabled),
+    midiasSociaisTierId: r.midiasSociaisTierId ?? null,
+    storiesInstagramEnabled: Boolean(r.storiesInstagramEnabled),
+    storiesInstagramTierId: r.storiesInstagramTierId ?? null,
+    alertasWebRealtime: Boolean(r.alertasWebRealtime),
+    apiCService: Boolean(r.apiCService),
+    newsletterWhatsApp: Boolean(r.newsletterWhatsApp),
+    newsletterExtraEnvios: Math.max(0, Math.floor(Number(r.newsletterExtraEnvios) || 0)),
+    destinatariosExtrasEnabled: Boolean(r.destinatariosExtrasEnabled),
+    destinatariosExtrasTierId: r.destinatariosExtrasTierId ?? null,
+    plantaoFimSemana: Boolean(r.plantaoFimSemana),
+    curadoriaAprovacaoManual: Boolean(r.curadoriaAprovacaoManual),
+    aprovacaoAutomatica: Boolean(r.aprovacaoAutomatica),
+  }
+}
+
 export function createInitialProposalState(
   seed: ProposalStateSeed = {},
 ): ProposalState {
-  const prices = structuredClone(seed.prices ?? DEFAULT_PRICES)
+  const prices = normalizePrices(structuredClone(seed.prices ?? DEFAULT_PRICES))
   const validadeDias = prices.validadeOptions[0] ?? 30
   return {
     currentStep: 0,
@@ -75,6 +123,8 @@ export function createInitialProposalState(
     prices,
     applyServicesToAll: false,
     activeScopeTab: 'marcas',
+    /** 2 = assistente com 5 etapas; ausente/<2 trata como fluxo legado de 4 etapas ao carregar. */
+    wizardVersion: 2,
     savedProposalId: null,
     lastSavedAt: null,
     pricingConfigSavedAt: seed.pricingConfigSavedAt ?? Date.now(),
@@ -108,8 +158,21 @@ export function proposalReducer(
         ...state,
         currentStep: Math.max(0, Math.min(STEP_COUNT - 1, action.step)),
       }
-    case 'LOAD_PROPOSAL_STATE':
-      return structuredClone(action.state)
+    case 'LOAD_PROPOSAL_STATE': {
+      const raw = structuredClone(action.state)
+      const legacyWizard = (raw.wizardVersion ?? 1) < 2
+      let currentStep = raw.currentStep
+      if (legacyWizard && (currentStep === 2 || currentStep === 3)) {
+        currentStep = currentStep + 1
+      }
+      return {
+        ...raw,
+        currentStep,
+        wizardVersion: 2,
+        prices: normalizePrices(structuredClone(raw.prices)),
+        additionals: coerceLoadedAdditionals(structuredClone(raw.additionals)),
+      }
+    }
     case 'RESET_PROPOSAL':
       return createInitialProposalState({
         precoBaseMensal: state.precoBaseMensal,
@@ -204,6 +267,30 @@ export function proposalReducer(
       return {
         ...state,
         additionals: { ...state.additionals, ...action.patch },
+      }
+    case 'TOGGLE_IMPRESSO':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          impressoEnabled: action.enabled,
+        },
+      }
+    case 'TOGGLE_WEB_NACIONAL':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          webNacionalEnabled: action.enabled,
+        },
+      }
+    case 'TOGGLE_WEB_INTERNACIONAL':
+      return {
+        ...state,
+        additionals: {
+          ...state.additionals,
+          webInternacionalEnabled: action.enabled,
+        },
       }
     case 'TOGGLE_RADIO':
       return {
@@ -306,13 +393,13 @@ export function proposalReducer(
     case 'SET_PRICES':
       return {
         ...state,
-        prices: structuredClone(action.prices),
+        prices: normalizePrices(structuredClone(action.prices)),
         pricingConfigSavedAt: Date.now(),
       }
     case 'COMMIT_PRICING_CONFIG':
       return {
         ...state,
-        prices: structuredClone(action.prices),
+        prices: normalizePrices(structuredClone(action.prices)),
         precoBaseMensal: Math.max(0, action.precoBaseMensal),
         pricingConfigSavedAt: action.savedAt ?? Date.now(),
       }

@@ -41,8 +41,11 @@ export function describeTemplateSnapshot(
 
   const a = snapshot.additionals
   const extras: string[] = []
-  if (a.tvEnabled && a.tvRegion) extras.push(`TV ${REGION_LABELS[a.tvRegion]}`)
+  if (a.impressoEnabled) extras.push('Impresso')
+  if (a.webNacionalEnabled) extras.push('Web (Nacional)')
+  if (a.webInternacionalEnabled) extras.push('Web (Internacional)')
   if (a.radioEnabled && a.radioRegion) extras.push(`Rádio ${REGION_LABELS[a.radioRegion]}`)
+  if (a.tvEnabled && a.tvRegion) extras.push(`TV ${REGION_LABELS[a.tvRegion]}`)
   if (a.midiasSociaisEnabled) extras.push('Mídias sociais')
   if (a.storiesInstagramEnabled) extras.push('Stories Instagram')
   if (a.alertasWebRealtime) extras.push('Alertas web')

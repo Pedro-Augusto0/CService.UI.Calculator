@@ -1,4 +1,5 @@
 import type { Prices } from '@/domain/prices'
+import { normalizePrices } from '@/domain/prices'
 
 /** Persistência da tabela de preços global (admin), independente do rascunho da proposta. */
 const STORAGE_KEY = 'cservice.ui.calculator.pricing-config.v1'
@@ -36,7 +37,7 @@ export function loadStoredPricingConfig(): StoredPricingConfig | null {
     const parsed: unknown = JSON.parse(raw)
     if (!isStoredPricingConfig(parsed)) return null
     return {
-      prices: structuredClone(parsed.prices as Prices),
+      prices: normalizePrices(structuredClone(parsed.prices as Prices)),
       precoBaseMensal: parsed.precoBaseMensal,
       pricingConfigSavedAt: parsed.pricingConfigSavedAt,
     }

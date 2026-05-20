@@ -48,6 +48,11 @@
   gap: 16px;
 }
 
+/** Terceiro campo (ex.: validade) ocupa a linha inteira no formulário inicial. */
+.escopo-page__meta-grid--with-validade > :nth-child(3) {
+  grid-column: 1 / -1;
+}
+
 .escopo-page__stack {
   display: flex;
   flex-direction: column;
@@ -125,6 +130,32 @@
   border-top: 1px solid var(--color-border);
 }
 
+.escopo-page__aval-wrap {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.escopo-page__services-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.escopo-page__services-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.escopo-page__services-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
 .escopo-page__icon {
   width: 30px;
   height: 30px;
@@ -161,6 +192,10 @@
 .escopo-page__hint {
   font-weight: 500;
   color: var(--color-muted);
+}
+
+.tipos-midia-page__lead {
+  margin-bottom: 0;
 }
 
 @media (max-width: 900px) {

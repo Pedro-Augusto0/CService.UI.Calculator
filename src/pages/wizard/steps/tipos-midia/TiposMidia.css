@@ -1,0 +1,128 @@
+/* Etapa «Tipos de mídia» — cartões alinhados e hierarquia visual consistente */
+
+.tipos-midia-page .add-page__grid {
+  margin-top: 14px;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+}
+
+.tipos-midia-page .tipos-midia-card.ui-card--padded {
+  padding: 15px 16px 16px;
+}
+
+.tipos-midia-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 252px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface) 0%, rgb(250 251 255 / 85%) 100%);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%), 0 4px 14px rgb(15 23 42 / 5%);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.tipos-midia-card:hover {
+  border-color: rgb(0 82 255 / 18%);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 5%),
+    0 6px 18px rgb(0 82 255 / 7%);
+}
+
+.tipos-midia-card__primary {
+  flex-shrink: 0;
+}
+
+.tipos-midia-card__primary > .ui-toggle + .ui-toggle {
+  margin-top: 12px;
+}
+
+.tipos-midia-card__footer {
+  margin-top: auto;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Cabeçalho do card Web (ritmo parecido com toggle + título nas outras caixas) */
+.tipos-midia-card__web-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.tipos-midia-card__web-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid rgb(0 82 255 / 14%);
+}
+
+.tipos-midia-card__web-titles {
+  min-width: 0;
+}
+
+.tipos-midia-card__web-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.tipos-midia-card__web-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+  max-width: 36ch;
+}
+
+.tipos-midia-card__web-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 13px;
+  border-radius: var(--radius-sm);
+  background: rgb(178 203 255 / 5%);
+  border: 1px solid rgb(0 82 255 / 10%);
+}
+
+/* Região SP+RJ / Nacional — estado ativo mais legível */
+.tipos-midia-page .add-page__region {
+  min-height: 40px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.tipos-midia-page .add-page__region--on {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow:
+    0 0 0 1px var(--color-primary),
+    inset 0 1px 0 rgb(255 255 255 / 55%);
+}
+
+.tipos-midia-page .add-page__region:not(:disabled):not(.add-page__region--on):hover {
+  border-color: rgb(0 82 255 / 28%);
+  background: rgb(0 82 255 / 4%);
+}
+
+@media (max-width: 600px) {
+  .tipos-midia-card {
+    min-height: 0;
+  }
+}

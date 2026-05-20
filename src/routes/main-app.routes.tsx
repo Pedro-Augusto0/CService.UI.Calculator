@@ -31,19 +31,23 @@ import { downloadHtmlDocument, proposalFilename } from '@/utils/downloadHtml'
 
 const STEPPER_STEPS = [
   {
-    title: 'Escopo do Monitoramento',
-    subtitle: 'Marcas, concorrentes e setor.',
+    title: 'Identificação',
+    subtitle: 'Cliente, proposta e validade.',
   },
   {
-    title: 'Tipos de Monitoramento',
-    subtitle: 'Selecione os serviços por escopo.',
+    title: 'Monitoramentos',
+    subtitle: 'Canais do monitoramento.',
   },
   {
-    title: 'Serviços Adicionais',
-    subtitle: 'Broadcast, relatórios e outros.',
+    title: 'Escopo',
+    subtitle: 'Próprio, concorrentes e setor.',
   },
   {
-    title: 'Resumo e Proposta',
+    title: 'Serviços adicionais',
+    subtitle: 'Relatórios, newsletter e mais.',
+  },
+  {
+    title: 'Resumo e proposta',
     subtitle: 'Revise e gere sua proposta.',
   },
 ]
@@ -303,7 +307,7 @@ export function MainAppRoutes() {
           route === 'wizard' ? (
             <SummaryPanel
               resumoStepActions={
-                step === 3
+                step === 4
                   ? {
                       onSaveProposal: () => {
                         saveCurrentProposal()

@@ -487,6 +487,12 @@
   border-color: #d8e6ff;
 }
 
+.resumo-page__section-icon--teal {
+  background: #ecfdff;
+  color: #0d9488;
+  border-color: #cffafe;
+}
+
 .resumo-page__section-titles {
   min-width: 0;
 }

@@ -1,17 +1,21 @@
 import type { SavedProposalRecord } from '@/features/proposal/lib/savedProposalStore'
+import { REGION_LABELS } from '@/domain/prices'
 
 export function collectExtraServices(record: SavedProposalRecord) {
   const a = record.state.additionals
   const r = record.state.reports
   const labels = [
+    a.impressoEnabled ? 'Impresso' : null,
+    a.webNacionalEnabled ? 'Web (Nacional)' : null,
+    a.webInternacionalEnabled ? 'Web (Internacional)' : null,
+    a.tvEnabled && a.tvRegion ? `TV ${REGION_LABELS[a.tvRegion]}` : null,
+    a.radioEnabled && a.radioRegion ? `Rádio ${REGION_LABELS[a.radioRegion]}` : null,
     a.midiasSociaisEnabled ? 'Mídias Sociais' : null,
     a.storiesInstagramEnabled ? 'Stories Instagram' : null,
     a.alertasWebRealtime ? 'Alertas web' : null,
     a.apiCService ? 'API CService' : null,
     a.newsletterWhatsApp ? 'Newsletter WhatsApp' : null,
     a.curadoriaAprovacaoManual ? 'Curadoria manual' : null,
-    a.tvEnabled ? 'TV' : null,
-    a.radioEnabled ? 'Rádio' : null,
     r.executivoEnabled ? 'Relatório Executivo' : null,
     r.estrategicoEnabled ? 'Relatório Estratégico' : null,
     r.biEnabled ? 'CService BI' : null,
@@ -19,7 +23,6 @@ export function collectExtraServices(record: SavedProposalRecord) {
 
   return labels.filter(Boolean) as string[]
 }
-
 export function formatEditedAt(timestamp: number) {
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',

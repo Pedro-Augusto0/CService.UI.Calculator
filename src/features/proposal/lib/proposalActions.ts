@@ -34,6 +34,9 @@ export type ProposalAction =
   | { type: 'SET_REPORT_ESTRATEGICO_FREQ'; freq: ReportFrequency | null }
   | { type: 'TOGGLE_BI'; enabled: boolean }
   | { type: 'SET_ADDITIONALS'; patch: Partial<AdditionalsState> }
+  | { type: 'TOGGLE_IMPRESSO'; enabled: boolean }
+  | { type: 'TOGGLE_WEB_NACIONAL'; enabled: boolean }
+  | { type: 'TOGGLE_WEB_INTERNACIONAL'; enabled: boolean }
   | { type: 'TOGGLE_RADIO'; enabled: boolean }
   | { type: 'SET_RADIO_REGION'; region: RegionKey | null }
   | { type: 'TOGGLE_TV'; enabled: boolean }
@@ -70,6 +73,8 @@ export interface ProposalState {
   prices: Prices
   applyServicesToAll: boolean
   activeScopeTab: SectionKey
+  /** Versão do fluxo do assistente (2 = cinco etapas). */
+  wizardVersion: number
   savedProposalId: string | null
   lastSavedAt: number | null
   /** Timestamp ms da última persistência da tabela de preços ou do preço base (config). */

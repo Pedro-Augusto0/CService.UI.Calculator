@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   Layers,
   Lightbulb,
+  Radar,
   type LucideIcon,
 } from 'lucide-react'
 import type { ConfigTabId } from '@/features/pricing-config/types'
@@ -95,9 +96,12 @@ export function ConfigPricingSidebar({
     [prices.reports],
   )
 
-  const additionalsItems = useMemo(() => {
+  const monitoramentosItems = useMemo(() => {
     const a = prices.additionals
     return [
+      { label: 'Impresso (mensal)', value: formatCurrency(a.impresso) },
+      { label: 'Web · Nacional (mensal)', value: formatCurrency(a.web.nacional) },
+      { label: 'Web · Internacional (mensal)', value: formatCurrency(a.web.internacional) },
       { label: 'Rádio SP/RJ', value: formatCurrency(a.radio.spRj) },
       { label: 'Rádio Nacional', value: formatCurrency(a.radio.nacional) },
       { label: 'TV SP/RJ', value: formatCurrency(a.tv.spRj) },
@@ -110,6 +114,12 @@ export function ConfigPricingSidebar({
         label: 'Stories Instagram (faixas por perfis)',
         value: `${a.storiesInstagram.tiers.length} faixa${a.storiesInstagram.tiers.length === 1 ? '' : 's'}`,
       },
+    ]
+  }, [prices.additionals])
+
+  const additionalsItems = useMemo(() => {
+    const a = prices.additionals
+    return [
       { label: 'Alertas web', value: formatCurrency(a.alertasWebRealtime) },
       { label: 'API CService', value: formatCurrency(a.apiCService) },
       { label: 'Newsletter WhatsApp', value: formatCurrency(a.newsletterWhatsApp) },
@@ -185,6 +195,15 @@ export function ConfigPricingSidebar({
       Icon: FileBarChart,
       tone: 'blue',
       items: reportItems,
+    },
+    {
+      key: 'monitoramentos',
+      tab: 'monitoramentos',
+      label: 'Monitoramentos',
+      summary: '7 canais',
+      Icon: Radar,
+      tone: 'orange',
+      items: monitoramentosItems,
     },
     {
       key: 'additionals',

@@ -4,6 +4,8 @@ import {
   ClipboardCheck,
   FileBarChart,
   Gauge,
+  Globe,
+  Globe2,
   Highlighter,
   Newspaper,
   RadioTower,
@@ -61,6 +63,27 @@ export function templateCardContentFromSnapshot(
   }
 
   const a = s.additionals
+  if (a.impressoEnabled) {
+    chips.push({
+      id: 'impresso',
+      label: 'Impresso',
+      Icon: Newspaper,
+    })
+  }
+  if (a.webNacionalEnabled) {
+    chips.push({
+      id: 'web-nac',
+      label: 'Web (Nacional)',
+      Icon: Globe,
+    })
+  }
+  if (a.webInternacionalEnabled) {
+    chips.push({
+      id: 'web-intl',
+      label: 'Web (Internacional)',
+      Icon: Globe2,
+    })
+  }
   if (a.tvEnabled && a.tvRegion) {
     chips.push({ id: 'tv', label: `TV ${REGION_LABELS[a.tvRegion]}`, Icon: TvIcon })
   }

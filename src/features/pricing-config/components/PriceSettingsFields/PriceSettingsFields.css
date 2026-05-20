@@ -38,9 +38,21 @@
 
 .matter-card__mode-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 12px;
   width: 100%;
+}
+
+/* Grid de modo + valores: usa a largura restante do cartão (evita coluna fixa de 200px e 3 linhas altas) */
+.config-base-card .config-base-card__field:has(.matter-card__mode-fields) {
+  flex: 1 1 320px;
+  width: auto;
+  min-width: min(100%, 180px);
+  max-width: none;
+}
+
+.config-page__base-layout .config-base-card .matter-card__mode-fields .ui-field--dense {
+  gap: 4px;
 }
 
 .matter-card__tiers {

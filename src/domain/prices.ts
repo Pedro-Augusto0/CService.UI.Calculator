@@ -51,6 +51,10 @@ export interface ReportsPrices {
 }
 
 export interface AdditionalsPrices {
+  /** Valor mensal único do monitoramento impresso. */
+  impresso: number
+  /** Web: nacional e internacional (preços separados; na proposta podem ser ambos ligados). */
+  web: { nacional: number; internacional: number }
   radio: { spRj: number; nacional: number }
   tv: { spRj: number; nacional: number }
   midiasSociais: { tiers: RangeTier[] }
@@ -151,6 +155,8 @@ export const DEFAULT_PRICES: Prices = {
     bi: { setupPrice: 4500, monthlyMaintenance: 900 },
   },
   additionals: {
+    impresso: 900,
+    web: { nacional: 1100, internacional: 2200 },
     radio: { spRj: 320, nacional: 950 },
     tv: { spRj: 500, nacional: 1800 },
     midiasSociais: {
@@ -190,12 +196,12 @@ export const DEFAULT_PRICES: Prices = {
 export const DEFAULT_PRECO_BASE_MENSAL = 1500
 
 export const MATTER_SERVICE_LABELS: Record<MatterServiceKey, string> = {
-  centimetragem: 'Centimetragem / Valoração',
-  grifo: 'Destaque de Termos / Grifo',
-  score: 'CService Score',
-  ia: 'Enriquecimento Inteligente por IA',
-  screenshot: 'Captura de Tela / Screenshot',
-  avaliacao: 'Classificação Customizada / Avaliação',
+  centimetragem: 'Centimetragem',
+  grifo: 'Grifo',
+  score: 'Score',
+  ia: 'IA',
+  screenshot: 'Screenshot',
+  avaliacao: 'Avaliação',
 }
 
 export const MATTER_SERVICE_SHORT_LABELS: Record<MatterServiceKey, string> = {
@@ -231,4 +237,87 @@ export const BILLING_MODE_LABELS: Record<BillingMode, string> = {
   fixed: 'Preço fixo',
   variable: 'Preço por volume',
   both: 'Fixo e variável',
+}
+
+/** Garante chaves novas em `additionals` quando a tabela veio de storage antigo. */
+export function normalizeAdditionalsPrices(
+  a: Partial<AdditionalsPrices> | Record<string, unknown> | undefined,
+): AdditionalsPrices {
+  const d = DEFAULT_PRICES.additionals
+  if (!a || typeof a !== 'object') return { ...d }
+
+  const raw = a as Record<string, unknown>
+  const legacyWebIntl =
+    typeof raw.webInternacional === 'number' && Number.isFinite(raw.webInternacional)
+      ? raw.webInternacional
+      : undefined
+
+  let impresso = d.impresso
+  if (typeof raw.impresso === 'number' && Number.isFinite(raw.impresso)) {
+    impresso = raw.impresso
+  } else if (raw.impresso && typeof raw.impresso === 'object') {
+    const o = raw.impresso as { spRj?: number; nacional?: number }
+    impresso = Number(o.nacional ?? o.spRj ?? d.impresso)
+  }
+
+  let web = { ...d.web }
+  if (raw.web && typeof raw.web === 'object') {
+    const w = raw.web as Record<string, unknown>
+    if ('internacional' in w && 'nacional' in w) {
+      web = {
+        nacional: Number(w.nacional ?? d.web.nacional),
+        internacional: Number(w.internacional ?? d.web.internacional),
+      }
+    } else {
+      const o = raw.web as { spRj?: number; nacional?: number }
+      web = {
+        nacional: Number(o.nacional ?? o.spRj ?? d.web.nacional),
+        internacional: Number(legacyWebIntl ?? d.web.internacional),
+      }
+    }
+  } else if (legacyWebIntl !== undefined) {
+    web = { ...d.web, internacional: legacyWebIntl }
+  }
+
+  const x = { ...d, ...raw }
+  return {
+    ...x,
+    impresso,
+    web,
+    radio: { ...d.radio, ...(raw.radio as AdditionalsPrices['radio'] | undefined) },
+    tv: { ...d.tv, ...(raw.tv as AdditionalsPrices['tv'] | undefined) },
+    midiasSociais: {
+      tiers:
+        (a as AdditionalsPrices).midiasSociais?.tiers ?? d.midiasSociais.tiers,
+    },
+    storiesInstagram: {
+      tiers:
+        (a as AdditionalsPrices).storiesInstagram?.tiers ?? d.storiesInstagram.tiers,
+    },
+    destinatariosExtras: {
+      tiers:
+        (a as AdditionalsPrices).destinatariosExtras?.tiers ??
+        d.destinatariosExtras.tiers,
+    },
+    alertasWebRealtime: Number(x.alertasWebRealtime ?? d.alertasWebRealtime),
+    apiCService: Number(x.apiCService ?? d.apiCService),
+    newsletterWhatsApp: Number(x.newsletterWhatsApp ?? d.newsletterWhatsApp),
+    newsletterExtraEnvio: Number(x.newsletterExtraEnvio ?? d.newsletterExtraEnvio),
+    plantaoPercent: Number(x.plantaoPercent ?? d.plantaoPercent),
+    curadoriaAprovacaoManual: Number(
+      x.curadoriaAprovacaoManual ?? d.curadoriaAprovacaoManual,
+    ),
+    aprovacaoAutomaticaPercent: Number(
+      x.aprovacaoAutomaticaPercent ?? d.aprovacaoAutomaticaPercent,
+    ),
+  }
+}
+
+export function normalizePrices(p: Prices): Prices {
+  return {
+    ...p,
+    additionals: normalizeAdditionalsPrices(
+      p.additionals as unknown as Record<string, unknown>,
+    ),
+  }
 }

@@ -92,7 +92,7 @@
 
 .add-page__region {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
   padding: 8px 10px;

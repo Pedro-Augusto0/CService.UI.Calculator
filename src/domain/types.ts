@@ -51,6 +51,10 @@ export interface ReportsState {
 }
 
 export interface AdditionalsState {
+  impressoEnabled: boolean
+  /** Web nacional e internacional podem ficar ligados ao mesmo tempo. */
+  webNacionalEnabled: boolean
+  webInternacionalEnabled: boolean
   radioEnabled: boolean
   radioRegion: RegionKey | null
   tvEnabled: boolean

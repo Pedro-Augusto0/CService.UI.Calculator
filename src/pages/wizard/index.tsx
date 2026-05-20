@@ -2,15 +2,18 @@ import { BookMarked } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import { Escopo } from '@/pages/wizard/steps/escopo'
+import { IdentificacaoProposta } from '@/pages/wizard/steps/identificacao'
 import { ResumoProposta } from '@/pages/wizard/steps/resumo-proposta'
 import { ServicosAdicionais } from '@/pages/wizard/steps/servicos-adicionais'
-import { TiposMonitoramento } from '@/pages/wizard/steps/tipos-monitoramento'
+import { TiposMidia } from '@/pages/wizard/steps/tipos-midia'
 
 interface WizardPageProps {
   onDownload: (filename?: string) => void
   onSaveComplete: () => void
   onOpenSaveTemplate: () => void
 }
+
+const LAST_STEP_INDEX = 4
 
 export function WizardPage({
   onDownload,
@@ -23,10 +26,11 @@ export function WizardPage({
   return (
     <div className="wizard-layout">
       <div className="wizard-content">
-        {step === 0 ? <Escopo /> : null}
-        {step === 1 ? <TiposMonitoramento /> : null}
-        {step === 2 ? <ServicosAdicionais /> : null}
-        {step === 3 ? (
+        {step === 0 ? <IdentificacaoProposta /> : null}
+        {step === 1 ? <TiposMidia /> : null}
+        {step === 2 ? <Escopo /> : null}
+        {step === 3 ? <ServicosAdicionais /> : null}
+        {step === 4 ? (
           <ResumoProposta
             onBack={() => dispatch({ type: 'SET_STEP', step: step - 1 })}
             onDownload={onDownload}
@@ -36,7 +40,7 @@ export function WizardPage({
         ) : null}
       </div>
 
-      {step < 3 ? (
+      {step < LAST_STEP_INDEX ? (
         <div className="wizard-footer">
           <div className="wizard-footer__left">
             <Button

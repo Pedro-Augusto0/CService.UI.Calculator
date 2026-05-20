@@ -160,9 +160,9 @@
 .config-base-card {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 16px 20px;
-  padding: 16px 18px;
+  align-items: flex-start;
+  gap: 12px 16px;
+  padding: 14px 16px;
   border: 1px solid rgb(226 232 240);
   border-radius: var(--radius-sm);
   background: rgb(255 255 255);
@@ -195,12 +195,14 @@
 }
 
 .config-base-card__copy {
-  flex: 1 1 200px;
-  min-width: min(100%, 220px);
+  /* Não esticar até ocupar o meio do cartão — libera largura para os campos */
+  flex: 0 1 240px;
+  min-width: min(100%, 160px);
+  max-width: min(300px, 100%);
 }
 
 .config-base-card__title {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   font-size: 0.9375rem;
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -210,7 +212,7 @@
 .config-base-card__desc {
   margin: 0;
   font-size: 0.78125rem;
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--color-muted);
 }
 

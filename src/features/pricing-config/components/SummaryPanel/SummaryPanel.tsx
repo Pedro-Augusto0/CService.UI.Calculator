@@ -13,6 +13,7 @@ import {
   MoreHorizontal,
   Newspaper,
   Plus,
+  Radar,
   Save,
   Sparkles,
   type LucideIcon,
@@ -62,7 +63,7 @@ function pluralize(count: number, singular: string, plural: string) {
 export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
   const { calculation: c, state } = useProposal()
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
-  const isResumoStep = state.currentStep === 3
+  const isResumoStep = state.currentStep === 4
 
   const matterLabels = MATTER_SERVICE_KEYS.filter((k) =>
     state.sections.marcas.services[k] ||
@@ -83,11 +84,17 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
     const a = state.additionals
     const r = state.reports
 
-    const additionalLabels: string[] = [
+    const monitoramentoLabels: string[] = [
+      a.impressoEnabled ? 'Impresso' : null,
+      a.webNacionalEnabled ? 'Web (Nacional)' : null,
+      a.webInternacionalEnabled ? 'Web (Internacional)' : null,
       a.tvEnabled && a.tvRegion ? `TV ${REGION_LABELS[a.tvRegion]}` : null,
       a.radioEnabled && a.radioRegion ? `Rádio ${REGION_LABELS[a.radioRegion]}` : null,
       a.midiasSociaisEnabled ? 'Mídias Sociais' : null,
       a.storiesInstagramEnabled ? 'Stories Instagram' : null,
+    ].filter(Boolean) as string[]
+
+    const adicionaisExtrasLabels: string[] = [
       a.alertasWebRealtime ? 'Alertas Web' : null,
       a.apiCService ? 'API CService' : null,
       a.newsletterWhatsApp ? 'Newsletter WhatsApp' : null,
@@ -96,6 +103,9 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
         : null,
       a.destinatariosExtrasEnabled ? 'Destinatários extras' : null,
       a.curadoriaAprovacaoManual ? 'Curadoria manual' : null,
+    ].filter(Boolean) as string[]
+
+    const modificadoresLabels: string[] = [
       a.plantaoFimSemana ? `Plantão (+${c.plantaoPercent}%)` : null,
       a.aprovacaoAutomatica ? `Aprovação automática (-${c.aprovacaoAutomaticaPercent}%)` : null,
     ].filter(Boolean) as string[]
@@ -109,6 +119,11 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
         : null,
       r.biEnabled ? 'CService BI' : null,
     ].filter(Boolean) as string[]
+
+    const adicionaisSidebarItems = [
+      ...adicionaisExtrasLabels,
+      ...modificadoresLabels,
+    ]
 
     return [
       {
@@ -136,12 +151,24 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
         chevron: 'down',
       },
       {
+        key: 'monitoramentos',
+        title: 'Monitoramentos',
+        emptyLabel: 'Nenhum canal selecionado',
+        items: monitoramentoLabels,
+        summary: monitoramentoLabels.length
+          ? pluralize(monitoramentoLabels.length, 'canal', 'canais')
+          : 'Nenhum',
+        tone: 'blue',
+        icon: Radar,
+        chevron: 'down',
+      },
+      {
         key: 'adicionais',
         title: 'Adicionais e modificadores',
         emptyLabel: 'Nenhum adicional ativo',
-        items: additionalLabels,
-        summary: additionalLabels.length
-          ? pluralize(additionalLabels.length, 'item', 'itens')
+        items: adicionaisSidebarItems,
+        summary: adicionaisSidebarItems.length
+          ? pluralize(adicionaisSidebarItems.length, 'item', 'itens')
           : 'Nenhum',
         tone: 'orange',
         icon: Sparkles,

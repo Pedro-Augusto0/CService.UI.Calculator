@@ -43,6 +43,15 @@ function additionalsBucket(
   const p = prices.additionals
   let total = 0
 
+  if (a.impressoEnabled) {
+    total += p.impresso
+  }
+  if (a.webNacionalEnabled) {
+    total += p.web.nacional
+  }
+  if (a.webInternacionalEnabled) {
+    total += p.web.internacional
+  }
   if (a.radioEnabled && a.radioRegion) {
     total += p.radio[a.radioRegion]
   }

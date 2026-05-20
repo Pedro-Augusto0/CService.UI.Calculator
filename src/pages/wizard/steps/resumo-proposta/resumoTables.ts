@@ -53,7 +53,8 @@ export function buildReportRows(
   return rows
 }
 
-export function buildAdditionalsRows(
+/** Canais de monitoramento (passo «Tipos de mídia»). */
+export function buildMonitoramentosRows(
   additionals: AdditionalsState,
   prices: Prices['additionals'],
 ): PricedRow[] {
@@ -61,6 +62,30 @@ export function buildAdditionalsRows(
   const p = prices
   const rows: PricedRow[] = []
 
+  if (a.impressoEnabled) {
+    rows.push({
+      key: 'impresso',
+      label: 'Impresso',
+      detail: 'Valor mensal',
+      value: p.impresso,
+    })
+  }
+  if (a.webNacionalEnabled) {
+    rows.push({
+      key: 'webNacional',
+      label: 'Web',
+      detail: 'Nacional',
+      value: p.web.nacional,
+    })
+  }
+  if (a.webInternacionalEnabled) {
+    rows.push({
+      key: 'webInternacional',
+      label: 'Web',
+      detail: 'Internacional',
+      value: p.web.internacional,
+    })
+  }
   if (a.radioEnabled && a.radioRegion) {
     rows.push({
       key: 'radio',
@@ -99,6 +124,19 @@ export function buildAdditionalsRows(
       })
     }
   }
+
+  return rows
+}
+
+/** Relatórios, newsletter, alertas, API etc. (sem os canais de monitoramento). */
+export function buildAdicionaisExtrasRows(
+  additionals: AdditionalsState,
+  prices: Prices['additionals'],
+): PricedRow[] {
+  const a = additionals
+  const p = prices
+  const rows: PricedRow[] = []
+
   if (a.alertasWebRealtime) {
     rows.push({
       key: 'alertasWeb',
@@ -152,4 +190,19 @@ export function buildAdditionalsRows(
   }
 
   return rows
+}
+
+/** Todas as linhas de adicionais (monitoramentos + extras). */
+export function buildAdditionalsRows(
+  additionals: AdditionalsState,
+  prices: Prices['additionals'],
+): PricedRow[] {
+  return [
+    ...buildMonitoramentosRows(additionals, prices),
+    ...buildAdicionaisExtrasRows(additionals, prices),
+  ]
+}
+
+export function sumPricedRows(rows: PricedRow[]): number {
+  return rows.reduce((acc, r) => acc + r.value, 0)
 }

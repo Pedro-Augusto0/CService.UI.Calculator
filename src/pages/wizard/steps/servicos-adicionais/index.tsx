@@ -1,5 +1,4 @@
 import {
-  Antenna,
   BadgePercent,
   Bell,
   ChevronDown,
@@ -7,7 +6,6 @@ import {
   FileBarChart,
   Hash,
   Send,
-  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -16,12 +14,12 @@ import { Card } from '@/components/ui/Card'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { Toggle } from '@/components/ui/Toggle'
-import { REPORT_FREQUENCIES, type RegionKey, type ReportFrequency } from '@/domain/types'
-import { REGION_LABELS, REPORT_FREQUENCY_LABELS } from '@/domain/prices'
+import { REPORT_FREQUENCIES, type ReportFrequency } from '@/domain/types'
+import { REPORT_FREQUENCY_LABELS } from '@/domain/prices'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import './ServicosAdicionais.css'
 
-type SectionKey = 'broadcast' | 'reports' | 'social' | 'distribution' | 'others' | 'modifiers'
+type SectionKey = 'reports' | 'distribution' | 'others' | 'modifiers'
 
 interface AccordionSectionProps {
   open: boolean
@@ -64,90 +62,19 @@ function AccordionSection({
   )
 }
 
-function RegionButtons({
-  region,
-  disabled,
-  onChange,
-}: {
-  region: RegionKey | null
-  disabled: boolean
-  onChange: (region: RegionKey | null) => void
-}) {
-  function pick(next: RegionKey) {
-    onChange(region === next ? null : next)
-  }
-  return (
-    <div className="add-page__region-buttons" role="group" aria-label="Região">
-      <button
-        type="button"
-        className={`add-page__region ${region === 'spRj' ? 'add-page__region--on' : ''}`}
-        disabled={disabled}
-        onClick={() => pick('spRj')}
-      >
-        {REGION_LABELS.spRj}
-      </button>
-      <button
-        type="button"
-        className={`add-page__region ${region === 'nacional' ? 'add-page__region--on' : ''}`}
-        disabled={disabled}
-        onClick={() => pick('nacional')}
-      >
-        {REGION_LABELS.nacional}
-      </button>
-    </div>
-  )
-}
-
 export function ServicosAdicionais() {
   const { state, dispatch } = useProposal()
   const a = state.additionals
   const r = state.reports
   const prices = state.prices
 
-  const [openSection, setOpenSection] = useState<SectionKey | null>('broadcast')
+  const [openSection, setOpenSection] = useState<SectionKey | null>('reports')
   function toggleSection(s: SectionKey) {
     setOpenSection((prev) => (prev === s ? null : s))
   }
 
   return (
     <div className="page-etapa add-page">
-      <AccordionSection
-        open={openSection === 'broadcast'}
-        onToggle={() => toggleSection('broadcast')}
-        icon={Antenna}
-        title="Rádio e TV"
-      >
-        <div className="add-page__grid">
-          <Card className="add-page__bc">
-            <Toggle
-              checked={a.radioEnabled}
-              onChange={(v) => dispatch({ type: 'TOGGLE_RADIO', enabled: v })}
-              label="Monitoramento Rádio"
-              description="Cobrança fixa regional (mutuamente exclusiva)."
-            />
-            <RegionButtons
-              region={a.radioRegion}
-              disabled={!a.radioEnabled}
-              onChange={(region) => dispatch({ type: 'SET_RADIO_REGION', region })}
-            />
-          </Card>
-
-          <Card className="add-page__bc">
-            <Toggle
-              checked={a.tvEnabled}
-              onChange={(v) => dispatch({ type: 'TOGGLE_TV', enabled: v })}
-              label="Monitoramento TV"
-              description="Cobrança fixa regional (mutuamente exclusiva)."
-            />
-            <RegionButtons
-              region={a.tvRegion}
-              disabled={!a.tvEnabled}
-              onChange={(region) => dispatch({ type: 'SET_TV_REGION', region })}
-            />
-          </Card>
-        </div>
-      </AccordionSection>
-
       <AccordionSection
         open={openSection === 'reports'}
         onToggle={() => toggleSection('reports')}
@@ -229,81 +156,10 @@ export function ServicosAdicionais() {
       </AccordionSection>
 
       <AccordionSection
-        open={openSection === 'social'}
-        onToggle={() => toggleSection('social')}
-        icon={Sparkles}
-        title="Mídias Sociais e Stories"
-      >
-        <div className="add-page__grid">
-          <Card className="add-page__bc">
-            <Toggle
-              checked={a.midiasSociaisEnabled}
-              onChange={(v) =>
-                dispatch({ type: 'TOGGLE_MIDIAS_SOCIAIS', enabled: v })
-              }
-              label="Monitoramento de Mídias Sociais"
-              description="Selecione a faixa por quantidade de posts."
-            />
-            <SelectField
-              dense
-              id="ms-tier"
-              label="Faixa (posts)"
-              disabled={!a.midiasSociaisEnabled}
-              value={a.midiasSociaisTierId ?? ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_MIDIAS_SOCIAIS_TIER',
-                  tierId: e.target.value || null,
-                })
-              }
-            >
-              <option value="">Selecione…</option>
-              {prices.additionals.midiasSociais.tiers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </SelectField>
-          </Card>
-
-          <Card className="add-page__bc">
-            <Toggle
-              checked={a.storiesInstagramEnabled}
-              onChange={(v) =>
-                dispatch({ type: 'TOGGLE_STORIES_INSTAGRAM', enabled: v })
-              }
-              label="Stories Instagram"
-              description="Selecione a faixa por quantidade de perfis."
-            />
-            <SelectField
-              dense
-              id="sg-tier"
-              label="Faixa (perfis)"
-              disabled={!a.storiesInstagramEnabled}
-              value={a.storiesInstagramTierId ?? ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_STORIES_INSTAGRAM_TIER',
-                  tierId: e.target.value || null,
-                })
-              }
-            >
-              <option value="">Selecione…</option>
-              {prices.additionals.storiesInstagram.tiers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </SelectField>
-          </Card>
-        </div>
-      </AccordionSection>
-
-      <AccordionSection
         open={openSection === 'distribution'}
         onToggle={() => toggleSection('distribution')}
         icon={Send}
-        title="Distribuição da Newsletter"
+        title="Newsletter e distribuição"
       >
         <div className="add-page__other">
           <Toggle

@@ -13,8 +13,10 @@ import {
   FileBarChart,
   FileText,
   Gauge,
+  Globe,
   Highlighter,
   Mail,
+  Newspaper,
   Percent,
   Plus,
   Radio,
@@ -157,7 +159,7 @@ function ModeBillingFields({
 interface PriceSettingsFieldsProps {
   draft: Prices
   patch: <K extends keyof Prices>(key: K, value: Prices[K]) => void
-  section: 'matter' | 'reports' | 'additionals' | 'outros'
+  section: 'matter' | 'reports' | 'monitoramentos' | 'additionals' | 'outros'
 }
 
 function newAvaliacaoTier(): AvaliacaoTier {
@@ -186,6 +188,8 @@ export function PriceSettingsFields({
 }: PriceSettingsFieldsProps) {
   if (section === 'matter') return <MatterSection draft={draft} patch={patch} />
   if (section === 'reports') return <ReportsSection draft={draft} patch={patch} />
+  if (section === 'monitoramentos')
+    return <MonitoramentosSection draft={draft} patch={patch} />
   if (section === 'additionals')
     return <AdditionalsSection draft={draft} patch={patch} />
   return <OutrosSection draft={draft} patch={patch} />
@@ -418,7 +422,7 @@ function FrequencyCard({
   )
 }
 
-function AdditionalsSection({
+function MonitoramentosSection({
   draft,
   patch,
 }: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
@@ -434,6 +438,44 @@ function AdditionalsSection({
 
   return (
     <>
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Newspaper}
+        title="Monitoramento Impresso"
+        description="Valor mensal único. Ative ou desative na proposta."
+      >
+        <div className="matter-card__mode-fields">
+          <PtDecimalField
+            id="config-impresso"
+            label="Valor (R$)"
+            value={a.impresso}
+            onCommit={(n) => update('impresso', n)}
+          />
+        </div>
+      </PriceConfigCard>
+
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Globe}
+        title="Monitoramento Web"
+        description="Nacional e Internacional. Na proposta cada um tem um interruptor; podem ficar os dois ligados."
+      >
+        <div className="matter-card__mode-fields">
+          <PtDecimalField
+            id="config-web-nacional"
+            label="Nacional (R$)"
+            value={a.web.nacional}
+            onCommit={(n) => update('web', { ...a.web, nacional: n })}
+          />
+          <PtDecimalField
+            id="config-web-internacional"
+            label="Internacional (R$)"
+            value={a.web.internacional}
+            onCommit={(n) => update('web', { ...a.web, internacional: n })}
+          />
+        </div>
+      </PriceConfigCard>
+
       <PriceConfigCard
         toneIndex={tone++}
         Icon={Radio}
@@ -512,7 +554,7 @@ function AdditionalsSection({
             <Sparkles size={22} strokeWidth={1.85} />
           </div>
           <div className="config-base-card__copy">
-            <h3 className="config-base-card__title">Monitoramento de Stories Instagram</h3>
+            <h3 className="config-base-card__title">Monitoramento de Instagram Stories</h3>
             <p className="config-base-card__desc">
               Faixas por quantidade de perfis monitorados.
             </p>
@@ -533,7 +575,26 @@ function AdditionalsSection({
           />
         </div>
       </article>
+    </>
+  )
+}
 
+function AdditionalsSection({
+  draft,
+  patch,
+}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
+  const a = draft.additionals
+  let tone = 0
+
+  function update<K extends keyof Prices['additionals']>(
+    key: K,
+    value: Prices['additionals'][K],
+  ) {
+    patch('additionals', { ...a, [key]: value })
+  }
+
+  return (
+    <>
       <PriceConfigCard
         toneIndex={tone++}
         Icon={Bell}
@@ -589,7 +650,19 @@ function AdditionalsSection({
           onCommit={(n) => update('newsletterExtraEnvio', n)}
         />
       </PriceConfigCard>
-
+      <PriceConfigCard
+        toneIndex={tone++}
+        Icon={Briefcase}
+        title="Curadoria e Aprovação Manual de Newsletter"
+        description="Valor fixo mensal."
+      >
+        <PtDecimalField
+          id="config-curadoria"
+          label="Valor (R$)"
+          value={a.curadoriaAprovacaoManual}
+          onCommit={(n) => update('curadoriaAprovacaoManual', n)}
+        />
+      </PriceConfigCard>
       <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
         <div className="config-base-card__lead">
           <div className="config-base-card__icon config-base-card__icon--orange" aria-hidden>
@@ -632,19 +705,7 @@ function AdditionalsSection({
         />
       </PriceConfigCard>
 
-      <PriceConfigCard
-        toneIndex={tone++}
-        Icon={Briefcase}
-        title="Curadoria e Aprovação Manual de Newsletter"
-        description="Valor fixo mensal."
-      >
-        <PtDecimalField
-          id="config-curadoria"
-          label="Valor (R$)"
-          value={a.curadoriaAprovacaoManual}
-          onCommit={(n) => update('curadoriaAprovacaoManual', n)}
-        />
-      </PriceConfigCard>
+
 
       <PriceConfigCard
         toneIndex={tone++}

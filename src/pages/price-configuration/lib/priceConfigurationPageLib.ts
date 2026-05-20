@@ -4,6 +4,7 @@ import {
   FileCog,
   HeartHandshake,
   Layers,
+  Radar,
   type LucideIcon,
 } from 'lucide-react'
 import type { ConfigTabId } from '@/features/pricing-config/types'
@@ -13,8 +14,10 @@ export const TAB_PANEL_INFO: Record<Exclude<ConfigTabId, 'base'>, string> = {
     'Para cada serviço, escolha o modo de cobrança (fixo, variável ou ambos) e configure os valores. O comercial usa estes valores na proposta sem editar.',
   reports:
     'Relatórios são cobrados por frequência. CService BI tem setup único + manutenção mensal recorrente.',
+  monitoramentos:
+    'Valores dos monitoramentos por canal: impresso, web, internacional, rádio, TV e faixas de redes sociais.',
   additionals:
-    'Adicionais cobrados como fixo, faixa ou percentual sobre o total. As faixas podem ser editadas conforme a evolução comercial.',
+    'Adicionais cobrados como fixo, faixa ou percentual sobre o total. Alertas, API, newsletter e modificadores.',
   outros:
     'Opções de validade da proposta em dias. O comercial escolhe uma das opções cadastradas aqui ao montar a proposta.',
 }
@@ -53,11 +56,19 @@ export const CONFIG_TABS: ConfigTabItem[] = [
     icon: FileBarChart,
   },
   {
+    id: 'monitoramentos',
+    label: 'Monitoramentos',
+    title: 'Monitoramentos',
+    description:
+      'Impresso, web, web internacional, rádio, TV, mídias sociais e stories.',
+    icon: Radar,
+  },
+  {
     id: 'additionals',
     label: 'Serviços Adicionais',
     title: 'Serviços adicionais',
     description:
-      'Rádio, TV, mídias sociais, stories, alertas, API, newsletter e modificadores percentuais.',
+      'Alertas web, API, newsletter, destinatários extras e modificadores percentuais.',
     icon: HeartHandshake,
   },
   {

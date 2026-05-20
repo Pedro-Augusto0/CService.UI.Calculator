@@ -148,6 +148,15 @@ function buildReportsLabels(reports: ReportsState): InvestmentDetailItem[] {
 function buildAdditionalsLabels(additionals: AdditionalsState): InvestmentDetailItem[] {
   const a = additionals
   const items: InvestmentDetailItem[] = []
+  if (a.impressoEnabled) {
+    items.push({ label: 'Impresso', value: '' })
+  }
+  if (a.webNacionalEnabled) {
+    items.push({ label: 'Web (Nacional)', value: '' })
+  }
+  if (a.webInternacionalEnabled) {
+    items.push({ label: 'Web (Internacional)', value: '' })
+  }
   if (a.radioEnabled && a.radioRegion) {
     items.push({ label: `Rádio ${REGION_LABELS[a.radioRegion]}`, value: '' })
   }
