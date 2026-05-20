@@ -8,31 +8,23 @@ import './PriceConfiguration.css'
 interface PriceConfigurationProps {
   draftPrices: Prices
   setDraftPrices: Dispatch<SetStateAction<Prices | null>>
-  draftPrecoBaseMensal: number
-  setDraftPrecoBaseMensal: Dispatch<SetStateAction<number | null>>
   onActiveTabChange?: (tab: ConfigTabId) => void
 }
 
 export function PriceConfiguration({
   draftPrices,
   setDraftPrices,
-  draftPrecoBaseMensal,
-  setDraftPrecoBaseMensal,
   onActiveTabChange,
 }: PriceConfigurationProps) {
   const p = usePriceConfigurationPage({
     draftPrices,
     setDraftPrices,
-    draftPrecoBaseMensal,
-    setDraftPrecoBaseMensal,
     onActiveTabChange,
   })
 
   return (
     <PriceConfigurationView
       draftPrices={draftPrices}
-      draftPrecoBaseMensal={draftPrecoBaseMensal}
-      setDraftPrecoBaseMensal={setDraftPrecoBaseMensal}
       activeTab={p.activeTab}
       setActiveTab={p.setActiveTab}
       activeTabItem={p.activeTabItem}

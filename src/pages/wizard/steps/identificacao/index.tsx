@@ -1,8 +1,8 @@
 import { BriefcaseBusiness, FileText } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
-import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
+import { FIXED_PROPOSAL_VALIDADE_DIAS } from '@/features/proposal/lib/proposalReducer'
 import '../escopo/Escopo.css'
 
 export function IdentificacaoProposta() {
@@ -18,12 +18,13 @@ export function IdentificacaoProposta() {
           <div>
             <h2 className="escopo-page__meta-title">Identificação da proposta</h2>
             <p className="escopo-page__meta-text">
-              Informe o cliente, um nome para esta proposta e por quanto tempo ela permanece
-              válida. Esses dados aparecem nas propostas salvas e no arquivo exportado.
+              Informe o cliente e um nome para esta proposta. A validade está fixa em{' '}
+              {FIXED_PROPOSAL_VALIDADE_DIAS} dias por enquanto. Esses dados aparecem nas propostas
+              salvas e no arquivo exportado.
             </p>
           </div>
         </div>
-        <div className="escopo-page__meta-grid escopo-page__meta-grid--with-validade">
+        <div className="escopo-page__meta-grid">
           <TextField
             label="Cliente"
             placeholder="Ex.: Nome da empresa"
@@ -48,23 +49,6 @@ export function IdentificacaoProposta() {
               })
             }
           />
-          <SelectField
-            id="wizard-validade-dias"
-            label="Validade da proposta"
-            value={String(state.validadeDias)}
-            onChange={(e) =>
-              dispatch({
-                type: 'SET_VALIDADE_DIAS',
-                dias: Number.parseInt(e.target.value, 10) || 0,
-              })
-            }
-          >
-            {state.prices.validadeOptions.map((dias) => (
-              <option key={dias} value={dias}>
-                {dias} dia{dias === 1 ? '' : 's'}
-              </option>
-            ))}
-          </SelectField>
         </div>
       </Card>
     </div>

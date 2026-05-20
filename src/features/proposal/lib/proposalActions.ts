@@ -23,7 +23,6 @@ export type ProposalAction =
       section: SectionKey
       service: MatterServiceKey
     }
-  | { type: 'SET_APPLY_SERVICES_TO_ALL'; value: boolean }
   | { type: 'SET_ACTIVE_SCOPE_TAB'; section: SectionKey }
   | { type: 'SET_GLOBAL_BILLING_MODE'; mode: GlobalBillingMode }
   | { type: 'SET_AVALIACAO_TIER'; tierId: string | null }
@@ -71,7 +70,6 @@ export interface ProposalState {
   validadeDias: number
   precoBaseMensal: number
   prices: Prices
-  applyServicesToAll: boolean
   activeScopeTab: SectionKey
   /** Versão do fluxo do assistente (2 = cinco etapas). */
   wizardVersion: number

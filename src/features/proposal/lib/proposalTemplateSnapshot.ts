@@ -22,7 +22,6 @@ export interface ProposalTemplateSnapshot {
   reports: ReportsState
   additionals: AdditionalsState
   validadeDias: number
-  applyServicesToAll: boolean
   activeScopeTab: SectionKey
 }
 
@@ -45,7 +44,6 @@ export function proposalStateToTemplateSnapshot(
     reports: structuredClone(state.reports),
     additionals: structuredClone(state.additionals),
     validadeDias: state.validadeDias,
-    applyServicesToAll: state.applyServicesToAll,
     activeScopeTab: state.activeScopeTab,
   }
 }
@@ -72,7 +70,6 @@ export function proposalSnapshotToState(
     }),
     wizardVersion: 2,
     validadeDias: snapshot.validadeDias,
-    applyServicesToAll: snapshot.applyServicesToAll,
     activeScopeTab: snapshot.activeScopeTab,
   }
 }
@@ -89,7 +86,6 @@ export function isProposalTemplateSnapshot(value: unknown): value is ProposalTem
     && Boolean(v.additionals)
     && typeof v.additionals === 'object'
     && typeof v.validadeDias === 'number'
-    && typeof v.applyServicesToAll === 'boolean'
     && typeof v.activeScopeTab === 'string'
   )
 }

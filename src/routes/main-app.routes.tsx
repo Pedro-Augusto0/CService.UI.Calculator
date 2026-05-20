@@ -7,6 +7,7 @@ import {
 import { useAuth } from '@/features/auth/AuthContext'
 import { ConfigPricingSidebar } from '@/features/pricing-config/components/ConfigPricingSidebar'
 import type { ConfigTabId } from '@/features/pricing-config/types'
+import { CONFIG_TABS } from '@/pages/price-configuration/lib/priceConfigurationPageLib'
 import { PreviewProposalModal } from '@/features/pricing-config/components/PreviewProposalModal'
 import { SaveProposalTemplateModal } from '@/features/proposal/components/SaveProposalTemplateModal'
 import { SummaryPanel } from '@/features/pricing-config/components/SummaryPanel'
@@ -32,7 +33,7 @@ import { downloadHtmlDocument, proposalFilename } from '@/utils/downloadHtml'
 const STEPPER_STEPS = [
   {
     title: 'Identificação',
-    subtitle: 'Cliente, proposta e validade.',
+    subtitle: 'Cliente e nome da proposta.',
   },
   {
     title: 'Monitoramentos',
@@ -70,9 +71,8 @@ export function MainAppRoutes() {
   const [previewHtml, setPreviewHtml] = useState('')
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
   const [pricingDraft, setPricingDraft] = useState<Prices | null>(null)
-  const [precoBaseDraft, setPrecoBaseDraft] = useState<number | null>(null)
   const [settingsSidebarSection, setSettingsSidebarSection] =
-    useState<ConfigTabId>('base')
+    useState<ConfigTabId>(CONFIG_TABS[0].id)
   const [accessBanner, setAccessBanner] = useState<string | null>(null)
 
   const navigateMain = useCallback(
@@ -213,12 +213,10 @@ export function MainAppRoutes() {
   useEffect(() => {
     if (route === 'settings') {
       setPricingDraft(structuredClone(state.prices))
-      setPrecoBaseDraft(state.precoBaseMensal)
     } else {
       setPricingDraft(null)
-      setPrecoBaseDraft(null)
     }
-  }, [route, state.prices, state.precoBaseMensal])
+  }, [route, state.prices])
 
   const html = useMemo(
     () =>
@@ -254,7 +252,6 @@ export function MainAppRoutes() {
 
   function handleUsarModelo(templateId: string) {
     const seed = {
-      precoBaseMensal: state.precoBaseMensal,
       prices: state.prices,
       pricingConfigSavedAt: state.pricingConfigSavedAt,
     }
@@ -326,8 +323,6 @@ export function MainAppRoutes() {
           ) : route === 'settings' ? (
             <ConfigPricingSidebar
               prices={pricingDraft ?? state.prices}
-              precoBaseMensal={precoBaseDraft ?? state.precoBaseMensal}
-              pricingSavedAt={state.pricingConfigSavedAt}
               focusSection={settingsSidebarSection}
             />
           ) : null
@@ -342,8 +337,6 @@ export function MainAppRoutes() {
           <PriceConfiguration
             draftPrices={pricingDraft ?? state.prices}
             setDraftPrices={setPricingDraft}
-            draftPrecoBaseMensal={precoBaseDraft ?? state.precoBaseMensal}
-            setDraftPrecoBaseMensal={setPrecoBaseDraft}
             onActiveTabChange={setSettingsSidebarSection}
           />
         ) : route === 'saved' ? (

@@ -7,7 +7,6 @@ import {
   BookOpenCheck,
   Briefcase,
   Camera,
-  CalendarRange,
   ClipboardCheck,
   Cpu,
   FileBarChart,
@@ -18,18 +17,14 @@ import {
   Mail,
   Newspaper,
   Percent,
-  Plus,
   Radio,
   Send,
   Sparkles,
   Star,
-  Trash2,
   Tv,
   Users,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { PtDecimalField } from '@/components/ui/PtDecimalField'
-import { TextField } from '@/components/ui/TextField'
 import { SelectField } from '@/components/ui/SelectField'
 import {
   BILLING_MODE_LABELS,
@@ -71,7 +66,7 @@ const SERVICE_DESCRIPTIONS: Record<MatterServiceKey, string> = {
   screenshot:
     'Captura visual da publicação — preço fixo, por volume ou ambos.',
   avaliacao:
-    'Classificação customizada por quantidade de campos — preço por faixa, com modo fixo, variável ou ambos.',
+    'Classificação customizada — preço por faixa (rótulo, fixo e por volume), com modo fixo, variável ou ambos.',
 }
 
 const BILLING_MODE_OPTIONS: BillingMode[] = ['fixed', 'variable', 'both']
@@ -159,14 +154,13 @@ function ModeBillingFields({
 interface PriceSettingsFieldsProps {
   draft: Prices
   patch: <K extends keyof Prices>(key: K, value: Prices[K]) => void
-  section: 'matter' | 'reports' | 'monitoramentos' | 'additionals' | 'outros'
+  section: 'matter' | 'reports' | 'monitoramentos' | 'additionals'
 }
 
 function newAvaliacaoTier(): AvaliacaoTier {
   return {
     id: `aval-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
     label: 'Nova faixa',
-    fieldCount: 0,
     fixedPrice: 0,
     variablePrice: 0,
   }
@@ -190,9 +184,7 @@ export function PriceSettingsFields({
   if (section === 'reports') return <ReportsSection draft={draft} patch={patch} />
   if (section === 'monitoramentos')
     return <MonitoramentosSection draft={draft} patch={patch} />
-  if (section === 'additionals')
-    return <AdditionalsSection draft={draft} patch={patch} />
-  return <OutrosSection draft={draft} patch={patch} />
+  return <AdditionalsSection draft={draft} patch={patch} />
 }
 
 function MatterSection({
@@ -280,14 +272,13 @@ function MatterSection({
         </div>
         <div className="matter-card__tiers">
           <TierEditor<AvaliacaoTier>
-            title="Faixas por quantidade de campos"
-            description="Faixas que o comercial seleciona como combo na proposta (item 5.1 do documento)."
+            title=""
+            description="Combinações de rótulo, valor fixo e valor por volume que o comercial escolhe na proposta."
             tiers={matter.avaliacao.tiers}
             onChange={updateAvaliacaoTiers}
             createTier={newAvaliacaoTier}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
-              { key: 'fieldCount', label: 'Quant. campos', type: 'integer' },
               { key: 'fixedPrice', label: 'Valor fixo (R$)', type: 'decimal' },
               {
                 key: 'variablePrice',
@@ -534,7 +525,7 @@ function MonitoramentosSection({
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
-            title="Faixas (posts)"
+            title=""
             description="Exemplos: até 100 posts, até 250 posts."
             tiers={a.midiasSociais.tiers}
             onChange={(tiers) => update('midiasSociais', { tiers })}
@@ -562,7 +553,7 @@ function MonitoramentosSection({
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
-            title="Faixas (perfis)"
+            title=""
             description="Exemplos: até 100 perfis, até 250 perfis."
             tiers={a.storiesInstagram.tiers}
             onChange={(tiers) => update('storiesInstagram', { tiers })}
@@ -677,7 +668,7 @@ function AdditionalsSection({
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
-            title="Faixas (destinatários adicionais)"
+            title=""
             description="O comercial escolhe a faixa em combo."
             tiers={a.destinatariosExtras.tiers}
             onChange={(tiers) => update('destinatariosExtras', { tiers })}
@@ -721,80 +712,5 @@ function AdditionalsSection({
         />
       </PriceConfigCard>
     </>
-  )
-}
-
-function OutrosSection({
-  draft,
-  patch,
-}: Pick<PriceSettingsFieldsProps, 'draft' | 'patch'>) {
-  function addOption() {
-    patch('validadeOptions', [...draft.validadeOptions, 30])
-  }
-
-  function updateOption(index: number, value: number) {
-    patch(
-      'validadeOptions',
-      draft.validadeOptions.map((v, i) => (i === index ? value : v)),
-    )
-  }
-
-  function removeOption(index: number) {
-    patch(
-      'validadeOptions',
-      draft.validadeOptions.filter((_, i) => i !== index),
-    )
-  }
-
-  return (
-    <article className="config-base-card config-base-card--stacked config-base-card--stacked-fields">
-      <div className="config-base-card__lead">
-        <div className="config-base-card__icon config-base-card__icon--blue" aria-hidden>
-          <CalendarRange size={22} strokeWidth={1.85} />
-        </div>
-        <div className="config-base-card__copy">
-          <h3 className="config-base-card__title">Validade da proposta</h3>
-          <p className="config-base-card__desc">
-            Opções (em dias) que o comercial poderá selecionar na proposta. Ordem reflete a ordem do combo.
-          </p>
-        </div>
-      </div>
-      <div className="validade-list">
-        {draft.validadeOptions.length === 0 ? (
-          <p className="validade-list__empty">
-            Nenhuma opção cadastrada. Clique em "Nova opção" para adicionar.
-          </p>
-        ) : (
-          draft.validadeOptions.map((value, idx) => (
-            <div key={idx} className="validade-list__row">
-              <TextField
-                dense
-                id={`config-validade-${idx}`}
-                label={`Opção ${idx + 1} (dias)`}
-                type="number"
-                min={0}
-                step={1}
-                value={value || ''}
-                onChange={(e) =>
-                  updateOption(idx, Number.parseInt(e.target.value, 10) || 0)
-                }
-              />
-              <button
-                type="button"
-                className="validade-list__remove"
-                onClick={() => removeOption(idx)}
-                aria-label={`Remover opção ${idx + 1}`}
-              >
-                <Trash2 size={16} strokeWidth={2} aria-hidden />
-              </button>
-            </div>
-          ))
-        )}
-        <Button variant="secondary" type="button" onClick={addOption}>
-          <Plus size={16} strokeWidth={2} aria-hidden />
-          Nova opção
-        </Button>
-      </div>
-    </article>
   )
 }

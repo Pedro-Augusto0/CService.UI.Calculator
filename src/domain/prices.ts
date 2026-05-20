@@ -13,11 +13,10 @@ export interface MatterServiceConfig {
   variablePrice: number
 }
 
-/** Faixa de campos para Classificação Customizada / Avaliação (item 5.1). */
+/** Faixa de preço para Avaliação (rótulo exibido no combo + valores fixo/variável). */
 export interface AvaliacaoTier {
   id: string
   label: string
-  fieldCount: number
   fixedPrice: number
   variablePrice: number
 }
@@ -95,105 +94,78 @@ function makeMatter(
   return { mode, fixedPrice, variablePrice }
 }
 
-function makeFreq(prices: Record<ReportFrequency, number>): ReportFrequencyPrices {
+function zeroReportFrequencies(): ReportFrequencyPrices {
   const byFrequency = {} as Record<ReportFrequency, number>
-  for (const f of REPORT_FREQUENCIES) byFrequency[f] = prices[f] ?? 0
+  for (const f of REPORT_FREQUENCIES) byFrequency[f] = 0
   return { byFrequency }
 }
 
 export const DEFAULT_PRICES: Prices = {
   matterServices: {
-    centimetragem: makeMatter('both', 350, 0.85),
-    grifo: makeMatter('both', 220, 0.45),
-    score: makeMatter('variable', 0, 0.65),
-    ia: makeMatter('both', 480, 2.1),
-    screenshot: makeMatter('variable', 0, 0.95),
+    centimetragem: makeMatter('both', 0, 0),
+    grifo: makeMatter('both', 0, 0),
+    score: makeMatter('variable', 0, 0),
+    ia: makeMatter('both', 0, 0),
+    screenshot: makeMatter('variable', 0, 0),
     avaliacao: {
       mode: 'both',
       tiers: [
         {
-          id: 'aval-2',
-          label: 'Até 2 campos',
-          fieldCount: 2,
-          fixedPrice: 300,
-          variablePrice: 1.2,
+          id: 'aval-ex-1',
+          label: 'Exemplo 1',
+          fixedPrice: 0,
+          variablePrice: 0,
         },
         {
-          id: 'aval-5',
-          label: 'Até 5 campos',
-          fieldCount: 5,
-          fixedPrice: 520,
-          variablePrice: 1.8,
-        },
-        {
-          id: 'aval-7',
-          label: 'Até 7 campos',
-          fieldCount: 7,
-          fixedPrice: 740,
-          variablePrice: 2.4,
+          id: 'aval-ex-2',
+          label: 'Exemplo 2',
+          fixedPrice: 0,
+          variablePrice: 0,
         },
       ],
     },
   },
   reports: {
-    executivo: makeFreq({
-      semanal: 1800,
-      quinzenal: 1500,
-      mensal: 1200,
-      trimestral: 1000,
-      semestral: 850,
-      anual: 700,
-    }),
-    estrategico: makeFreq({
-      semanal: 1600,
-      quinzenal: 1350,
-      mensal: 1100,
-      trimestral: 900,
-      semestral: 780,
-      anual: 650,
-    }),
-    bi: { setupPrice: 4500, monthlyMaintenance: 900 },
+    executivo: zeroReportFrequencies(),
+    estrategico: zeroReportFrequencies(),
+    bi: { setupPrice: 0, monthlyMaintenance: 0 },
   },
   additionals: {
-    impresso: 900,
-    web: { nacional: 1100, internacional: 2200 },
-    radio: { spRj: 320, nacional: 950 },
-    tv: { spRj: 500, nacional: 1800 },
+    impresso: 0,
+    web: { nacional: 0, internacional: 0 },
+    radio: { spRj: 0, nacional: 0 },
+    tv: { spRj: 0, nacional: 0 },
     midiasSociais: {
       tiers: [
-        { id: 'ms-100', label: 'Até 100 posts', upTo: 100, price: 250 },
-        { id: 'ms-250', label: 'Até 250 posts', upTo: 250, price: 500 },
-        { id: 'ms-500', label: 'Até 500 posts', upTo: 500, price: 900 },
+        { id: 'ms-ex-1', label: 'Exemplo 1', upTo: 0, price: 0 },
+        { id: 'ms-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
       ],
     },
     storiesInstagram: {
       tiers: [
-        { id: 'sg-100', label: 'Até 100 perfis', upTo: 100, price: 220 },
-        { id: 'sg-250', label: 'Até 250 perfis', upTo: 250, price: 450 },
-        { id: 'sg-500', label: 'Até 500 perfis', upTo: 500, price: 800 },
+        { id: 'sg-ex-1', label: 'Exemplo 1', upTo: 0, price: 0 },
+        { id: 'sg-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
       ],
     },
-    alertasWebRealtime: 400,
-    apiCService: 600,
-    newsletterWhatsApp: 350,
-    newsletterExtraEnvio: 120,
+    alertasWebRealtime: 0,
+    apiCService: 0,
+    newsletterWhatsApp: 0,
+    newsletterExtraEnvio: 0,
     destinatariosExtras: {
       tiers: [
-        { id: 'de-10', label: '+10 destinatários', upTo: 10, price: 80 },
-        { id: 'de-25', label: '+25 destinatários', upTo: 25, price: 180 },
-        { id: 'de-50', label: '+50 destinatários', upTo: 50, price: 320 },
-        { id: 'de-100', label: '+100 destinatários', upTo: 100, price: 600 },
+        { id: 'de-ex-1', label: 'Exemplo 1', upTo: 0, price: 0 },
+        { id: 'de-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
       ],
     },
-    plantaoPercent: 25,
-    curadoriaAprovacaoManual: 350,
-    aprovacaoAutomaticaPercent: 10,
+    plantaoPercent: 0,
+    curadoriaAprovacaoManual: 0,
+    aprovacaoAutomaticaPercent: 0,
   },
-  validadeOptions: [15, 30, 60, 90],
+  validadeOptions: [30],
 }
 
 /** Preço base mensal inicial (item 4). */
-export const DEFAULT_PRECO_BASE_MENSAL = 1500
+export const DEFAULT_PRECO_BASE_MENSAL = 0
 
 export const MATTER_SERVICE_LABELS: Record<MatterServiceKey, string> = {
   centimetragem: 'Centimetragem',

@@ -4,7 +4,8 @@ import {
   ChevronDown,
   Cpu,
   FileBarChart,
-  Hash,
+  Mail,
+  Phone,
   Send,
   type LucideIcon,
 } from 'lucide-react'
@@ -161,67 +162,96 @@ export function ServicosAdicionais() {
         icon={Send}
         title="Newsletter e distribuição"
       >
-        <div className="add-page__other">
-          <Toggle
-            checked={a.newsletterWhatsApp}
-            onChange={(v) =>
-              dispatch({
-                type: 'SET_ADDITIONALS',
-                patch: { newsletterWhatsApp: v },
-              })
-            }
-            label="Envio de Newsletter via WhatsApp"
-            description="Cobrança fixa mensal."
-          />
-          <div className="add-page__inline">
-            <Hash size={16} strokeWidth={2} aria-hidden />
-            <TextField
-              dense
-              id="news-extra"
-              label="Newsletters adicionais (qtd. envios extras)"
-              type="number"
-              min={0}
-              step={1}
-              value={a.newsletterExtraEnvios || ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_NEWSLETTER_EXTRA_ENVIOS',
-                  value: Number.parseInt(e.target.value, 10) || 0,
-                })
-              }
-            />
+        <div className="add-page__distribution">
+          <div className="add-page__distribution-email-panel">
+            <div className="add-page__distribution-col add-page__distribution-col--email">
+              <div className="add-page__distribution-block-head">
+                <span
+                  className="add-page__distribution-avatar add-page__distribution-avatar--mail"
+                  aria-hidden
+                >
+                  <Mail size={18} strokeWidth={2} />
+                </span>
+                <div className="add-page__distribution-block-titles">
+                  <span className="add-page__distribution-block-title">
+                    Newsletter por E-mail
+                  </span>
+                  <p className="add-page__distribution-block-desc">
+                    Envio padrão de newsletter por e-mail.
+                  </p>
+                </div>
+              </div>
+              <TextField
+                dense
+                id="news-extra"
+                label="Newsletters adicionais (qtd. envios extras)"
+                type="number"
+                min={0}
+                step={1}
+                placeholder="0"
+                value={a.newsletterExtraEnvios || ''}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_NEWSLETTER_EXTRA_ENVIOS',
+                    value: Number.parseInt(e.target.value, 10) || 0,
+                  })
+                }
+              />
+            </div>
+            <div className="add-page__distribution-divider" aria-hidden />
+            <div className="add-page__distribution-col add-page__distribution-col--recipients">
+              <Toggle
+                checked={a.destinatariosExtrasEnabled}
+                onChange={(v) =>
+                  dispatch({ type: 'TOGGLE_DESTINATARIOS_EXTRAS', enabled: v })
+                }
+                label="Destinatários adicionais"
+                description="Faixa fixa de destinatários extras."
+              />
+              <SelectField
+                dense
+                id="de-tier"
+                label="Faixa"
+                disabled={!a.destinatariosExtrasEnabled}
+                value={a.destinatariosExtrasTierId ?? ''}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_DESTINATARIOS_EXTRAS_TIER',
+                    tierId: e.target.value || null,
+                  })
+                }
+              >
+                <option value="">Selecione…</option>
+                {prices.additionals.destinatariosExtras.tiers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
           </div>
 
-          <Card className="add-page__bc">
-            <Toggle
-              checked={a.destinatariosExtrasEnabled}
-              onChange={(v) =>
-                dispatch({ type: 'TOGGLE_DESTINATARIOS_EXTRAS', enabled: v })
-              }
-              label="Destinatários Adicionais"
-              description="Faixa fixa de destinatários extras."
-            />
-            <SelectField
-              dense
-              id="de-tier"
-              label="Faixa"
-              disabled={!a.destinatariosExtrasEnabled}
-              value={a.destinatariosExtrasTierId ?? ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_DESTINATARIOS_EXTRAS_TIER',
-                  tierId: e.target.value || null,
-                })
-              }
+          <div className="add-page__distribution-wa-panel">
+            <span
+              className="add-page__distribution-avatar add-page__distribution-avatar--wa"
+              aria-hidden
             >
-              <option value="">Selecione…</option>
-              {prices.additionals.destinatariosExtras.tiers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </SelectField>
-          </Card>
+              <Phone size={18} strokeWidth={2} />
+            </span>
+            <div className="add-page__distribution-wa-controls">
+              <Toggle
+                checked={a.newsletterWhatsApp}
+                onChange={(v) =>
+                  dispatch({
+                    type: 'SET_ADDITIONALS',
+                    patch: { newsletterWhatsApp: v },
+                  })
+                }
+                label="Envio de Newsletter via WhatsApp"
+                description="Cobrança fixa mensal."
+              />
+            </div>
+          </div>
         </div>
       </AccordionSection>
 

@@ -70,42 +70,26 @@
   margin-top: 2px;
 }
 
-/* Tier editor inside pricing cards: cohesive panel */
+/* Tier editor de avaliação: alinhado ao cartão, sem painel extra */
 .matter-card__tiers .tier-editor {
   position: relative;
-  gap: 14px;
-  padding: 16px 18px 18px;
-  border: 1px solid rgb(221 228 238);
-  border-radius: 12px;
-  background: linear-gradient(
-    180deg,
-    rgb(255 255 255) 0%,
-    rgb(248 250 252) 100%
-  );
-  box-shadow:
-    0 1px 3px rgb(15 23 42 / 6%),
-    inset 0 1px 0 rgb(255 255 255 / 90%);
+  gap: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .matter-card__tiers .tier-editor::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  border-radius: 12px 0 0 12px;
-  background: linear-gradient(
-    180deg,
-    rgb(59 130 246 / 35%) 0%,
-    rgb(59 130 246 / 12%) 100%
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .matter-card__tiers .tier-editor__head {
   align-items: center;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgb(237 241 247);
+  gap: 10px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .matter-card__tiers .tier-editor__title {
@@ -127,34 +111,8 @@
   background: rgb(255 255 255 / 80%);
 }
 
-.matter-card__tiers .tier-editor__grid {
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
-  gap: 12px 14px;
-}
-
-.matter-card__tiers .tier-editor__grid .ui-field--dense {
-  gap: 7px;
-}
-
-.matter-card__tiers .tier-editor__row {
-  align-items: center;
-  padding: 14px;
-  border-radius: 10px;
-  border-color: rgb(226 232 240);
-  background: rgb(255 255 255);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
-  transition:
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-.matter-card__tiers .tier-editor__row:hover {
-  border-color: rgb(203 213 225);
-  box-shadow: 0 2px 6px rgb(15 23 42 / 6%);
-}
-
-.matter-card__tiers .tier-editor__remove {
-  border-radius: 9px;
+.matter-card__tiers .tier-editor__sheet {
+  background: transparent;
 }
 
 /* Corpo do cartão empilhado após o lead (frequências de relatório, validade) */

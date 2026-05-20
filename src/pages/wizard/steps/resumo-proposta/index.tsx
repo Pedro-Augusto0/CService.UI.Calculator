@@ -20,6 +20,7 @@ import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
 import type { MatterServiceKey } from '@/domain/types'
 import { formatCurrency } from '@/utils/currency'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
+import { FIXED_PROPOSAL_VALIDADE_DIAS } from '@/features/proposal/lib/proposalReducer'
 import {
   buildAdicionaisExtrasRows,
   buildMonitoramentosRows,
@@ -121,7 +122,7 @@ export function ResumoProposta({
     ajustes: true,
     parametros: true,
   })
-  const [stripPicker, setStripPicker] = useState<null | 'billing' | 'validade'>(null)
+  const [stripPicker, setStripPicker] = useState<null | 'billing'>(null)
 
   function toggleDetail(key: DetailSectionKey) {
     setDetailOpen((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -207,16 +208,12 @@ export function ResumoProposta({
 
   const commercialColumns = [
     {
-      label: 'Preço base mensal',
-      value: formatCurrency(state.precoBaseMensal),
-    },
-    {
       label: 'Modo de cobrança',
       value: state.globalBillingMode === 'fixed' ? 'Fixo' : 'Variável',
     },
     {
       label: 'Validade',
-      value: `${state.validadeDias} dia${state.validadeDias === 1 ? '' : 's'}`,
+      value: `${FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)`,
     },
     { label: 'Investimento mensal', value: formatCurrency(c.finalPrice) },
     { label: 'Contrato', value: 'Mensal' },
@@ -230,7 +227,7 @@ export function ResumoProposta({
     : 'Ainda não salva no histórico local.'
 
   const modoLabel = state.globalBillingMode === 'fixed' ? 'Fixo' : 'Variável'
-  const validadeLabel = `${state.validadeDias} dia${state.validadeDias === 1 ? '' : 's'}`
+  const validadeLabel = `${FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)`
 
   return (
     <div className="page-etapa resumo-page">
@@ -286,44 +283,7 @@ export function ResumoProposta({
           </div>
           <div className="resumo-page__strip-metric">
             <p className="resumo-page__strip-kicker">Validade da proposta</p>
-            {stripPicker === 'validade' ? (
-              <select
-                className="resumo-page__strip-select"
-                aria-label="Validade da proposta"
-                autoComplete="off"
-                autoFocus
-                value={state.validadeDias}
-                onChange={(e) => {
-                  dispatch({
-                    type: 'SET_VALIDADE_DIAS',
-                    dias: Number.parseInt(e.target.value, 10) || 0,
-                  })
-                  setStripPicker(null)
-                }}
-                onBlur={() => setStripPicker(null)}
-              >
-                {state.prices.validadeOptions.map((dias) => (
-                  <option key={dias} value={dias}>
-                    {dias} dia{dias === 1 ? '' : 's'}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <button
-                type="button"
-                className="resumo-page__strip-value resumo-page__strip-value--editable"
-                onClick={() => setStripPicker('validade')}
-              >
-                {validadeLabel}
-
-                <ChevronDown
-                  size={18}
-                  strokeWidth={2}
-                  className="resumo-page__coverage-chevron"
-                  aria-hidden
-                />
-              </button>
-            )}
+            <span className="resumo-page__strip-value">{validadeLabel}</span>
           </div>
         </div>
       </Card>
@@ -640,7 +600,7 @@ export function ResumoProposta({
 
         <ResumoCollapseSection
           title="Ajustes e totalização"
-          subtitle="Subtotal variável, modificadores percentuais e preço base garantido."
+          subtitle="Subtotal variável e modificadores percentuais."
           icon={<Percent size={18} strokeWidth={2} />}
           iconClassName="resumo-page__section-icon--sky"
           open={detailOpen.ajustes}
@@ -666,7 +626,7 @@ export function ResumoProposta({
               </div>
             ) : null}
             <div className="resumo-page__bd-row">
-              <span>Total após modificadores (antes do preço base)</span>
+              <span>Total após modificadores</span>
               <strong>
                 {formatCurrency(
                   c.subtotalBeforeModifiers +
@@ -674,10 +634,6 @@ export function ResumoProposta({
                   c.valorDescontoAprovacaoAutomatica,
                 )}
               </strong>
-            </div>
-            <div className="resumo-page__bd-row resumo-page__bd-row--emphasis">
-              <span>Preço base mensal (pacote)</span>
-              <strong>{formatCurrency(state.precoBaseMensal)}</strong>
             </div>
             <div className="resumo-page__bd-row resumo-page__bd-row--final">
               <span>Investimento mensal final</span>

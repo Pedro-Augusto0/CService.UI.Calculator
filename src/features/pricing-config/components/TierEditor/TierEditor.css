@@ -1,27 +1,29 @@
 .tier-editor {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px dashed rgb(203 213 225);
-  border-radius: var(--radius-sm);
-  background: rgb(248 250 252 / 50%);
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .tier-editor__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 12px;
+  flex-wrap: wrap;
 }
 
 .tier-editor__copy {
   min-width: 0;
+  flex: 1 1 160px;
 }
 
 .tier-editor__title {
-  margin: 0 0 4px;
-  font-size: 0.9375rem;
+  margin: 0 0 2px;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: rgb(15 23 42);
@@ -29,71 +31,181 @@
 
 .tier-editor__desc {
   margin: 0;
-  font-size: 0.78125rem;
-  line-height: 1.5;
+  font-size: 0.71875rem;
+  line-height: 1.4;
   color: var(--color-muted);
+}
+
+.tier-editor__add-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  gap: 6px;
 }
 
 .tier-editor__empty {
   margin: 0;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   background: rgb(255 255 255);
   border: 1px solid rgb(226 232 240);
-  font-size: 0.8125rem;
+  font-size: 0.78125rem;
   color: var(--color-muted);
 }
 
-.tier-editor__rows {
+/* Folha: cabeçalho único + linhas alinhadas em grelha */
+.tier-editor__sheet-scroll {
+  overflow-x: auto;
+  margin: 0 -2px;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tier-editor__sheet {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgb(255 255 255);
 }
 
-.tier-editor__row {
+.tier-editor__sheet-row {
+  display: grid;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 4px 2px;
+  min-height: 0;
+}
+
+.tier-editor__sheet-row--head {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  border-bottom: none;
+  background: transparent;
+}
+
+.tier-editor__sheet-row--data {
+  border-bottom: none;
+}
+
+.tier-editor__sheet-row--data:last-child {
+  border-bottom: none;
+}
+
+.tier-editor__sheet-row--data:hover {
+  background: transparent;
+}
+
+.tier-editor__cell--idx {
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgb(100 116 139);
+  line-height: 1.2;
+}
+
+.tier-editor__sheet-row--head .tier-editor__cell--idx {
+  color: rgb(100 116 139);
+}
+
+.tier-editor__cell--th {
+  min-width: 0;
+  line-height: 1.25;
+  padding: 0 2px;
+}
+
+.tier-editor__cell--action-head {
+  padding: 0;
+}
+
+.tier-editor__cell--field {
+  min-width: 0;
+}
+
+.tier-editor__cell--field .ui-field {
+  gap: 0;
+}
+
+/* Rótulos repetidos nos campos: só leitores de ecrã (cabeçalho visível na folha) */
+.tier-editor__cell--field .ui-field__label,
+.tier-editor__cell--field .ui-field__meta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tier-editor__cell--field .ui-field__control {
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 0.8125rem;
+}
+
+.tier-editor__cell--action {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: rgb(255 255 255);
-  border: 1px solid rgb(226 232 240);
-}
-
-.tier-editor__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
+  justify-content: center;
+  padding: 0;
 }
 
 .tier-editor__remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
-  border: 1px solid rgb(226 232 240);
-  border-radius: var(--radius-sm);
-  background: rgb(255 255 255);
-  color: rgb(220 38 38);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(148 163 184);
   cursor: pointer;
-  transition: background 0.16s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
 }
 
 .tier-editor__remove:hover {
   background: rgb(254 242 242);
+  color: rgb(220 38 38);
+}
+
+.tier-editor__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 720px) {
-  .tier-editor__row {
+  .tier-editor {
+    padding: 0;
+  }
+
+  .tier-editor__head {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .tier-editor__remove {
-    align-self: flex-end;
+  .tier-editor__add-btn {
+    justify-content: center;
   }
 }

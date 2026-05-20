@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  CalendarRange,
-  Calculator,
   ChevronDown,
   FileBarChart,
   HeartHandshake,
@@ -11,6 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { ConfigTabId } from '@/features/pricing-config/types'
+import { CONFIG_TABS } from '@/pages/price-configuration/lib/priceConfigurationPageLib'
 import {
   BILLING_MODE_LABELS,
   MATTER_SERVICE_SHORT_LABELS,
@@ -24,8 +23,6 @@ import './ConfigPricingSidebar.css'
 
 interface ConfigPricingSidebarProps {
   prices: Prices
-  precoBaseMensal: number
-  pricingSavedAt: number
   focusSection?: ConfigTabId
 }
 
@@ -47,10 +44,9 @@ function matterServiceSummaryText(conf: MatterServiceConfig): string {
 
 export function ConfigPricingSidebar({
   prices,
-  precoBaseMensal,
   focusSection,
 }: ConfigPricingSidebarProps) {
-  const [openKey, setOpenKey] = useState<string>('base')
+  const [openKey, setOpenKey] = useState<string>(CONFIG_TABS[0].id)
 
   useEffect(() => {
     if (focusSection) setOpenKey(focusSection)
@@ -65,7 +61,7 @@ export function ConfigPricingSidebar({
           label: MATTER_SERVICE_SHORT_LABELS[k],
           value: [
             `Modo de cobrança: ${BILLING_MODE_LABELS[conf.mode]}`,
-            `${tierCount} faixa${tierCount === 1 ? '' : 's'} por quantidade de campos`,
+            `${tierCount} faixa${tierCount === 1 ? '' : 's'} de preço`,
           ].join('\n'),
         }
       }
@@ -143,17 +139,6 @@ export function ConfigPricingSidebar({
     ]
   }, [prices.additionals])
 
-  const outrosItems = useMemo(
-    () =>
-      prices.validadeOptions.length
-        ? prices.validadeOptions.map((d) => ({
-            label: `Proposta válida por ${d} dia${d === 1 ? '' : 's'}`,
-            value: '',
-          }))
-        : [{ label: 'Nenhuma opção cadastrada', value: '' }],
-    [prices.validadeOptions],
-  )
-
   function toggle(key: string) {
     setOpenKey((prev) => (prev === key ? '' : key))
   }
@@ -168,15 +153,13 @@ export function ConfigPricingSidebar({
     items: { label: string; value: string }[]
   }[] = [
     {
-      key: 'base',
-      tab: 'base',
-      label: 'Preço base',
-      summary: formatCurrency(precoBaseMensal),
-      Icon: Calculator,
-      tone: 'purple',
-      items: [
-        { label: 'Preço base mensal', value: formatCurrency(precoBaseMensal) },
-      ],
+      key: 'monitoramentos',
+      tab: 'monitoramentos',
+      label: 'Monitoramentos',
+      summary: '7 canais',
+      Icon: Radar,
+      tone: 'orange',
+      items: monitoramentosItems,
     },
     {
       key: 'matter',
@@ -197,15 +180,6 @@ export function ConfigPricingSidebar({
       items: reportItems,
     },
     {
-      key: 'monitoramentos',
-      tab: 'monitoramentos',
-      label: 'Monitoramentos',
-      summary: '7 canais',
-      Icon: Radar,
-      tone: 'orange',
-      items: monitoramentosItems,
-    },
-    {
       key: 'additionals',
       tab: 'additionals',
       label: 'Adicionais',
@@ -213,15 +187,6 @@ export function ConfigPricingSidebar({
       Icon: HeartHandshake,
       tone: 'orange',
       items: additionalsItems,
-    },
-    {
-      key: 'outros',
-      tab: 'outros',
-      label: 'Outros',
-      summary: `${prices.validadeOptions.length} opções de validade`,
-      Icon: CalendarRange,
-      tone: 'purple',
-      items: outrosItems,
     },
   ]
 

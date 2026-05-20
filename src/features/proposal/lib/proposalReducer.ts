@@ -1,8 +1,4 @@
-import {
-  DEFAULT_PRECO_BASE_MENSAL,
-  DEFAULT_PRICES,
-  normalizePrices,
-} from '@/domain/prices'
+import { DEFAULT_PRICES, normalizePrices } from '@/domain/prices'
 import { defaultSections } from '@/domain/calculations'
 import type {
   AdditionalsState,
@@ -17,8 +13,10 @@ import type { ProposalAction, ProposalState } from './proposalActions'
 
 export const STEP_COUNT = 5
 
+/** Validade comercial fixa até reativarmos o seletor nas propostas. */
+export const FIXED_PROPOSAL_VALIDADE_DIAS = 30
+
 export interface ProposalStateSeed {
-  precoBaseMensal?: number
   prices?: ProposalState['prices']
   pricingConfigSavedAt?: number
 }
@@ -106,7 +104,6 @@ export function createInitialProposalState(
   seed: ProposalStateSeed = {},
 ): ProposalState {
   const prices = normalizePrices(structuredClone(seed.prices ?? DEFAULT_PRICES))
-  const validadeDias = prices.validadeOptions[0] ?? 30
   return {
     currentStep: 0,
     meta: {
@@ -118,10 +115,9 @@ export function createInitialProposalState(
     avaliacaoTierId: null,
     reports: emptyReports(),
     additionals: emptyAdditionals(),
-    validadeDias,
-    precoBaseMensal: seed.precoBaseMensal ?? DEFAULT_PRECO_BASE_MENSAL,
+    validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS,
+    precoBaseMensal: 0,
     prices,
-    applyServicesToAll: false,
     activeScopeTab: 'marcas',
     /** 2 = assistente com 5 etapas; ausente/<2 trata como fluxo legado de 4 etapas ao carregar. */
     wizardVersion: 2,
@@ -159,23 +155,28 @@ export function proposalReducer(
         currentStep: Math.max(0, Math.min(STEP_COUNT - 1, action.step)),
       }
     case 'LOAD_PROPOSAL_STATE': {
-      const raw = structuredClone(action.state)
-      const legacyWizard = (raw.wizardVersion ?? 1) < 2
-      let currentStep = raw.currentStep
+      const raw = structuredClone(action.state) as ProposalState & {
+        applyServicesToAll?: boolean
+      }
+      const { applyServicesToAll: _legacyApplyAll, ...rawRest } = raw
+      void _legacyApplyAll
+      const legacyWizard = (rawRest.wizardVersion ?? 1) < 2
+      let currentStep = rawRest.currentStep
       if (legacyWizard && (currentStep === 2 || currentStep === 3)) {
         currentStep = currentStep + 1
       }
       return {
-        ...raw,
+        ...rawRest,
         currentStep,
         wizardVersion: 2,
-        prices: normalizePrices(structuredClone(raw.prices)),
-        additionals: coerceLoadedAdditionals(structuredClone(raw.additionals)),
+        prices: normalizePrices(structuredClone(rawRest.prices)),
+        additionals: coerceLoadedAdditionals(structuredClone(rawRest.additionals)),
+        validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS,
+        precoBaseMensal: 0,
       }
     }
     case 'RESET_PROPOSAL':
       return createInitialProposalState({
-        precoBaseMensal: state.precoBaseMensal,
         prices: state.prices,
         pricingConfigSavedAt: state.pricingConfigSavedAt,
       })
@@ -207,9 +208,7 @@ export function proposalReducer(
       const current =
         state.sections[action.section].services[action.service]
       const nextValue = !current
-      const targets: SectionKey[] = state.applyServicesToAll
-        ? [...SECTION_KEYS]
-        : [action.section]
+      const targets: SectionKey[] = [action.section]
       const sections = applyServiceValueToSections(
         state.sections,
         targets,
@@ -223,8 +222,6 @@ export function proposalReducer(
       }
       return next
     }
-    case 'SET_APPLY_SERVICES_TO_ALL':
-      return { ...state, applyServicesToAll: action.value }
     case 'SET_ACTIVE_SCOPE_TAB':
       return { ...state, activeScopeTab: action.section }
     case 'SET_GLOBAL_BILLING_MODE':
@@ -383,13 +380,9 @@ export function proposalReducer(
         },
       }
     case 'SET_VALIDADE_DIAS':
-      return { ...state, validadeDias: Math.max(0, Math.floor(action.dias)) }
+      return { ...state, validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS }
     case 'SET_PRECO_BASE_MENSAL':
-      return {
-        ...state,
-        precoBaseMensal: Math.max(0, action.value),
-        pricingConfigSavedAt: Date.now(),
-      }
+      return { ...state, precoBaseMensal: 0 }
     case 'SET_PRICES':
       return {
         ...state,
@@ -400,7 +393,7 @@ export function proposalReducer(
       return {
         ...state,
         prices: normalizePrices(structuredClone(action.prices)),
-        precoBaseMensal: Math.max(0, action.precoBaseMensal),
+        precoBaseMensal: 0,
         pricingConfigSavedAt: action.savedAt ?? Date.now(),
       }
     case 'MARK_PROPOSAL_SAVED':

@@ -1,7 +1,5 @@
-import type { Dispatch, SetStateAction } from 'react'
-import { Calculator, Info, RotateCcw, Save } from 'lucide-react'
+import { Info, RotateCcw, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PtDecimalField } from '@/components/ui/PtDecimalField'
 import { PriceSettingsFields } from '@/features/pricing-config/components/PriceSettingsFields'
 import type { Prices } from '@/domain/prices'
 import type { ConfigTabId } from '@/features/pricing-config/types'
@@ -13,8 +11,6 @@ import {
 
 export function PriceConfigurationView({
   draftPrices,
-  draftPrecoBaseMensal,
-  setDraftPrecoBaseMensal,
   activeTab,
   setActiveTab,
   activeTabItem,
@@ -25,8 +21,6 @@ export function PriceConfigurationView({
   handleSave,
 }: {
   draftPrices: Prices
-  draftPrecoBaseMensal: number
-  setDraftPrecoBaseMensal: Dispatch<SetStateAction<number | null>>
   activeTab: ConfigTabId
   setActiveTab: (t: ConfigTabId) => void
   activeTabItem: ConfigTabItem
@@ -65,58 +59,15 @@ export function PriceConfigurationView({
             </div>
           </div>
 
-          {activeTab === 'base' ? (
-            <div className="config-page__base-layout">
-              <article className="config-base-card">
-                <div
-                  className="config-base-card__icon config-base-card__icon--blue"
-                  aria-hidden
-                >
-                  <Calculator size={22} strokeWidth={1.85} />
-                </div>
-                <div className="config-base-card__copy">
-                  <h3 className="config-base-card__title">Preço base mensal</h3>
-                  <p className="config-base-card__desc">
-                    Valor mínimo mensal obrigatório aplicado a todas as propostas (item 4 do documento).
-                  </p>
-                </div>
-                <div className="config-base-card__field">
-                  <PtDecimalField
-                    id="config-preco-base-mensal"
-                    label="Valor (R$)"
-                    value={draftPrecoBaseMensal}
-                    onCommit={(n) => setDraftPrecoBaseMensal(n)}
-                  />
-                </div>
-              </article>
-
-              <div className="config-page__info-callout" role="status">
-                <span className="config-page__info-callout-icon" aria-hidden>
-                  <Info size={20} strokeWidth={2} />
-                </span>
-                <p className="config-page__info-callout-text">
-                  O preço base é somado ao final da composição, depois dos modificadores percentuais
-                  de plantão e aprovação automática.
-                </p>
-              </div>
+          <div className="config-page__base-layout">
+            <PriceSettingsFields draft={draftPrices} patch={patch} section={activeTab} />
+            <div className="config-page__info-callout" role="status">
+              <span className="config-page__info-callout-icon" aria-hidden>
+                <Info size={20} strokeWidth={2} />
+              </span>
+              <p className="config-page__info-callout-text">{TAB_PANEL_INFO[activeTab]}</p>
             </div>
-          ) : (
-            <div className="config-page__base-layout">
-              <PriceSettingsFields
-                draft={draftPrices}
-                patch={patch}
-                section={activeTab}
-              />
-              <div className="config-page__info-callout" role="status">
-                <span className="config-page__info-callout-icon" aria-hidden>
-                  <Info size={20} strokeWidth={2} />
-                </span>
-                <p className="config-page__info-callout-text">
-                  {TAB_PANEL_INFO[activeTab]}
-                </p>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="config-page__actions-bar">

@@ -7,9 +7,11 @@ import {
   Newspaper,
   Sparkles,
 } from 'lucide-react'
+import { SelectField } from '@/components/ui/SelectField'
+import type { AvaliacaoTier } from '@/domain/prices'
+import { MATTER_SERVICE_LABELS } from '@/domain/prices'
 import type { MatterServiceKey } from '@/domain/types'
 import { MATTER_SERVICE_KEYS } from '@/domain/types'
-import { MATTER_SERVICE_LABELS } from '@/domain/prices'
 import './ServiceToggleGrid.css'
 
 const ICONS: Record<MatterServiceKey, LucideIcon> = {
@@ -34,17 +36,31 @@ interface ServiceToggleGridProps {
   variant?: 'compact' | 'large'
   selected: Record<MatterServiceKey, boolean>
   onToggle: (key: MatterServiceKey) => void
+  /** Select de faixa embutido no tile «Avaliação» quando ativo. */
+  avaliacaoTierId?: string | null
+  avaliacaoTiers?: AvaliacaoTier[]
+  onAvaliacaoTierChange?: (tierId: string | null) => void
+  /** Sufixo único para o id do select (ex.: secção do escopo). */
+  avaliacaoSelectIdSuffix?: string
 }
 
 export function ServiceToggleGrid({
   variant = 'compact',
   selected,
   onToggle,
+  avaliacaoTierId = null,
+  avaliacaoTiers,
+  onAvaliacaoTierChange,
+  avaliacaoSelectIdSuffix = 'scope',
 }: ServiceToggleGridProps) {
   const cls =
     variant === 'large'
       ? 'service-grid service-grid--large'
       : 'service-grid service-grid--compact'
+
+  const showAvalTier =
+    Boolean(avaliacaoTiers?.length)
+    && typeof onAvaliacaoTierChange === 'function'
 
   return (
     <div className={cls} role="group" aria-label="Serviços por matéria">
@@ -58,22 +74,49 @@ export function ServiceToggleGrid({
         ]
           .filter(Boolean)
           .join(' ')
+
         return (
-          <button
-            key={key}
-            type="button"
-            className={itemCls}
-            onClick={() => onToggle(key)}
-            aria-pressed={on}
-          >
-            <span className="service-grid__icon">
-              <Icon size={variant === 'large' ? 22 : 18} strokeWidth={1.75} />
-            </span>
-            <span className="service-grid__label">{MATTER_SERVICE_LABELS[key]}</span>
-            {variant === 'large' ? (
-              <span className="service-grid__desc">{DESCRIPTIONS[key]}</span>
+          <div key={key} className={itemCls}>
+            <button
+              type="button"
+              className="service-grid__item-main"
+              onClick={() => onToggle(key)}
+              aria-pressed={on}
+            >
+              <span className="service-grid__icon">
+                <Icon size={variant === 'large' ? 22 : 18} strokeWidth={1.75} />
+              </span>
+              <span className="service-grid__label">{MATTER_SERVICE_LABELS[key]}</span>
+              {variant === 'large' ? (
+                <span className="service-grid__desc">{DESCRIPTIONS[key]}</span>
+              ) : null}
+            </button>
+            {key === 'avaliacao' && on && showAvalTier ? (
+              <div
+                className="service-grid__item-tier"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <SelectField
+                  dense
+                  id={`escopo-aval-tier-${avaliacaoSelectIdSuffix}`}
+                  label=""
+                  hint=""
+                  value={avaliacaoTierId ?? ''}
+                  onChange={(e) =>
+                    onAvaliacaoTierChange(e.target.value || null)
+                  }
+                >
+                  <option value="">Selecione uma faixa…</option>
+                  {avaliacaoTiers!.map((tier) => (
+                    <option key={tier.id} value={tier.id}>
+                      {tier.label}
+                    </option>
+                  ))}
+                </SelectField>
+              </div>
             ) : null}
-          </button>
+          </div>
         )
       })}
     </div>

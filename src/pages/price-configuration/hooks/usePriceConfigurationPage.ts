@@ -7,31 +7,27 @@ import {
 } from '@/domain/prices'
 import type { ConfigTabId } from '@/features/pricing-config/types'
 import { CONFIG_TABS } from '@/pages/price-configuration/lib/priceConfigurationPageLib'
-import { persistPricingConfig } from '@/features/proposal/lib/pricingConfigStore'
+import {
+  loadStoredPricingConfig,
+  persistPricingConfig,
+} from '@/features/proposal/lib/pricingConfigStore'
 
 export interface UsePriceConfigurationPageArgs {
   draftPrices: Prices
   setDraftPrices: Dispatch<SetStateAction<Prices | null>>
-  draftPrecoBaseMensal: number
-  setDraftPrecoBaseMensal: Dispatch<SetStateAction<number | null>>
   onActiveTabChange?: (tab: ConfigTabId) => void
 }
 
 export function usePriceConfigurationPage({
   draftPrices,
   setDraftPrices,
-  draftPrecoBaseMensal,
-  setDraftPrecoBaseMensal,
   onActiveTabChange,
 }: UsePriceConfigurationPageArgs) {
   const { state, dispatch } = useProposal()
-  const [activeTab, setActiveTab] = useState<ConfigTabId>('base')
+  const [activeTab, setActiveTab] = useState<ConfigTabId>(() => CONFIG_TABS[0].id)
   const hasPendingPriceChanges =
-    JSON.stringify(draftPrices) !== JSON.stringify(state.prices) ||
-    draftPrecoBaseMensal !== state.precoBaseMensal
-  const isDefaultDraft =
-    JSON.stringify(draftPrices) === JSON.stringify(DEFAULT_PRICES) &&
-    draftPrecoBaseMensal === DEFAULT_PRECO_BASE_MENSAL
+    JSON.stringify(draftPrices) !== JSON.stringify(state.prices)
+  const isDefaultDraft = JSON.stringify(draftPrices) === JSON.stringify(DEFAULT_PRICES)
   const activeTabItem = CONFIG_TABS.find((tab) => tab.id === activeTab) ?? CONFIG_TABS[0]
 
   useEffect(() => {
@@ -47,12 +43,13 @@ export function usePriceConfigurationPage({
 
   function handleRestore() {
     setDraftPrices(structuredClone(DEFAULT_PRICES))
-    setDraftPrecoBaseMensal(DEFAULT_PRECO_BASE_MENSAL)
   }
 
   function handleSave() {
     const prices = structuredClone(draftPrices)
-    const precoBaseMensal = draftPrecoBaseMensal
+    const persisted = loadStoredPricingConfig()
+    const precoBaseMensal =
+      persisted?.precoBaseMensal ?? DEFAULT_PRECO_BASE_MENSAL
     const pricingConfigSavedAt = Date.now()
     dispatch({
       type: 'COMMIT_PRICING_CONFIG',

@@ -118,7 +118,6 @@ interface TemplateDef {
   avaliacaoTierId: string | null
   reports: ReportsState
   additionals: AdditionalsState
-  applyServicesToAll: boolean
 }
 
 const DEFAULT_AVAL_TIER = DEFAULT_PRICES.matterServices.avaliacao.tiers[1]?.id ?? null
@@ -132,7 +131,6 @@ const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
     avaliacaoTierId: null,
     reports: emptyReports(),
     additionals: emptyAdditionals(),
-    applyServicesToAll: true,
   },
   premium: {
     services: matterFlags({
@@ -157,7 +155,6 @@ const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
       midiasSociaisTierId:
         DEFAULT_PRICES.additionals.midiasSociais.tiers[0]?.id ?? null,
     },
-    applyServicesToAll: true,
   },
   'tv-radio': {
     services: matterFlags({
@@ -179,7 +176,6 @@ const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
       radioEnabled: true,
       radioRegion: 'spRj',
     },
-    applyServicesToAll: true,
   },
   digital: {
     services: matterFlags({
@@ -202,7 +198,6 @@ const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
       storiesInstagramTierId:
         DEFAULT_PRICES.additionals.storiesInstagram.tiers[0]?.id ?? null,
     },
-    applyServicesToAll: true,
   },
 }
 
@@ -219,7 +214,6 @@ export function getBuiltinTemplateSnapshot(
     reports: { ...def.reports },
     additionals: { ...def.additionals },
     validadeDias: initial.validadeDias,
-    applyServicesToAll: def.applyServicesToAll,
     activeScopeTab: 'marcas',
   }
 }

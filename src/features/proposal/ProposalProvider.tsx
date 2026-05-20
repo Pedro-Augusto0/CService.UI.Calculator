@@ -61,7 +61,6 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       stored
         ? {
             prices: stored.prices,
-            precoBaseMensal: stored.precoBaseMensal,
             pricingConfigSavedAt: stored.pricingConfigSavedAt,
           }
         : {},

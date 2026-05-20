@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
+import { FIXED_PROPOSAL_VALIDADE_DIAS } from '@/features/proposal/lib/proposalReducer'
 import { formatCurrency } from '@/utils/currency'
 import {
   MATTER_SERVICE_LABELS,
@@ -205,7 +206,9 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
     { label: 'Serviços por matéria', value: c.breakdownGroups.servicosMateria },
     { label: 'Relatórios e BI', value: c.breakdownGroups.relatoriosBi },
     { label: 'Serviços adicionais', value: c.breakdownGroups.servicosAdicionais },
-  ]
+  ].filter(
+    (l) => l.label !== 'Preço base mensal' || l.value > 0,
+  )
 
   function toggleGroup(key: string) {
     setExpandedGroups((current) => (current[key] ? {} : { [key]: true }))
@@ -496,7 +499,7 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
               <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
                 <span className="summary-panel__ledger-label">Validade</span>
                 <span className="summary-panel__ledger-value">
-                  {state.validadeDias} dia{state.validadeDias === 1 ? '' : 's'}
+                  {FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)
                 </span>
               </div>
             </div>

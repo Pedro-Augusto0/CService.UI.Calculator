@@ -14,9 +14,9 @@ function basePrices(): Prices {
       avaliacao: {
         mode: 'both',
         tiers: [
-          { id: 't2', label: 'Até 2', fieldCount: 2, fixedPrice: 100, variablePrice: 1 },
-          { id: 't5', label: 'Até 5', fieldCount: 5, fixedPrice: 250, variablePrice: 2 },
-          { id: 't7', label: 'Até 7', fieldCount: 7, fixedPrice: 400, variablePrice: 3 },
+          { id: 't2', label: 'Até 2', fixedPrice: 100, variablePrice: 1 },
+          { id: 't5', label: 'Até 5', fixedPrice: 250, variablePrice: 2 },
+          { id: 't7', label: 'Até 7', fixedPrice: 400, variablePrice: 3 },
         ],
       },
     },

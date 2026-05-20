@@ -56,10 +56,6 @@ export function describeTemplateSnapshot(
     lines.push(`Adicionais: ${extras.join(', ')}.`)
   }
 
-  if (snapshot.applyServicesToAll) {
-    lines.push('Serviços de matéria replicados em marcas, concorrentes e setor.')
-  }
-
   return {
     serviceCount: activeServices.length,
     includeLines: lines,

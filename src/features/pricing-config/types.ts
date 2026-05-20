@@ -1,7 +1,5 @@
 export type ConfigTabId =
-  | 'base'
+  | 'monitoramentos'
   | 'matter'
   | 'reports'
-  | 'monitoramentos'
   | 'additionals'
-  | 'outros'

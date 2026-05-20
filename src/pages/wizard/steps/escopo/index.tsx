@@ -10,8 +10,6 @@ import {
 import { Card } from '@/components/ui/Card'
 import { FieldGroup, TextField } from '@/components/ui/TextField'
 import { TagInput } from '@/components/ui/TagInput'
-import { Toggle } from '@/components/ui/Toggle'
-import { SelectField } from '@/components/ui/SelectField'
 import { SECTION_KEYS, type MatterServiceKey, type SectionKey } from '@/domain/types'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
 import { ServiceToggleGrid } from '@/features/proposal/components/ServiceToggleGrid'
@@ -42,9 +40,6 @@ export function Escopo() {
   const { state, dispatch } = useProposal()
   const [openSection, setOpenSection] = useState<SectionKey | null>(SECTION_KEYS[0])
 
-  const avaliacaoSelected = SECTION_KEYS.some(
-    (k) => state.sections[k].services.avaliacao,
-  )
   const avaliacaoTiers = state.prices.matterServices.avaliacao.tiers
 
   return (
@@ -56,40 +51,11 @@ export function Escopo() {
           </span>
           <div>
             <h2 className="escopo-page__meta-title">Escopo do monitoramento</h2>
+          <p className="escopo-page__meta-text">
+            Selecione os escopos de monitoramento para esta proposta.
+          </p>
           </div>
         </div>
-        <Toggle
-          checked={state.applyServicesToAll}
-          onChange={(v) =>
-            dispatch({ type: 'SET_APPLY_SERVICES_TO_ALL', value: v })
-          }
-          label="Aplicar serviços por matéria a todas as categorias"
-          description="Quando ligado, ativar ou desativar um serviço em uma categoria replica a mesma seleção nas demais."
-        />
-        {avaliacaoSelected ? (
-          <div className="escopo-page__aval-wrap">
-            <SelectField
-              dense
-              id="escopo-aval-tier"
-              label="Faixa da Avaliação (quantidade de campos)"
-              hint="Tabela configurada pelo administrador."
-              value={state.avaliacaoTierId ?? ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_AVALIACAO_TIER',
-                  tierId: e.target.value || null,
-                })
-              }
-            >
-              <option value="">Selecione uma faixa…</option>
-              {avaliacaoTiers.map((tier) => (
-                <option key={tier.id} value={tier.id}>
-                  {tier.label} ({tier.fieldCount} campos)
-                </option>
-              ))}
-            </SelectField>
-          </div>
-        ) : null}
       </Card>
 
       <div className="escopo-page__stack">
@@ -160,6 +126,12 @@ export function Escopo() {
                           service,
                         })
                       }
+                      avaliacaoTierId={state.avaliacaoTierId}
+                      avaliacaoTiers={avaliacaoTiers}
+                      onAvaliacaoTierChange={(tierId) =>
+                        dispatch({ type: 'SET_AVALIACAO_TIER', tierId })
+                      }
+                      avaliacaoSelectIdSuffix={key}
                     />
                   </div>
                 </div>
