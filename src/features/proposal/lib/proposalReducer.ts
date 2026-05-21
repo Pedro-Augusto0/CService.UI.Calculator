@@ -208,7 +208,9 @@ export function proposalReducer(
       const current =
         state.sections[action.section].services[action.service]
       const nextValue = !current
-      const targets: SectionKey[] = [action.section]
+      /** Avaliação é uma decisão única por proposta: liga/desliga nos três escopos juntos. */
+      const targets: SectionKey[] =
+        action.service === 'avaliacao' ? [...SECTION_KEYS] : [action.section]
       const sections = applyServiceValueToSections(
         state.sections,
         targets,
