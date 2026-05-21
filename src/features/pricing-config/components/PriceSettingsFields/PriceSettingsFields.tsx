@@ -540,20 +540,19 @@ function MonitoramentosSection({
           <div className="config-base-card__copy">
             <h3 className="config-base-card__title">Monitoramento de Mídias Sociais</h3>
             <p className="config-base-card__desc">
-              Faixas por quantidade de posts. O comercial escolhe a faixa em combo.
+              Faixas com rótulo e valor fixo. O comercial escolhe a faixa em combo.
             </p>
           </div>
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
             title=""
-            description="Exemplos: até 100 posts, até 250 posts."
+            description="Use o rótulo para descrever o que cada faixa cobre (ex.: pacote básico, expansão)."
             tiers={a.midiasSociais.tiers}
             onChange={(tiers) => update('midiasSociais', { tiers })}
             createTier={() => newRangeTier('ms')}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
-              { key: 'upTo', label: 'Até X posts', type: 'integer' },
               { key: 'price', label: 'Valor (R$)', type: 'decimal' },
             ]}
           />
@@ -568,20 +567,19 @@ function MonitoramentosSection({
           <div className="config-base-card__copy">
             <h3 className="config-base-card__title">Monitoramento de Instagram Stories</h3>
             <p className="config-base-card__desc">
-              Faixas por quantidade de perfis monitorados.
+              Faixas com rótulo e valor fixo. O comercial escolhe a faixa em combo.
             </p>
           </div>
         </div>
         <div className="matter-card__tiers">
           <TierEditor<RangeTier>
             title=""
-            description="Exemplos: até 100 perfis, até 250 perfis."
+            description="Use o rótulo para descrever o que cada faixa cobre."
             tiers={a.storiesInstagram.tiers}
             onChange={(tiers) => update('storiesInstagram', { tiers })}
             createTier={() => newRangeTier('sg')}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
-              { key: 'upTo', label: 'Até X perfis', type: 'integer' },
               { key: 'price', label: 'Valor (R$)', type: 'decimal' },
             ]}
           />
@@ -684,7 +682,7 @@ function AdditionalsSection({
           <div className="config-base-card__copy">
             <h3 className="config-base-card__title">Destinatários Adicionais</h3>
             <p className="config-base-card__desc">
-              Preço fixo por faixa de destinatários extras (+10, +25, +50, +100).
+              Preço fixo por faixa nomeada de destinatários extras.
             </p>
           </div>
         </div>
@@ -697,7 +695,6 @@ function AdditionalsSection({
             createTier={() => newRangeTier('de')}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
-              { key: 'upTo', label: 'Quantidade extra', type: 'integer' },
               { key: 'price', label: 'Valor (R$)', type: 'decimal' },
             ]}
           />

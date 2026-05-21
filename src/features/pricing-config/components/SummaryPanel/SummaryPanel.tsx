@@ -499,7 +499,7 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
               <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
                 <span className="summary-panel__ledger-label">Validade</span>
                 <span className="summary-panel__ledger-value">
-                  {FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)
+                  {FIXED_PROPOSAL_VALIDADE_DIAS} dias
                 </span>
               </div>
             </div>

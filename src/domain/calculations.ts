@@ -103,11 +103,24 @@ function selectedMatterLabels(
   )
 }
 
+/** Soma o volume apenas das seções em que o serviço está ligado (ex.: avaliação por escopo). */
+export function volumeSumForService(
+  sections: CalculationInput['sections'],
+  service: MatterServiceKey,
+): number {
+  let sum = 0
+  for (const sk of SECTION_KEYS) {
+    const sec = sections[sk]
+    if (sec.services[service]) sum += sec.volume
+  }
+  return sum
+}
+
 /**
  * Motor de cálculo da proposta — Fase 1.
  *
  * Ordem de aplicação:
- *  1. Soma Serviços por Matéria (modo resolvido por serviço; Avaliação usa faixa).
+ *  1. Soma Serviços por Matéria (modo resolvido por serviço; Avaliação usa uma faixa global e volume só onde está ligada).
  *  2. Soma Relatórios + BI.
  *  3. Soma Adicionais (fixos, faixas e fixo por envio extra de newsletter).
  *  4. Subtotal = matterServices + reports + additionals.
@@ -143,10 +156,11 @@ export function updateCalculations(
         conf.tiers.find((t) => t.id === input.avaliacaoTierId) ?? null
       if (!tier) continue
       const mode = effectiveMode(conf.mode, input.globalBillingMode)
+      const volAval = volumeSumForService(input.sections, 'avaliacao')
       if (mode === 'fixed') {
         matterServiceValues.avaliacao += tier.fixedPrice
       } else {
-        matterServiceValues.avaliacao += tier.variablePrice * totalVolume
+        matterServiceValues.avaliacao += tier.variablePrice * volAval
       }
       continue
     }

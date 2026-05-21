@@ -4,10 +4,12 @@ import {
   Building2,
   BriefcaseBusiness,
   ChevronDown,
+  ClipboardCheck,
   Tag,
   Users,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
+import { SelectField } from '@/components/ui/SelectField'
 import { FieldGroup, TextField } from '@/components/ui/TextField'
 import { TagInput } from '@/components/ui/TagInput'
 import { SECTION_KEYS, type MatterServiceKey, type SectionKey } from '@/domain/types'
@@ -41,6 +43,11 @@ export function Escopo() {
   const [openSection, setOpenSection] = useState<SectionKey | null>(SECTION_KEYS[0])
 
   const avaliacaoTiers = state.prices.matterServices.avaliacao.tiers
+  const anyAvaliacaoOn = SECTION_KEYS.some(
+    (k) => state.sections[k].services.avaliacao,
+  )
+  const avalTierNeedsChoice =
+    anyAvaliacaoOn && avaliacaoTiers.length > 0 && !state.avaliacaoTierId
 
   return (
     <div className="page-etapa escopo-page">
@@ -57,6 +64,49 @@ export function Escopo() {
           </div>
         </div>
       </Card>
+
+      {anyAvaliacaoOn && avaliacaoTiers.length > 0 ? (
+        <Card
+          padded={false}
+          className={[
+            'escopo-page__aval-card',
+            avalTierNeedsChoice ? 'escopo-page__aval-card--pending' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <div className="escopo-page__aval-inner">
+            <span className="escopo-page__aval-icon" aria-hidden>
+              <ClipboardCheck size={18} strokeWidth={2} />
+            </span>
+            <div className="escopo-page__aval-main">
+              <div className="escopo-page__aval-headline">
+                <h3 className="escopo-page__aval-title">Faixa de avaliação</h3>
+                <span className="escopo-page__aval-badge">Global</span>
+              </div>
+              <SelectField
+                dense
+                id="escopo-aval-tier-global"
+                label="Obrigatório para precificar — vale para todos os escopos com avaliação ligada."
+                value={state.avaliacaoTierId ?? ''}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_AVALIACAO_TIER',
+                    tierId: e.target.value || null,
+                  })
+                }
+              >
+                <option value="">Selecione uma faixa…</option>
+                {avaliacaoTiers.map((tier) => (
+                  <option key={tier.id} value={tier.id}>
+                    {tier.label}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <div className="escopo-page__stack">
         {SECTION_KEYS.map((key) => {
@@ -126,12 +176,6 @@ export function Escopo() {
                           service,
                         })
                       }
-                      avaliacaoTierId={state.avaliacaoTierId}
-                      avaliacaoTiers={avaliacaoTiers}
-                      onAvaliacaoTierChange={(tierId) =>
-                        dispatch({ type: 'SET_AVALIACAO_TIER', tierId })
-                      }
-                      avaliacaoSelectIdSuffix={key}
                     />
                   </div>
                 </div>

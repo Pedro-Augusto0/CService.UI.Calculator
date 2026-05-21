@@ -195,6 +195,24 @@ describe('updateCalculations', () => {
     expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(50 * 2)
   })
 
+  it('Avaliação variável usa só volume das seções em que está ligada', () => {
+    const input = baseInput()
+    input.sections.marcas.volume = 10
+    input.sections.concorrentes.volume = 20
+    input.sections.setor.volume = 30
+    input.sections.marcas.services.avaliacao = true
+    input.avaliacaoTierId = 't5'
+    input.globalBillingMode = 'variable'
+    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(
+      10 * 2,
+    )
+
+    input.sections.concorrentes.services.avaliacao = true
+    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(
+      30 * 2,
+    )
+  })
+
   it('volume é soma de todas as seções', () => {
     const input = baseInput()
     input.sections.marcas.volume = 10

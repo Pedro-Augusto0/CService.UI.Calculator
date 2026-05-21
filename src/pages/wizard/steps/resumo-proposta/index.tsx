@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { effectiveMode } from '@/domain/calculations'
+import { effectiveMode, volumeSumForService } from '@/domain/calculations'
 import { MATTER_SERVICE_LABELS, SECTION_LABELS } from '@/domain/prices'
 import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
 import type { MatterServiceKey } from '@/domain/types'
@@ -157,6 +157,7 @@ export function ResumoProposta({
   const matterRows = useMemo(() => {
     const vol = c.totalVolume
     const prices = state.prices
+    const volAvaliacao = volumeSumForService(state.sections, 'avaliacao')
     return MATTER_SERVICE_KEYS.filter((k) =>
       matterServiceSelected(state.sections, k),
     ).map((k) => {
@@ -171,7 +172,7 @@ export function ResumoProposta({
           service: MATTER_SERVICE_LABELS[k],
           detail: tier?.label ?? '—',
           billingMode: mode === 'fixed' ? 'Fixo' : 'Variável',
-          volumeDisplay: mode === 'fixed' ? '—' : formatInteger(vol),
+          volumeDisplay: mode === 'fixed' ? '—' : formatInteger(volAvaliacao),
           unitDisplay:
             mode === 'fixed'
               ? `${formatCurrency(tier?.fixedPrice ?? 0)} / mês`
@@ -214,7 +215,7 @@ export function ResumoProposta({
     },
     {
       label: 'Validade',
-      value: `${FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)`,
+      value: `${FIXED_PROPOSAL_VALIDADE_DIAS} dias`,
     },
     { label: 'Investimento mensal', value: formatCurrency(c.finalPrice) },
     { label: 'Contrato', value: 'Mensal' },
@@ -228,7 +229,7 @@ export function ResumoProposta({
     : 'Ainda não salva no histórico local.'
 
   const modoLabel = state.globalBillingMode === 'fixed' ? 'Fixo' : 'Variável'
-  const validadeLabel = `${FIXED_PROPOSAL_VALIDADE_DIAS} dias (fixa)`
+  const validadeLabel = `${FIXED_PROPOSAL_VALIDADE_DIAS} dias`
 
   return (
     <div className="page-etapa resumo-page">
