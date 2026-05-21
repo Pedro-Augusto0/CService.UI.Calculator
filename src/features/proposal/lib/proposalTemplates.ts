@@ -40,50 +40,7 @@ export interface BuiltinTemplateCardMeta {
 }
 
 export const BUILTIN_TEMPLATE_CARDS: BuiltinTemplateCardMeta[] = [
-  {
-    id: 'basic',
-    name: 'Monitoramento Básico',
-    description:
-      'Pacote inicial para acompanhar notícias com centimetragem e captura de tela.',
-    category: 'monitoramento',
-    accent: 'violet',
-    tierLabel: 'Básico',
-    usedInProposals: 28,
-    lastUsedDisplay: '12/05/2026',
-  },
-  {
-    id: 'premium',
-    name: 'Monitoramento Premium',
-    description:
-      'Catálogo completo de Serviços por Matéria com IA, Score e Avaliação. Inclui relatórios analíticos.',
-    category: 'monitoramento',
-    accent: 'green',
-    tierLabel: 'Avançado',
-    usedInProposals: 45,
-    lastUsedDisplay: '10/05/2026',
-  },
-  {
-    id: 'tv-radio',
-    name: 'TV + Rádio',
-    description:
-      'Monitoramento de matéria combinado com TV e rádio em SP/RJ e relatório executivo semanal.',
-    category: 'tv-radio',
-    accent: 'orange',
-    tierLabel: 'Broadcast',
-    usedInProposals: 18,
-    lastUsedDisplay: '08/05/2026',
-  },
-  {
-    id: 'digital',
-    name: 'Digital Completo',
-    description:
-      'Foco em ambiente digital: matéria com IA, mídias sociais, stories, alertas e integração via API.',
-    category: 'digital',
-    accent: 'blue',
-    tierLabel: 'Digital',
-    usedInProposals: 21,
-    lastUsedDisplay: '05/05/2026',
-  },
+  
 ]
 
 export function isProposalTemplateId(id: string): id is ProposalTemplateId {

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import {
   ArrowLeft,
+  Banknote,
   ChevronDown,
   CircleDashed,
   FileBarChart,
@@ -235,7 +236,7 @@ export function ResumoProposta({
         <div className="resumo-page__strip">
           <div className="resumo-page__strip-invest" aria-labelledby="resumo-strip-price-label">
             <span className="resumo-page__strip-spark" aria-hidden>
-              <Sparkles size={20} strokeWidth={2.2} />
+              <Banknote size={20} strokeWidth={2.2} />
             </span>
             <div>
               <p id="resumo-strip-price-label" className="resumo-page__strip-kicker">

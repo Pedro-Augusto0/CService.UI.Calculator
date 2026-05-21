@@ -27,6 +27,7 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+  border-radius: var(--radius);
 }
 
 .ui-button--primary:hover:not(:disabled) {
@@ -37,6 +38,7 @@
 .ui-button--secondary {
   background: var(--color-surface);
   color: var(--color-text);
+  border-radius: var(--radius);
 }
 
 .ui-button--secondary:hover:not(:disabled) {

@@ -104,9 +104,9 @@ export const DEFAULT_PRICES: Prices = {
   matterServices: {
     centimetragem: makeMatter('both', 0, 0),
     grifo: makeMatter('both', 0, 0),
-    score: makeMatter('variable', 0, 0),
+    score: makeMatter('both', 0, 0),
     ia: makeMatter('both', 0, 0),
-    screenshot: makeMatter('variable', 0, 0),
+    screenshot: makeMatter('both', 0, 0),
     avaliacao: {
       mode: 'both',
       tiers: [

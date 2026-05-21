@@ -43,6 +43,15 @@
   width: 100%;
 }
 
+/* Modo + dois preços: três colunas estáveis (evita esticar quando um campo some do fluxo). */
+.matter-card__mode-fields--mode-billing {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.matter-card__mode-fields__cell {
+  min-width: 0;
+}
+
 /* Grid de modo + valores: usa a largura restante do cartão (evita coluna fixa de 200px e 3 linhas altas) */
 .config-base-card .config-base-card__field:has(.matter-card__mode-fields) {
   flex: 1 1 320px;

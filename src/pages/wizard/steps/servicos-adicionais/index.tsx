@@ -5,13 +5,13 @@ import {
   Cpu,
   FileBarChart,
   Mail,
-  Phone,
   Send,
   type LucideIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { Toggle } from '@/components/ui/Toggle'
@@ -236,7 +236,7 @@ export function ServicosAdicionais() {
               className="add-page__distribution-avatar add-page__distribution-avatar--wa"
               aria-hidden
             >
-              <Phone size={18} strokeWidth={2} />
+              <WhatsAppIcon size={18} />
             </span>
             <div className="add-page__distribution-wa-controls">
               <Toggle

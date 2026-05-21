@@ -1,4 +1,5 @@
-import { Info, RotateCcw, Save } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { ChevronLeft, ChevronRight, Info, RotateCcw, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PriceSettingsFields } from '@/features/pricing-config/components/PriceSettingsFields'
 import type { Prices } from '@/domain/prices'
@@ -30,9 +31,46 @@ export function PriceConfigurationView({
   handleRestore: () => void
   handleSave: () => void
 }) {
+  const activeTabIndex = CONFIG_TABS.findIndex((t) => t.id === activeTab)
+  const safeIndex = activeTabIndex >= 0 ? activeTabIndex : 0
+  const canPrev = safeIndex > 0
+  const canNext = safeIndex < CONFIG_TABS.length - 1
+  const prevTabLabel =
+    canPrev ? CONFIG_TABS[safeIndex - 1]?.label ?? '' : ''
+  const nextTabLabel =
+    canNext ? CONFIG_TABS[safeIndex + 1]?.label ?? '' : ''
+
+  const scrollTopAnchorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollTopAnchorRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
+  }, [activeTab])
+
   return (
     <div className="config-page wizard-layout">
       <div className="wizard-content config-page__scroll">
+        <div ref={scrollTopAnchorRef} className="config-page__toolbar">
+          <Button
+            variant="secondary"
+            type="button"
+            className="config-page__restore"
+            disabled={isDefaultDraft}
+            onClick={handleRestore}
+          >
+            <RotateCcw size={16} strokeWidth={2} aria-hidden />
+            Restaurar padrão
+          </Button>
+          <Button
+            variant="primary"
+            type="button"
+            disabled={!hasPendingPriceChanges}
+            onClick={handleSave}
+          >
+            <Save size={18} strokeWidth={2} aria-hidden />
+            Salvar alterações
+          </Button>
+        </div>
+
         <nav className="config-page__tabs" aria-label="Seções da configuração" role="tablist">
           {CONFIG_TABS.map(({ id, label, icon: Icon }) => (
             <button
@@ -70,25 +108,34 @@ export function PriceConfigurationView({
           </div>
         </div>
 
-        <div className="config-page__actions-bar">
+        <div className="wizard-footer config-page__tab-footer">
           <Button
             variant="secondary"
             type="button"
-            className="config-page__restore"
-            disabled={isDefaultDraft}
-            onClick={handleRestore}
+            disabled={!canPrev}
+            onClick={() => {
+              if (canPrev) setActiveTab(CONFIG_TABS[safeIndex - 1].id)
+            }}
+            aria-label={
+              canPrev ? `Ir para aba anterior: ${prevTabLabel}` : undefined
+            }
           >
-            <RotateCcw size={16} strokeWidth={2} aria-hidden />
-            Restaurar padrão
+            <ChevronLeft size={18} strokeWidth={2} aria-hidden />
+            Aba anterior
           </Button>
           <Button
             variant="primary"
             type="button"
-            disabled={!hasPendingPriceChanges}
-            onClick={handleSave}
+            disabled={!canNext}
+            onClick={() => {
+              if (canNext) setActiveTab(CONFIG_TABS[safeIndex + 1].id)
+            }}
+            aria-label={
+              canNext ? `Ir para próxima aba: ${nextTabLabel}` : undefined
+            }
           >
-            <Save size={18} strokeWidth={2} aria-hidden />
-            Salvar alterações
+            Próxima aba
+            <ChevronRight size={18} strokeWidth={2} aria-hidden />
           </Button>
         </div>
       </div>

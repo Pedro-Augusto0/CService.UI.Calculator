@@ -2,17 +2,24 @@
   min-height: 0;
 }
 
+/* Ocupa a área principal para o rodapé de abas poder usar margin-top: auto */
+.config-page.wizard-layout {
+  flex: 1;
+  min-height: 0;
+}
+
 .config-page__scroll {
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding-bottom: 28px;
+  flex: 1;
+  min-height: 0;
 }
 
 .config-page__tabs {
   display: flex;
   gap: 4px;
-  overflow-x: auto;
   padding-bottom: 4px;
 }
 
@@ -60,7 +67,6 @@
 
 .config-page__panel {
   width: 100%;
-  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -106,7 +112,6 @@
 
 .config-page__price-subtitle {
   margin: 0;
-  max-width: 56ch;
   font-size: 0.8125rem;
   line-height: 1.55;
   color: var(--color-muted);
@@ -165,7 +170,7 @@
   padding: 14px 16px;
   border: 1px solid rgb(226 232 240);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255);
+  background: rgb(251 251 251);
   box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
 }
 
@@ -194,11 +199,22 @@
   color: rgb(194 65 12);
 }
 
+/* WhatsApp (marca): alinhado ao assistente / avatar verde */
+.config-base-card__icon--whatsapp {
+  background: rgb(220 252 231);
+  color: rgb(37 211 102);
+}
+
+/* Instagram (marca) */
+.config-base-card__icon--instagram {
+  background: rgb(255 243 250);
+  color: rgb(228 64 95);
+}
+
 .config-base-card__copy {
   /* Não esticar até ocupar o meio do cartão — libera largura para os campos */
-  flex: 0 1 240px;
+  flex: 0 1 400px;
   min-width: min(100%, 160px);
-  max-width: min(300px, 100%);
 }
 
 .config-base-card__title {
@@ -244,7 +260,7 @@
   gap: 12px;
   margin-top: 2px;
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid rgb(191 219 254);
   background: rgb(239 246 255 / 72%);
 }
@@ -487,20 +503,26 @@
   overflow: visible;
 }
 
-.config-page__actions-bar {
+/* Ações globais (salvar / restaurar) no topo */
+.config-page__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 0 8px;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 0 2px;
   flex-shrink: 0;
 }
 
-.config-page__actions-bar .ui-button--primary {
+.config-page__toolbar .ui-button--primary {
   gap: 8px;
   padding-inline: 18px;
   font-weight: 600;
+}
+
+/* Navegação entre abas (rodapé da página de config) */
+.config-page__tab-footer {
+  margin-top: auto;
 }
 
 @media (max-width: 1080px) {

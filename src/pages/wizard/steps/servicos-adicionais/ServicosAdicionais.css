@@ -208,9 +208,10 @@
 }
 
 .add-page__distribution-avatar--wa {
-  background: rgb(236 253 245);
-  color: rgb(5 122 85);
-  border: 1px solid rgb(167 243 208);
+  /* Verde WhatsApp (~#25D366) sobre fundo claro */
+  background: rgb(220 252 231);
+  color: rgb(37 211 102);
+  border: 1px solid rgb(134 239 172);
 }
 
 .add-page__distribution-wa-panel {

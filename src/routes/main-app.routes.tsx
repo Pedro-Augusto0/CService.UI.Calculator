@@ -5,9 +5,6 @@ import {
   setHashConfigPrecos,
 } from '@/features/auth/appHash'
 import { useAuth } from '@/features/auth/AuthContext'
-import { ConfigPricingSidebar } from '@/features/pricing-config/components/ConfigPricingSidebar'
-import type { ConfigTabId } from '@/features/pricing-config/types'
-import { CONFIG_TABS } from '@/pages/price-configuration/lib/priceConfigurationPageLib'
 import { PreviewProposalModal } from '@/features/pricing-config/components/PreviewProposalModal'
 import { SaveProposalTemplateModal } from '@/features/proposal/components/SaveProposalTemplateModal'
 import { SummaryPanel } from '@/features/pricing-config/components/SummaryPanel'
@@ -71,8 +68,6 @@ export function MainAppRoutes() {
   const [previewHtml, setPreviewHtml] = useState('')
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
   const [pricingDraft, setPricingDraft] = useState<Prices | null>(null)
-  const [settingsSidebarSection, setSettingsSidebarSection] =
-    useState<ConfigTabId>(CONFIG_TABS[0].id)
   const [accessBanner, setAccessBanner] = useState<string | null>(null)
 
   const navigateMain = useCallback(
@@ -320,11 +315,6 @@ export function MainAppRoutes() {
                   : undefined
               }
             />
-          ) : route === 'settings' ? (
-            <ConfigPricingSidebar
-              prices={pricingDraft ?? state.prices}
-              focusSection={settingsSidebarSection}
-            />
           ) : null
         }
         sidebarActiveRoute={route}
@@ -337,7 +327,6 @@ export function MainAppRoutes() {
           <PriceConfiguration
             draftPrices={pricingDraft ?? state.prices}
             setDraftPrices={setPricingDraft}
-            onActiveTabChange={setSettingsSidebarSection}
           />
         ) : route === 'saved' ? (
           <SavedProposals

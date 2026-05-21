@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Antenna,
@@ -14,7 +14,6 @@ import {
   Gauge,
   Globe,
   Highlighter,
-  Mail,
   Newspaper,
   Percent,
   Radio,
@@ -42,6 +41,8 @@ import {
   type MatterServiceKey,
 } from '@/domain/types'
 import { TierEditor } from '@/features/pricing-config/components/TierEditor'
+import { InstagramIcon } from '@/components/icons/InstagramIcon'
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 import './PriceSettingsFields.css'
 
 const CARD_TONES = ['blue', 'green', 'orange'] as const
@@ -71,20 +72,30 @@ const SERVICE_DESCRIPTIONS: Record<MatterServiceKey, string> = {
 
 const BILLING_MODE_OPTIONS: BillingMode[] = ['fixed', 'variable', 'both']
 
+type PriceConfigCardIcon = ComponentType<{
+  size?: number
+  strokeWidth?: number
+}>
+
 function PriceConfigCard({
   toneIndex,
   Icon,
   title,
   description,
   children,
+  iconToneOverride,
 }: {
   toneIndex: number
-  Icon: LucideIcon
+  Icon: PriceConfigCardIcon
   title: string
   description: string
   children: ReactNode
+  /** Quando definido, substitui a rotação azul/verde/laranja (ex.: WhatsApp verde). */
+  iconToneOverride?: 'whatsapp'
 }) {
-  const tone = CARD_TONES[toneIndex % CARD_TONES.length]
+  const tone =
+    iconToneOverride ??
+    CARD_TONES[toneIndex % CARD_TONES.length]
   return (
     <article className="config-base-card">
       <div
@@ -115,7 +126,7 @@ function ModeBillingFields({
   const showVariable = config.mode === 'variable' || config.mode === 'both'
 
   return (
-    <div className="matter-card__mode-fields">
+    <div className="matter-card__mode-fields matter-card__mode-fields--mode-billing">
       <SelectField
         dense
         id={`${idPrefix}-mode`}
@@ -131,22 +142,32 @@ function ModeBillingFields({
           </option>
         ))}
       </SelectField>
-      {showFixed ? (
+      <div
+        className="matter-card__mode-fields__cell"
+        style={{ visibility: showFixed ? 'visible' : 'hidden' }}
+        aria-hidden={!showFixed}
+        inert={!showFixed ? true : undefined}
+      >
         <PtDecimalField
           id={`${idPrefix}-fixed`}
           label="Valor fixo (R$)"
           value={config.fixedPrice}
           onCommit={(n) => onChange({ ...config, fixedPrice: n })}
         />
-      ) : null}
-      {showVariable ? (
+      </div>
+      <div
+        className="matter-card__mode-fields__cell"
+        style={{ visibility: showVariable ? 'visible' : 'hidden' }}
+        aria-hidden={!showVariable}
+        inert={!showVariable ? true : undefined}
+      >
         <PtDecimalField
           id={`${idPrefix}-var`}
           label="Por volume (R$ / notícia)"
           value={config.variablePrice}
           onCommit={(n) => onChange({ ...config, variablePrice: n })}
         />
-      ) : null}
+      </div>
     </div>
   )
 }
@@ -541,8 +562,8 @@ function MonitoramentosSection({
 
       <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
         <div className="config-base-card__lead">
-          <div className="config-base-card__icon config-base-card__icon--green" aria-hidden>
-            <Sparkles size={22} strokeWidth={1.85} />
+          <div className="config-base-card__icon config-base-card__icon--instagram" aria-hidden>
+            <InstagramIcon size={22} strokeWidth={1.85} />
           </div>
           <div className="config-base-card__copy">
             <h3 className="config-base-card__title">Monitoramento de Instagram Stories</h3>
@@ -616,7 +637,8 @@ function AdditionalsSection({
 
       <PriceConfigCard
         toneIndex={tone++}
-        Icon={Mail}
+        iconToneOverride="whatsapp"
+        Icon={WhatsAppIcon}
         title="Envio de Newsletter via WhatsApp"
         description="Cobrança fixa mensal."
       >

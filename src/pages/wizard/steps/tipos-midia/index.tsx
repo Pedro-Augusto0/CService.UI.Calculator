@@ -1,12 +1,11 @@
-import type { ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { ComponentType, ReactNode } from 'react'
+import { InstagramIcon } from '@/components/icons/InstagramIcon'
 import {
   Globe,
   Info,
   Newspaper,
   Radar,
   Radio,
-  Sparkles,
   ThumbsUp,
   Tv,
 } from 'lucide-react'
@@ -79,8 +78,9 @@ function MidiaCard({
   toggleId,
   children,
   hideFooterWhenOff = false,
+  typeIconVariant = 'default',
 }: {
-  icon: LucideIcon
+  icon: ComponentType<{ size?: number; strokeWidth?: number }>
   title: string
   description: string
   enabled: boolean
@@ -89,6 +89,7 @@ function MidiaCard({
   children: ReactNode
   /** Só Impresso: sem área de config quando desligado */
   hideFooterWhenOff?: boolean
+  typeIconVariant?: 'default' | 'instagram'
 }) {
   const showFooter = hideFooterWhenOff ? enabled : true
   return (
@@ -96,7 +97,14 @@ function MidiaCard({
       <span className="tipos-midia-card__accent" aria-hidden />
       <div className="tipos-midia-card__header">
         <div className="tipos-midia-card__header-main">
-          <span className="tipos-midia-card__type-icon" aria-hidden>
+          <span
+            className={
+              typeIconVariant === 'instagram'
+                ? 'tipos-midia-card__type-icon tipos-midia-card__type-icon--instagram'
+                : 'tipos-midia-card__type-icon'
+            }
+            aria-hidden
+          >
             <Icon size={20} strokeWidth={2} />
           </span>
           <div className="tipos-midia-card__heading-wrap">
@@ -161,20 +169,8 @@ export function TiposMidia() {
           toggleId="midia-impresso"
           hideFooterWhenOff
         >
-          <div className="tipos-midia-card__config tipos-midia-card__config--split">
-            <div className="tipos-midia-card__config-cell">
-              <span className="tipos-midia-card__config-label">Entrega</span>
-              <span className="tipos-midia-card__config-value">Diária</span>
-            </div>
-            <div className="tipos-midia-card__config-cell">
-              <span className="tipos-midia-card__config-label">Cobertura</span>
-              <span className="tipos-midia-card__config-value">
-                Regional / Nacional
-              </span>
-            </div>
-          </div>
+          <></>
         </MidiaCard>
-
         <Card className="add-page__bc tipos-midia-card">
           <span className="tipos-midia-card__accent" aria-hidden />
           <div className="tipos-midia-card__header">
@@ -297,7 +293,8 @@ export function TiposMidia() {
         </MidiaCard>
 
         <MidiaCard
-          icon={Sparkles}
+          icon={InstagramIcon}
+          typeIconVariant="instagram"
           title="Instagram Stories"
           description="Selecione a faixa por quantidade de perfis."
           enabled={a.storiesInstagramEnabled}
