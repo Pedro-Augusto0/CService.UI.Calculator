@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Perfil temporário do Chrome (testes/automação no projeto — não versionar)
+.chrome-user-data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

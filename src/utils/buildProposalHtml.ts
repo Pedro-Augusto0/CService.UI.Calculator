@@ -435,6 +435,18 @@ function buildCompositionBlocks(
       ],
     })
   }
+  if (calc.valorDescontoTotal < 0 && calc.descontoTotalPercent > 0) {
+    blocks.push({
+      sectionTitle: null,
+      lines: [
+        {
+          label: `Descontos · Negociação na proposta (−${calc.descontoTotalPercent}%)`,
+          value: `− ${formatCurrency(Math.abs(calc.valorDescontoTotal))}`,
+          rowClass: 'comp-line--discount',
+        },
+      ],
+    })
+  }
 
   return blocks
 }

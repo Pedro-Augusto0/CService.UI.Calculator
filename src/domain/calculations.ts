@@ -127,6 +127,7 @@ export function volumeSumForService(
  *  5. Acréscimo Plantão de Finais de Semana/Feriados: × (1 + plantaoPercent/100).
  *  6. Desconto Aprovação Automática: × (1 - aprovacaoAutomaticaPercent/100).
  *  7. Preço Base Mensal é somado ao final (mínimo garantido do pacote).
+ *  8. Desconto total comercial (na proposta): × (1 - descontoTotalPercent/100) sobre o valor do passo 7.
  */
 export function updateCalculations(
   input: CalculationInput,
@@ -202,7 +203,15 @@ export function updateCalculations(
   const valorDescontoAprovacaoAutomatica = afterAprovacao - afterPlantao
 
   const precoBaseMensal = Math.max(0, Number(input.precoBaseMensal) || 0)
-  const finalPrice = afterAprovacao + precoBaseMensal
+  const valorAntesDescontoComercial = afterAprovacao + precoBaseMensal
+
+  const descontoTotalPercent = Math.min(
+    100,
+    Math.max(0, Number(input.descontoTotalPercent) || 0),
+  )
+  const factorDescontoTotal = 1 - descontoTotalPercent / 100
+  const finalPrice = valorAntesDescontoComercial * factorDescontoTotal
+  const valorDescontoTotal = finalPrice - valorAntesDescontoComercial
 
   const hasActiveServices =
     matterServicesTotal > 0 || reportsTotal > 0 || additionalsTotal > 0
@@ -222,6 +231,9 @@ export function updateCalculations(
     factorAprovacaoAutomatica: factorAprovacao,
     valorAcrescimoPlantao,
     valorDescontoAprovacaoAutomatica,
+    valorAntesDescontoComercial,
+    descontoTotalPercent,
+    valorDescontoTotal,
     finalPrice,
     globalBillingMode: input.globalBillingMode,
     selectedMatterLabels: selectedMatterLabels(matterServiceValues),

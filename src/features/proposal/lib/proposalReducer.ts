@@ -16,6 +16,11 @@ export const STEP_COUNT = 5
 /** Validade comercial fixa até reativarmos o seletor nas propostas. */
 export const FIXED_PROPOSAL_VALIDADE_DIAS = 30
 
+function clampDescontoTotalPercent(value: unknown): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) return 0
+  return Math.min(100, Math.max(0, value))
+}
+
 export interface ProposalStateSeed {
   prices?: ProposalState['prices']
   pricingConfigSavedAt?: number
@@ -119,6 +124,7 @@ export function createInitialProposalState(
     precoBaseMensal: 0,
     prices,
     activeScopeTab: 'marcas',
+    descontoTotalPercent: 0,
     /** 2 = assistente com 5 etapas; ausente/<2 trata como fluxo legado de 4 etapas ao carregar. */
     wizardVersion: 2,
     savedProposalId: null,
@@ -173,6 +179,7 @@ export function proposalReducer(
         additionals: coerceLoadedAdditionals(structuredClone(rawRest.additionals)),
         validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS,
         precoBaseMensal: 0,
+        descontoTotalPercent: clampDescontoTotalPercent(rawRest.descontoTotalPercent),
       }
     }
     case 'RESET_PROPOSAL':
@@ -400,6 +407,11 @@ export function proposalReducer(
         ...state,
         savedProposalId: action.id,
         lastSavedAt: action.savedAt,
+      }
+    case 'SET_DESCONTO_TOTAL_PERCENT':
+      return {
+        ...state,
+        descontoTotalPercent: clampDescontoTotalPercent(action.percent),
       }
     default:
       return state

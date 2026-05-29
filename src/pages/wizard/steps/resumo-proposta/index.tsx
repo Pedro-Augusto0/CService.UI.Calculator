@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import {
   ArrowLeft,
+  BadgePercent,
   Banknote,
   ChevronDown,
   CircleDashed,
@@ -217,6 +218,14 @@ export function ResumoProposta({
       label: 'Validade',
       value: `${FIXED_PROPOSAL_VALIDADE_DIAS} dias`,
     },
+    ...(state.descontoTotalPercent > 0
+      ? [
+          {
+            label: 'Desconto total na proposta',
+            value: `${state.descontoTotalPercent}%`,
+          },
+        ]
+      : []),
     { label: 'Investimento mensal', value: formatCurrency(c.finalPrice) },
     { label: 'Contrato', value: 'Mensal' },
   ]
@@ -636,6 +645,97 @@ export function ResumoProposta({
                   c.valorDescontoAprovacaoAutomatica,
                 )}
               </strong>
+            </div>
+            {c.breakdownGroups.precoBaseMensal > 0 ? (
+              <div className="resumo-page__bd-row">
+                <span>Preço base mensal (pacote)</span>
+                <strong>
+                  + {formatCurrency(c.breakdownGroups.precoBaseMensal)}
+                </strong>
+              </div>
+            ) : null}
+            <div className="resumo-page__bd-row resumo-page__bd-row--base">
+              <span>Base para desconto comercial</span>
+              <strong>{formatCurrency(c.valorAntesDescontoComercial)}</strong>
+            </div>
+
+            <div className="resumo-page__discount-panel">
+              <div className="resumo-page__discount-panel-intro">
+                <span
+                  className="resumo-page__discount-panel-icon"
+                  aria-hidden
+                >
+                  <BadgePercent size={18} strokeWidth={2} />
+                </span>
+                <div className="resumo-page__discount-panel-copy">
+                  <p className="resumo-page__discount-panel-title">
+                    Desconto total na proposta
+                  </p>
+                  <p className="resumo-page__discount-panel-hint">
+                    Percentual opcional aplicado sobre a base acima, após plantão,
+                    aprovação automática e preço base.
+                  </p>
+                </div>
+              </div>
+
+              <div className="resumo-page__discount-panel-action">
+                <label
+                  className="resumo-page__discount-panel-label"
+                  htmlFor="resumo-desconto-total"
+                >
+                  Percentual de desconto
+                </label>
+                <div className="resumo-page__discount-input-wrap">
+                  <input
+                    id="resumo-desconto-total"
+                    className="resumo-page__discount-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={
+                      Number.isFinite(state.descontoTotalPercent)
+                        ? state.descontoTotalPercent
+                        : 0
+                    }
+                    onChange={(e) => {
+                      const v = Number(e.target.value)
+                      dispatch({
+                        type: 'SET_DESCONTO_TOTAL_PERCENT',
+                        percent: Number.isFinite(v) ? v : 0,
+                      })
+                    }}
+                  />
+                  <span className="resumo-page__discount-input-suffix" aria-hidden>
+                    %
+                  </span>
+                </div>
+              </div>
+
+              {c.descontoTotalPercent > 0 ? (
+                <div
+                  className="resumo-page__discount-preview"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="resumo-page__discount-preview-label">
+                    Impacto no investimento mensal
+                  </span>
+                  <strong className="resumo-page__discount-preview-value">
+                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
+                    <span className="resumo-page__discount-preview-pct">
+                      ({c.descontoTotalPercent}%)
+                    </span>
+                  </strong>
+                </div>
+              ) : (
+                <p className="resumo-page__discount-idle">
+                  Sem desconto comercial — o investimento final segue a base
+                  calculada.
+                </p>
+              )}
             </div>
             <div className="resumo-page__bd-row resumo-page__bd-row--final">
               <span>Investimento mensal final</span>

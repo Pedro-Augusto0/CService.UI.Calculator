@@ -255,6 +255,16 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
                   </span>
                 </div>
               ) : null}
+              {c.descontoTotalPercent > 0 ? (
+                <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
+                  <span className="summary-panel__ledger-label">
+                    Desconto na proposta (−{c.descontoTotalPercent}%)
+                  </span>
+                  <span className="summary-panel__ledger-value">
+                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
+                  </span>
+                </div>
+              ) : null}
             </div>
 
             <div className="summary-panel__resumo-total-mensal">
@@ -493,6 +503,16 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
                   </span>
                   <span className="summary-panel__ledger-value">
                     − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
+                  </span>
+                </div>
+              ) : null}
+              {c.descontoTotalPercent > 0 ? (
+                <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
+                  <span className="summary-panel__ledger-label">
+                    Desconto na proposta (−{c.descontoTotalPercent}%)
+                  </span>
+                  <span className="summary-panel__ledger-value">
+                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
                   </span>
                 </div>
               ) : null}

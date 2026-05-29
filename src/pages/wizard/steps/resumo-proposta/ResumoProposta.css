@@ -640,6 +640,200 @@
   color: #d04545;
 }
 
+.resumo-page__bd-row--base {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-bottom: none;
+  background: #f8fafc;
+  margin-inline: -4px;
+  padding-inline: 10px;
+  border-radius: 6px;
+}
+
+.resumo-page__bd-row--base span {
+  font-weight: 500;
+  color: #5a6b85;
+}
+
+.resumo-page__discount-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(148px, 200px);
+  grid-template-areas:
+    'intro action'
+    'footer footer';
+  gap: 14px 20px;
+  margin: 14px 0 6px;
+  padding: 16px 18px;
+  border: 1px solid #f5d0d0;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #fffcfc 0%, #fff6f6 48%, #fff9f5 100%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 80%) inset;
+}
+
+.resumo-page__discount-panel-intro {
+  grid-area: intro;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.resumo-page__discount-panel-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #f9d4d4;
+  background: #fff0f0;
+  color: #d04545;
+}
+
+.resumo-page__discount-panel-copy {
+  min-width: 0;
+}
+
+.resumo-page__discount-panel-title {
+  margin: 0;
+  color: #202c46;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.resumo-page__discount-panel-hint {
+  margin: 4px 0 0;
+  color: #8a94a8;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  max-width: 42ch;
+}
+
+.resumo-page__discount-panel-action {
+  grid-area: action;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.resumo-page__discount-panel-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a94a8;
+}
+
+.resumo-page__discount-input-wrap {
+  display: flex;
+  align-items: stretch;
+  min-height: 42px;
+  border: 1px solid #e8d4d4;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  overflow: hidden;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
+}
+
+.resumo-page__discount-input-wrap:focus-within {
+  border-color: #e8a0a0;
+  box-shadow: 0 0 0 3px rgb(208 69 69 / 12%);
+}
+
+.resumo-page__discount-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #18253f;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.resumo-page__discount-input:focus {
+  outline: none;
+}
+
+.resumo-page__discount-input::-webkit-outer-spin-button,
+.resumo-page__discount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.resumo-page__discount-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.resumo-page__discount-input-suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-left: 1px solid #f0e0e0;
+  background: #faf5f5;
+  color: #9a6b6b;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.resumo-page__discount-preview,
+.resumo-page__discount-idle {
+  grid-area: footer;
+  grid-column: 1 / -1;
+}
+
+.resumo-page__discount-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #f5d8d8;
+  background: rgb(255 255 255 / 72%);
+}
+
+.resumo-page__discount-preview-label {
+  font-size: 0.8125rem;
+  color: #5a6b85;
+}
+
+.resumo-page__discount-preview-value {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+  color: #d04545;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.resumo-page__discount-preview-pct {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b85c5c;
+}
+
+.resumo-page__discount-idle {
+  margin: 0;
+  padding: 8px 2px 0;
+  font-size: 0.75rem;
+  color: #8a94a8;
+  line-height: 1.4;
+}
+
 .resumo-page__coverage-table-wrap,
 .resumo-page__table-scroll {
   overflow-x: auto;
@@ -709,10 +903,13 @@
 }
 
 .resumo-page__bd-row--final {
-  padding-top: 12px;
-  margin-top: 4px;
+  padding: 14px 12px 10px;
+  margin-top: 8px;
   border-bottom: none;
+  border-radius: 6px;
   font-size: 0.9375rem;
+  background: linear-gradient(180deg, #f5f9ff 0%, #eef4ff 100%);
+  border: 1px solid #dce8ff;
 }
 
 .resumo-page__bd-row--final span,
@@ -723,6 +920,23 @@
 @media (max-width: 720px) {
   .resumo-page__toggle-row {
     grid-template-columns: 1fr;
+  }
+
+  .resumo-page__discount-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'intro'
+      'action'
+      'footer';
+  }
+
+  .resumo-page__discount-preview {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resumo-page__discount-preview-value {
+    justify-content: flex-start;
   }
 }
 

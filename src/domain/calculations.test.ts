@@ -114,6 +114,7 @@ function baseInput(): CalculationInput {
     },
     precoBaseMensal: 0,
     validadeDias: 30,
+    descontoTotalPercent: 0,
   }
 }
 
@@ -302,6 +303,20 @@ describe('updateCalculations', () => {
     input.additionals.plantaoFimSemana = true
     const r = updateCalculations(input, basePrices())
     expect(r.finalPrice).toBe(1000)
+  })
+
+  it('desconto total comercial aplica sobre investimento após ajustes catalogados e preço base', () => {
+    const input = baseInput()
+    input.sections.marcas.volume = 10
+    input.sections.marcas.services.score = true
+    input.precoBaseMensal = 1000
+    input.descontoTotalPercent = 20
+
+    const r = updateCalculations(input, basePrices())
+    const variavel = 10 * 0.5
+    expect(r.valorAntesDescontoComercial).toBeCloseTo(variavel + 1000)
+    expect(r.finalPrice).toBeCloseTo((variavel + 1000) * 0.8)
+    expect(r.valorDescontoTotal).toBeLessThan(0)
   })
 
   it('selectedMatterLabels lista apenas serviços com valor > 0', () => {

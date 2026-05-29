@@ -58,6 +58,8 @@ export type ProposalAction =
       savedAt?: number
     }
   | { type: 'MARK_PROPOSAL_SAVED'; id: string; savedAt: number }
+  /** Desconto comercial total (0–100%) sobre investimento após demais ajustes. */
+  | { type: 'SET_DESCONTO_TOTAL_PERCENT'; percent: number }
 
 export interface ProposalState {
   currentStep: number
@@ -71,6 +73,8 @@ export interface ProposalState {
   precoBaseMensal: number
   prices: Prices
   activeScopeTab: SectionKey
+  /** Desconto percentual total informado na última etapa (0–100). */
+  descontoTotalPercent: number
   /** Versão do fluxo do assistente (2 = cinco etapas). */
   wizardVersion: number
   savedProposalId: string | null

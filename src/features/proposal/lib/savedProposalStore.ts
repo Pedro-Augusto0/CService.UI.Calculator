@@ -145,6 +145,7 @@ export function toCalculationInputFromState(state: ProposalState): CalculationIn
     additionals: state.additionals,
     precoBaseMensal: state.precoBaseMensal,
     validadeDias: state.validadeDias,
+    descontoTotalPercent: state.descontoTotalPercent ?? 0,
   }
 }
 

@@ -90,6 +90,8 @@ export interface CalculationInput {
   additionals: AdditionalsState
   precoBaseMensal: number
   validadeDias: number
+  /** Desconto percentual escolhido pelo comercial sobre o total da proposta (após demais ajustes e preço base). 0–100. */
+  descontoTotalPercent: number
 }
 
 export interface CalculationResult {
@@ -114,6 +116,12 @@ export interface CalculationResult {
   factorAprovacaoAutomatica: number
   valorAcrescimoPlantao: number
   valorDescontoAprovacaoAutomatica: number
+  /** afterAprovacao + preço base, antes do desconto comercial informado na proposta. */
+  valorAntesDescontoComercial: number
+  /** Eco do percentual de desconto total (0–100). */
+  descontoTotalPercent: number
+  /** Valor retirado pelo desconto comercial (≤ 0). */
+  valorDescontoTotal: number
   finalPrice: number
   /** Modo efetivo escolhido na proposta (eco do toggle). */
   globalBillingMode: GlobalBillingMode
