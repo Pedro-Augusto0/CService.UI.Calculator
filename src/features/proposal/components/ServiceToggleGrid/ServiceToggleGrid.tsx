@@ -13,21 +13,21 @@ import { MATTER_SERVICE_KEYS } from '@/domain/types'
 import './ServiceToggleGrid.css'
 
 const ICONS: Record<MatterServiceKey, LucideIcon> = {
-  centimetragem: Newspaper,
-  grifo: Highlighter,
+  columnInches: Newspaper,
+  highlight: Highlighter,
   score: Gauge,
-  ia: Sparkles,
+  ai: Sparkles,
   screenshot: Camera,
-  avaliacao: ClipboardCheck,
+  assessment: ClipboardCheck,
 }
 
 const DESCRIPTIONS: Record<MatterServiceKey, string> = {
-  centimetragem: 'Centimetragem ou valoração editorial.',
-  grifo: 'Destaque dos trechos mais relevantes.',
+  columnInches: 'Centimetragem ou valoração editorial.',
+  highlight: 'Destaque dos trechos mais relevantes.',
   score: 'Pontuação de relevância da matéria.',
-  ia: 'Enriquecimento com IA (sentimento, contexto).',
+  ai: 'Enriquecimento com IA (sentimento, contexto).',
   screenshot: 'Captura visual da publicação.',
-  avaliacao: 'Classificação customizada com faixa de campos.',
+  assessment: 'Classificação customizada com faixa de campos.',
 }
 
 interface ServiceToggleGridProps {

@@ -18,10 +18,10 @@ import {
 export interface ProposalTemplateSnapshot {
   sections: ProposalSections
   globalBillingMode: GlobalBillingMode
-  avaliacaoTierId: string | null
+  assessmentTierId: string | null
   reports: ReportsState
   additionals: AdditionalsState
-  validadeDias: number
+  validityDays: number
   activeScopeTab: SectionKey
 }
 
@@ -40,10 +40,10 @@ export function proposalStateToTemplateSnapshot(
   return {
     sections,
     globalBillingMode: state.globalBillingMode,
-    avaliacaoTierId: state.avaliacaoTierId,
+    assessmentTierId: state.assessmentTierId,
     reports: structuredClone(state.reports),
     additionals: structuredClone(state.additionals),
-    validadeDias: state.validadeDias,
+    validityDays: state.validityDays,
     activeScopeTab: state.activeScopeTab,
   }
 }
@@ -57,19 +57,19 @@ export function proposalSnapshotToState(
   return {
     ...initial,
     currentStep: 0,
-    meta: { clientName: '', proposalName: '' },
+    meta: { clientName: '', proposalName: '', clientId: null },
     savedProposalId: null,
     lastSavedAt: null,
     sections: structuredClone(snapshot.sections),
     globalBillingMode: snapshot.globalBillingMode,
-    avaliacaoTierId: snapshot.avaliacaoTierId,
+    assessmentTierId: snapshot.assessmentTierId,
     reports: structuredClone(snapshot.reports),
     additionals: coerceLoadedAdditionals({
       ...emptyAdditionals(),
       ...structuredClone(snapshot.additionals),
     }),
     wizardVersion: 2,
-    validadeDias: snapshot.validadeDias,
+    validityDays: snapshot.validityDays,
     activeScopeTab: snapshot.activeScopeTab,
   }
 }
@@ -85,7 +85,7 @@ export function isProposalTemplateSnapshot(value: unknown): value is ProposalTem
     && typeof v.reports === 'object'
     && Boolean(v.additionals)
     && typeof v.additionals === 'object'
-    && typeof v.validadeDias === 'number'
+    && typeof v.validityDays === 'number'
     && typeof v.activeScopeTab === 'string'
   )
 }

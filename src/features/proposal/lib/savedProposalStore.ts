@@ -1,4 +1,5 @@
 import { updateCalculations } from '@/domain/calculations'
+import { migrateSavedProposalRecord } from '@/domain/jsonMigrate'
 import type { CalculationInput, CalculationResult, ProposalMeta } from '@/domain/types'
 import type { ProposalState } from './proposalActions'
 
@@ -11,10 +12,10 @@ const LEGACY_STORAGE_KEYS = ['cservice.ui.calculator.saved-proposals.v1']
 const FIRST_PROPOSAL_NUMBER = 251
 
 export const SAVED_PROPOSAL_STATUSES = [
-  'rascunho',
-  'enviada',
-  'aprovada',
-  'expirada',
+  'draft',
+  'sent',
+  'approved',
+  'expired',
 ] as const
 
 export type SavedProposalStatus = (typeof SAVED_PROPOSAL_STATUSES)[number]
@@ -54,7 +55,7 @@ function isCurrentSchemaState(value: unknown): boolean {
     typeof v.globalBillingMode === 'string' &&
     Boolean(v.reports) &&
     Boolean(v.additionals) &&
-    typeof v.validadeDias === 'number'
+    typeof v.validityDays === 'number'
   )
 }
 
@@ -87,7 +88,11 @@ export function loadSavedProposals(): SavedProposalRecord[] {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
 
-    return sortSavedProposals(parsed.filter(isSavedProposalRecord))
+    return sortSavedProposals(
+      parsed
+        .map((item) => migrateSavedProposalRecord(item as SavedProposalRecord))
+        .filter(isSavedProposalRecord),
+    )
   } catch {
     return []
   }
@@ -125,14 +130,15 @@ export function formatProposalNumber(proposalNumber: number): string {
 
 export function resolveProposalMeta(state: ProposalState): ProposalMeta {
   const fallbackClient =
-    state.sections.marcas.keywords[0]?.trim() ||
-    state.sections.concorrentes.keywords[0]?.trim() ||
-    state.sections.setor.keywords[0]?.trim() ||
+    state.sections.brands.keywords[0]?.trim() ||
+    state.sections.competitors.keywords[0]?.trim() ||
+    state.sections.sector.keywords[0]?.trim() ||
     'Cliente sem nome'
 
   return {
     clientName: state.meta.clientName.trim() || fallbackClient,
     proposalName: state.meta.proposalName.trim() || 'Proposta de monitoramento',
+    clientId: state.meta.clientId ?? null,
   }
 }
 
@@ -140,12 +146,12 @@ export function toCalculationInputFromState(state: ProposalState): CalculationIn
   return {
     sections: state.sections,
     globalBillingMode: state.globalBillingMode,
-    avaliacaoTierId: state.avaliacaoTierId,
+    assessmentTierId: state.assessmentTierId,
     reports: state.reports,
     additionals: state.additionals,
-    precoBaseMensal: state.precoBaseMensal,
-    validadeDias: state.validadeDias,
-    descontoTotalPercent: state.descontoTotalPercent ?? 0,
+    baseMonthlyPrice: state.baseMonthlyPrice,
+    validityDays: state.validityDays,
+    totalDiscountPercent: state.totalDiscountPercent ?? 0,
   }
 }
 

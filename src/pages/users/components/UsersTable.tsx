@@ -1,39 +1,34 @@
-import { Trash2 } from 'lucide-react'
-import type { AccessGroup } from '@/features/access-groups/types'
+import { Pencil, Trash2 } from 'lucide-react'
 import type { AuthUser, StoredUser } from '@/features/auth/types'
-import { normalizeUserGroupIds } from '@/features/auth/groupIds'
 import { initialsFromName } from '@/utils/strings'
 import {
   formatDatePt,
   formatTimePt,
   isActiveInWindow,
   paletteForId,
-  accessGroupsParticipatedSorted,
 } from '@/pages/users/lib/usersPageLib'
 
 export function UsersTable({
   filtered,
-  accessGroups,
   sessionUser,
   selectedIds,
-  adminCount,
+  canManageUsers,
   allFilteredSelected,
   someFilteredSelected,
   toggleSelectAllFiltered,
   toggleRowSelected,
-  handleToggleAdmin,
+  onEdit,
   handleRemove,
 }: {
   filtered: StoredUser[]
-  accessGroups: AccessGroup[]
   sessionUser: AuthUser | null
   selectedIds: Set<string>
-  adminCount: number
+  canManageUsers: boolean
   allFilteredSelected: boolean
   someFilteredSelected: boolean
   toggleSelectAllFiltered: () => void
   toggleRowSelected: (id: string) => void
-  handleToggleAdmin: (target: StoredUser, nextAdmin: boolean) => void
+  onEdit: (target: StoredUser) => void
   handleRemove: (target: StoredUser) => void
 }) {
   return (
@@ -56,7 +51,6 @@ export function UsersTable({
               />
             </th>
             <th className="users-page__th">Usuário</th>
-            <th className="users-page__th users-page__th--group">Grupo</th>
             <th className="users-page__th users-page__th--status">Status</th>
             <th className="users-page__th">Perfil</th>
             <th className="users-page__th">Criado em</th>
@@ -69,22 +63,8 @@ export function UsersTable({
           {filtered.map((u) => {
             const created = new Date(u.createdAt)
             const pal = paletteForId(u.id)
-            const switchDisabled = u.isAdmin && adminCount <= 1
-            const groupsWithMeta = accessGroupsParticipatedSorted(
-              u,
-              accessGroups,
-            )
-            const catalogIdSet = new Set(accessGroups.map((g) => g.id))
-            const orphanIds = normalizeUserGroupIds(u).filter(
-              (id) => !catalogIdSet.has(id),
-            )
-            const labelParts = [
-              ...groupsWithMeta.map((g) => g.name),
-              ...orphanIds,
-            ]
-            const labelNames =
-              labelParts.length > 0 ? labelParts.join(', ') : ''
-            const activeNow = isActiveInWindow(u, Date.now())
+            const accountActive =
+              u.isActive === false ? false : isActiveInWindow(u, Date.now())
 
             return (
               <tr key={u.id} className="users-page__row">
@@ -115,78 +95,38 @@ export function UsersTable({
                     </div>
                   </div>
                 </td>
-                <td className="users-page__td users-page__td--group">
-                  {!groupsWithMeta.length && !orphanIds.length ? (
-                    <span
-                      className="users-page__group-label users-page__group-label--none"
-                      aria-label={`Grupo de ${u.name}: não participa de nenhum grupo cadastrado`}
-                    >
-                      Não participa de nenhum grupo
-                    </span>
-                  ) : (
-                    <div
-                      className="users-page__group-chips"
-                      role="group"
-                      aria-label={`Grupo de ${u.name}: ${labelNames}`}
-                    >
-                      {groupsWithMeta.map((g) => (
-                        <span
-                          key={g.id}
-                          className={`users-page__group-label users-page__group-label--${g.color}`}
-                        >
-                          {g.name}
-                        </span>
-                      ))}
-                      {orphanIds.length > 0 ? (
-                        <span
-                          className="users-page__group-label users-page__group-label--ghost"
-                          title={orphanIds.join(', ')}
-                        >
-                          {orphanIds.length === 1
-                            ? 'Referência órfã'
-                            : `${orphanIds.length} referências órfãs`}
-                        </span>
-                      ) : null}
-                    </div>
-                  )}
-                </td>
                 <td className="users-page__td users-page__td--status">
                   <span
                     className={
-                      activeNow
+                      accountActive
                         ? 'users-page__status users-page__status--on'
                         : 'users-page__status users-page__status--off'
                     }
                   >
                     <span className="users-page__status-dot" aria-hidden />
-                    {activeNow ? 'Ativo' : 'Inativo'}
+                    {u.isActive === false
+                      ? 'Inativo'
+                      : accountActive
+                        ? 'Ativo'
+                        : 'Inativo'}
                   </span>
                 </td>
                 <td className="users-page__td users-page__td--profile">
-                  <div className="users-page__profile-cell">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={u.isAdmin}
-                      disabled={switchDisabled}
-                      title={
-                        switchDisabled
-                          ? 'Mantenha pelo menos um administrador.'
-                          : u.isAdmin
-                            ? 'Alternar para usuário'
-                            : 'Alternar para administrador'
-                      }
-                      className={`users-page__switch${u.isAdmin ? ' users-page__switch--on' : ''}`}
-                      onClick={() => handleToggleAdmin(u, !u.isAdmin)}
-                    >
-                      <span className="users-page__switch-thumb" />
-                    </button>
-                    <span
-                      className={`users-page__badge${u.isAdmin ? ' users-page__badge--admin' : ' users-page__badge--user'}`}
-                    >
-                      {u.isAdmin ? 'Admin' : 'Usuário'}
-                    </span>
-                  </div>
+                  <span
+                    className={`users-page__badge${
+                      u.isMasterAdmin
+                        ? ' users-page__badge--master'
+                        : u.isAdmin
+                          ? ' users-page__badge--admin'
+                          : ' users-page__badge--user'
+                    }`}
+                  >
+                    {u.isMasterAdmin
+                      ? 'Master admin'
+                      : u.isAdmin
+                        ? 'Admin'
+                        : 'Usuário'}
+                  </span>
                 </td>
                 <td className="users-page__td users-page__td--date">
                   <div className="users-page__date-line">
@@ -197,19 +137,31 @@ export function UsersTable({
                   </div>
                 </td>
                 <td className="users-page__td users-page__td--actions">
-                  <button
-                    type="button"
-                    className="users-page__remove"
-                    disabled={u.id === sessionUser?.id}
-                    title={
-                      u.id === sessionUser?.id
-                        ? 'Você não pode remover a si mesmo.'
-                        : 'Remover usuário'
-                    }
-                    onClick={() => handleRemove(u)}
-                  >
-                    <Trash2 size={18} strokeWidth={1.9} />
-                  </button>
+                  {canManageUsers ? (
+                    <div className="users-page__actions">
+                      <button
+                        type="button"
+                        className="users-page__edit"
+                        title="Editar usuário"
+                        onClick={() => onEdit(u)}
+                      >
+                        <Pencil size={18} strokeWidth={1.9} />
+                      </button>
+                      <button
+                        type="button"
+                        className="users-page__remove"
+                        disabled={u.id === sessionUser?.id}
+                        title={
+                          u.id === sessionUser?.id
+                            ? 'Você não pode remover a si mesmo.'
+                            : 'Remover usuário'
+                        }
+                        onClick={() => handleRemove(u)}
+                      >
+                        <Trash2 size={18} strokeWidth={1.9} />
+                      </button>
+                    </div>
+                  ) : null}
                 </td>
               </tr>
             )

@@ -1,4 +1,4 @@
-export const SECTION_KEYS = ['marcas', 'concorrentes', 'setor'] as const
+export const SECTION_KEYS = ['brands', 'competitors', 'sector'] as const
 export type SectionKey = (typeof SECTION_KEYS)[number]
 
 /** Modo de cobrança configurado pelo administrador para um serviço por matéria. */
@@ -8,12 +8,12 @@ export type BillingMode = 'fixed' | 'variable' | 'both'
 export type GlobalBillingMode = 'fixed' | 'variable'
 
 export const REPORT_FREQUENCIES = [
-  'semanal',
-  'quinzenal',
-  'mensal',
-  'trimestral',
-  'semestral',
-  'anual',
+  'weekly',
+  'biweekly',
+  'monthly',
+  'quarterly',
+  'semiannual',
+  'annual',
 ] as const
 export type ReportFrequency = (typeof REPORT_FREQUENCIES)[number]
 
@@ -22,17 +22,17 @@ export type ReportFrequency = (typeof REPORT_FREQUENCIES)[number]
  * "Texto" foi removido — monitoramento textual faz parte do pacote base.
  */
 export const MATTER_SERVICE_KEYS = [
-  'centimetragem',
-  'grifo',
+  'columnInches',
+  'highlight',
   'score',
-  'ia',
+  'ai',
   'screenshot',
-  'avaliacao',
+  'assessment',
 ] as const
 export type MatterServiceKey = (typeof MATTER_SERVICE_KEYS)[number]
 
 /** Região para itens mutuamente exclusivos (Rádio e TV). */
-export type RegionKey = 'spRj' | 'nacional'
+export type RegionKey = 'spRj' | 'national'
 
 export interface SectionConfig {
   keywords: string[]
@@ -43,55 +43,56 @@ export interface SectionConfig {
 export type ProposalSections = Record<SectionKey, SectionConfig>
 
 export interface ReportsState {
-  executivoEnabled: boolean
-  executivoFreq: ReportFrequency | null
-  estrategicoEnabled: boolean
-  estrategicoFreq: ReportFrequency | null
+  executiveEnabled: boolean
+  executiveFrequency: ReportFrequency | null
+  strategicEnabled: boolean
+  strategicFrequency: ReportFrequency | null
   biEnabled: boolean
 }
 
 export interface AdditionalsState {
-  impressoEnabled: boolean
+  printEnabled: boolean
   /** Web nacional e internacional podem ficar ligados ao mesmo tempo. */
-  webNacionalEnabled: boolean
-  webInternacionalEnabled: boolean
+  webNationalEnabled: boolean
+  webInternationalEnabled: boolean
   radioEnabled: boolean
   radioRegion: RegionKey | null
   tvEnabled: boolean
   tvRegion: RegionKey | null
-  midiasSociaisEnabled: boolean
-  midiasSociaisTierId: string | null
+  socialMediaEnabled: boolean
+  socialMediaTierId: string | null
   storiesInstagramEnabled: boolean
   storiesInstagramTierId: string | null
-  alertasWebRealtime: boolean
+  webRealtimeAlerts: boolean
   apiCService: boolean
   newsletterWhatsApp: boolean
   /** Quantidade de envios adicionais cobrados como fixo por envio. */
-  newsletterExtraEnvios: number
-  destinatariosExtrasEnabled: boolean
-  destinatariosExtrasTierId: string | null
+  newsletterExtraSends: number
+  extraRecipientsEnabled: boolean
+  extraRecipientsTierId: string | null
   /** Acréscimo percentual sobre o total (item 7.11). */
-  plantaoFimSemana: boolean
-  curadoriaAprovacaoManual: boolean
+  weekendOnCall: boolean
+  manualCuration: boolean
   /** Desconto percentual sobre o total (item 7.13). */
-  aprovacaoAutomatica: boolean
+  autoApproval: boolean
 }
 
 export interface ProposalMeta {
   clientName: string
   proposalName: string
+  clientId: number | null
 }
 
 export interface CalculationInput {
   sections: ProposalSections
   globalBillingMode: GlobalBillingMode
-  avaliacaoTierId: string | null
+  assessmentTierId: string | null
   reports: ReportsState
   additionals: AdditionalsState
-  precoBaseMensal: number
-  validadeDias: number
+  baseMonthlyPrice: number
+  validityDays: number
   /** Desconto percentual escolhido pelo comercial sobre o total da proposta (após demais ajustes e preço base). 0–100. */
-  descontoTotalPercent: number
+  totalDiscountPercent: number
 }
 
 export interface CalculationResult {
@@ -109,19 +110,19 @@ export interface CalculationResult {
   /** Soma antes da aplicação dos modificadores percentuais. */
   subtotalBeforeModifiers: number
   /** % configurado pelo admin aplicado quando plantão está ligado. */
-  plantaoPercent: number
+  onCallPercent: number
   /** % configurado pelo admin aplicado como desconto quando aprovação automática está ligada. */
-  aprovacaoAutomaticaPercent: number
+  autoApprovalDiscountPercent: number
   factorPlantao: number
   factorAprovacaoAutomatica: number
-  valorAcrescimoPlantao: number
-  valorDescontoAprovacaoAutomatica: number
+  onCallSurchargeAmount: number
+  autoApprovalDiscountAmount: number
   /** afterAprovacao + preço base, antes do desconto comercial informado na proposta. */
-  valorAntesDescontoComercial: number
+  amountBeforeCommercialDiscount: number
   /** Eco do percentual de desconto total (0–100). */
-  descontoTotalPercent: number
+  totalDiscountPercent: number
   /** Valor retirado pelo desconto comercial (≤ 0). */
-  valorDescontoTotal: number
+  totalDiscountAmount: number
   finalPrice: number
   /** Modo efetivo escolhido na proposta (eco do toggle). */
   globalBillingMode: GlobalBillingMode
@@ -129,9 +130,9 @@ export interface CalculationResult {
   selectedMatterLabels: string[]
   /** Agrupamento usado por SummaryPanel e exportação HTML. */
   breakdownGroups: {
-    precoBaseMensal: number
-    servicosMateria: number
-    relatoriosBi: number
-    servicosAdicionais: number
+    baseMonthlyPrice: number
+    matterServices: number
+    reportsBi: number
+    additionalServices: number
   }
 }

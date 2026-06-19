@@ -85,9 +85,9 @@ export function ServicosAdicionais() {
         <div className="add-page__grid">
           <Card className="add-page__bc">
             <Toggle
-              checked={r.executivoEnabled}
+              checked={r.executiveEnabled}
               onChange={(v) =>
-                dispatch({ type: 'TOGGLE_REPORT_EXECUTIVO', enabled: v })
+                dispatch({ type: 'TOGGLE_REPORT_EXECUTIVE', enabled: v })
               }
               label="Relatório Executivo CService"
               description="Apresentação em PowerPoint."
@@ -96,11 +96,11 @@ export function ServicosAdicionais() {
               dense
               id="rep-exec-freq"
               label="Frequência"
-              disabled={!r.executivoEnabled}
-              value={r.executivoFreq ?? ''}
+              disabled={!r.executiveEnabled}
+              value={r.executiveFrequency ?? ''}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_REPORT_EXECUTIVO_FREQ',
+                  type: 'SET_REPORT_EXECUTIVE_FREQUENCY',
                   freq: (e.target.value as ReportFrequency) || null,
                 })
               }
@@ -116,9 +116,9 @@ export function ServicosAdicionais() {
 
           <Card className="add-page__bc">
             <Toggle
-              checked={r.estrategicoEnabled}
+              checked={r.strategicEnabled}
               onChange={(v) =>
-                dispatch({ type: 'TOGGLE_REPORT_ESTRATEGICO', enabled: v })
+                dispatch({ type: 'TOGGLE_REPORT_STRATEGIC', enabled: v })
               }
               label="Relatório Estratégico de Mídia"
               description="Entrega em formato HTML."
@@ -127,11 +127,11 @@ export function ServicosAdicionais() {
               dense
               id="rep-estr-freq"
               label="Frequência"
-              disabled={!r.estrategicoEnabled}
-              value={r.estrategicoFreq ?? ''}
+              disabled={!r.strategicEnabled}
+              value={r.strategicFrequency ?? ''}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_REPORT_ESTRATEGICO_FREQ',
+                  type: 'SET_REPORT_STRATEGIC_FREQUENCY',
                   freq: (e.target.value as ReportFrequency) || null,
                 })
               }
@@ -189,10 +189,10 @@ export function ServicosAdicionais() {
                 min={0}
                 step={1}
                 placeholder="0"
-                value={a.newsletterExtraEnvios || ''}
+                value={a.newsletterExtraSends || ''}
                 onChange={(e) =>
                   dispatch({
-                    type: 'SET_NEWSLETTER_EXTRA_ENVIOS',
+                    type: 'SET_NEWSLETTER_EXTRA_SENDS',
                     value: Number.parseInt(e.target.value, 10) || 0,
                   })
                 }
@@ -201,9 +201,9 @@ export function ServicosAdicionais() {
             <div className="add-page__distribution-divider" aria-hidden />
             <div className="add-page__distribution-col add-page__distribution-col--recipients">
               <Toggle
-                checked={a.destinatariosExtrasEnabled}
+                checked={a.extraRecipientsEnabled}
                 onChange={(v) =>
-                  dispatch({ type: 'TOGGLE_DESTINATARIOS_EXTRAS', enabled: v })
+                  dispatch({ type: 'TOGGLE_EXTRA_RECIPIENTS', enabled: v })
                 }
                 label="Destinatários adicionais"
                 description="Faixa fixa de destinatários extras."
@@ -212,17 +212,17 @@ export function ServicosAdicionais() {
                 dense
                 id="de-tier"
                 label="Faixa"
-                disabled={!a.destinatariosExtrasEnabled}
-                value={a.destinatariosExtrasTierId ?? ''}
+                disabled={!a.extraRecipientsEnabled}
+                value={a.extraRecipientsTierId ?? ''}
                 onChange={(e) =>
                   dispatch({
-                    type: 'SET_DESTINATARIOS_EXTRAS_TIER',
+                    type: 'SET_EXTRA_RECIPIENTS_TIER',
                     tierId: e.target.value || null,
                   })
                 }
               >
                 <option value="">Selecione…</option>
-                {prices.additionals.destinatariosExtras.tiers.map((t) => (
+                {prices.additionals.extraRecipients.tiers.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.label}
                   </option>
@@ -263,9 +263,9 @@ export function ServicosAdicionais() {
       >
         <div className="add-page__other">
           <Toggle
-            checked={a.alertasWebRealtime}
+            checked={a.webRealtimeAlerts}
             onChange={(v) =>
-              dispatch({ type: 'SET_ADDITIONALS', patch: { alertasWebRealtime: v } })
+              dispatch({ type: 'SET_ADDITIONALS', patch: { webRealtimeAlerts: v } })
             }
             label="Alertas Web em Tempo Real"
             description="Cobrança fixa mensal."
@@ -279,11 +279,11 @@ export function ServicosAdicionais() {
             description="Cobrança fixa mensal."
           />
           <Toggle
-            checked={a.curadoriaAprovacaoManual}
+            checked={a.manualCuration}
             onChange={(v) =>
               dispatch({
                 type: 'SET_ADDITIONALS',
-                patch: { curadoriaAprovacaoManual: v },
+                patch: { manualCuration: v },
               })
             }
             label="Curadoria e Aprovação Manual"
@@ -300,20 +300,20 @@ export function ServicosAdicionais() {
       >
         <div className="add-page__other">
           <Toggle
-            checked={a.plantaoFimSemana}
+            checked={a.weekendOnCall}
             onChange={(v) =>
-              dispatch({ type: 'SET_ADDITIONALS', patch: { plantaoFimSemana: v } })
+              dispatch({ type: 'SET_ADDITIONALS', patch: { weekendOnCall: v } })
             }
             label="Plantão Finais de Semana e Feriados"
-            description={`+${prices.additionals.plantaoPercent}% sobre o subtotal.`}
+            description={`+${prices.additionals.onCallPercent}% sobre o subtotal.`}
           />
           <Toggle
-            checked={a.aprovacaoAutomatica}
+            checked={a.autoApproval}
             onChange={(v) =>
-              dispatch({ type: 'SET_ADDITIONALS', patch: { aprovacaoAutomatica: v } })
+              dispatch({ type: 'SET_ADDITIONALS', patch: { autoApproval: v } })
             }
             label="Aprovação / Envio Automático"
-            description={`Desconto de ${prices.additionals.aprovacaoAutomaticaPercent}% aplicado após o plantão.`}
+            description={`Desconto de ${prices.additionals.autoApprovalDiscountPercent}% aplicado após o plantão.`}
           />
         </div>
       </AccordionSection>

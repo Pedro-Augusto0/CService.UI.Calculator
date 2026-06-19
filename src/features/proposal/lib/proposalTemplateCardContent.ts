@@ -18,12 +18,12 @@ import { MATTER_SERVICE_KEYS } from '@/domain/types'
 import type { ProposalTemplateSnapshot } from './proposalTemplateSnapshot'
 
 const MATTER_ICONS: Record<MatterServiceKey, LucideIcon> = {
-  centimetragem: Newspaper,
-  grifo: Highlighter,
+  columnInches: Newspaper,
+  highlight: Highlighter,
   score: Gauge,
-  ia: Sparkles,
+  ai: Sparkles,
   screenshot: Camera,
-  avaliacao: ClipboardCheck,
+  assessment: ClipboardCheck,
 }
 
 export interface TemplateCardChip {
@@ -43,7 +43,7 @@ export function templateCardContentFromSnapshot(
   s: ProposalTemplateSnapshot,
 ): TemplateCardContent {
   const chips: TemplateCardChip[] = []
-  const sec = s.sections.marcas
+  const sec = s.sections.brands
 
   for (const k of MATTER_SERVICE_KEYS) {
     if (!sec.services[k]) continue
@@ -55,29 +55,29 @@ export function templateCardContentFromSnapshot(
   }
 
   const r = s.reports
-  if (r.executivoEnabled && r.executivoFreq) {
+  if (r.executiveEnabled && r.executiveFrequency) {
     chips.push({ id: 'rep-exec', label: 'Executivo', Icon: FileBarChart })
   }
-  if (r.estrategicoEnabled && r.estrategicoFreq) {
+  if (r.strategicEnabled && r.strategicFrequency) {
     chips.push({ id: 'rep-estr', label: 'Estratégico', Icon: FileBarChart })
   }
 
   const a = s.additionals
-  if (a.impressoEnabled) {
+  if (a.printEnabled) {
     chips.push({
-      id: 'impresso',
+      id: 'print',
       label: 'Impresso',
       Icon: Newspaper,
     })
   }
-  if (a.webNacionalEnabled) {
+  if (a.webNationalEnabled) {
     chips.push({
       id: 'web-nac',
       label: 'Web (Nacional)',
       Icon: Globe,
     })
   }
-  if (a.webInternacionalEnabled) {
+  if (a.webInternationalEnabled) {
     chips.push({
       id: 'web-intl',
       label: 'Web (Internacional)',
@@ -97,18 +97,18 @@ export function templateCardContentFromSnapshot(
 
   const extras: string[] = []
   if (a.apiCService) extras.push('API')
-  if (a.alertasWebRealtime) extras.push('Alertas')
-  if (a.midiasSociaisEnabled) extras.push('Mídias sociais')
+  if (a.webRealtimeAlerts) extras.push('Alertas')
+  if (a.socialMediaEnabled) extras.push('Mídias sociais')
   if (a.storiesInstagramEnabled) extras.push('Stories')
   if (a.newsletterWhatsApp) extras.push('Newsletter')
-  if (a.curadoriaAprovacaoManual) extras.push('Curadoria')
+  if (a.manualCuration) extras.push('Curadoria')
 
   return {
     includedChips: chips,
     includedCount: chips.length,
     distribution: {
       envios: a.newsletterWhatsApp ? 'Newsletter WhatsApp' : 'Entrega padrão',
-      destinatarios: a.destinatariosExtrasEnabled
+      destinatarios: a.extraRecipientsEnabled
         ? 'Destinatários extras configurados'
         : 'Lista padrão',
     },

@@ -21,17 +21,17 @@ const META: Record<
   SectionKey,
   { title: string; subtitle: string; icon: ReactNode }
 > = {
-  marcas: {
+  brands: {
     title: 'Próprio',
     subtitle: 'Marcas próprias e derivados.',
     icon: <Tag size={20} strokeWidth={2} />,
   },
-  concorrentes: {
+  competitors: {
     title: 'Concorrentes',
     subtitle: 'Concorrentes diretos ou indiretos.',
     icon: <Users size={20} strokeWidth={2} />,
   },
-  setor: {
+  sector: {
     title: 'Setor',
     subtitle: 'Termos de setor / macroeconomia.',
     icon: <Building2 size={20} strokeWidth={2} />,
@@ -42,12 +42,12 @@ export function Escopo() {
   const { state, dispatch } = useProposal()
   const [openSection, setOpenSection] = useState<SectionKey | null>(SECTION_KEYS[0])
 
-  const avaliacaoTiers = state.prices.matterServices.avaliacao.tiers
+  const assessmentTiers = state.prices.matterServices.assessment.tiers
   const anyAvaliacaoOn = SECTION_KEYS.some(
-    (k) => state.sections[k].services.avaliacao,
+    (k) => state.sections[k].services.assessment,
   )
   const avalTierNeedsChoice =
-    anyAvaliacaoOn && avaliacaoTiers.length > 0 && !state.avaliacaoTierId
+    anyAvaliacaoOn && assessmentTiers.length > 0 && !state.assessmentTierId
 
   return (
     <div className="page-etapa escopo-page">
@@ -65,7 +65,7 @@ export function Escopo() {
         </div>
       </Card>
 
-      {anyAvaliacaoOn && avaliacaoTiers.length > 0 ? (
+      {anyAvaliacaoOn && assessmentTiers.length > 0 ? (
         <Card
           padded={false}
           className={[
@@ -88,16 +88,16 @@ export function Escopo() {
                 dense
                 id="escopo-aval-tier-global"
                 label="Obrigatório para precificar — vale para todos os escopos com avaliação ligada."
-                value={state.avaliacaoTierId ?? ''}
+                value={state.assessmentTierId ?? ''}
                 onChange={(e) =>
                   dispatch({
-                    type: 'SET_AVALIACAO_TIER',
+                    type: 'SET_ASSESSMENT_TIER',
                     tierId: e.target.value || null,
                   })
                 }
               >
                 <option value="">Selecione uma faixa…</option>
-                {avaliacaoTiers.map((tier) => (
+                {assessmentTiers.map((tier) => (
                   <option key={tier.id} value={tier.id}>
                     {tier.label}
                   </option>

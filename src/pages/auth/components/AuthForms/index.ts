@@ -1,5 +1,1 @@
-export {
-  AuthMarketingAside,
-  LoginForm,
-  RegisterForm,
-} from './AuthForms'
+export { AuthMarketingAside, LoginForm } from './AuthForms'

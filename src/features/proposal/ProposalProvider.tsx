@@ -9,6 +9,16 @@ import {
   type ReactNode,
 } from 'react'
 import type { CalculationInput, CalculationResult } from '@/domain/types'
+import { useApi } from '@/features/api/config'
+import { fetchCurrentPricing } from '@/features/api/pricingApi'
+import {
+  createProposal,
+  duplicateProposalApi,
+  fetchProposals,
+  fetchProposalById,
+  updateProposal,
+  updateProposalStatusApi,
+} from '@/features/api/proposalsApi'
 import type { ProposalAction, ProposalState } from './lib/proposalActions'
 import { createInitialProposalState, proposalReducer } from './lib/proposalReducer'
 import { loadStoredPricingConfig } from './lib/pricingConfigStore'
@@ -24,7 +34,6 @@ import {
   sortSavedProposals,
   toCalculationInputFromState,
 } from './lib/savedProposalStore'
-
 import { proposalStateToTemplateSnapshot } from './lib/proposalTemplateSnapshot'
 import {
   createUserProposalTemplateRecord,
@@ -40,13 +49,14 @@ interface ProposalContextValue {
   calculation: CalculationResult
   calculationInput: CalculationInput
   savedProposals: SavedProposalRecord[]
-  saveCurrentProposal: () => SavedProposalRecord
-  loadSavedProposal: (id: string) => SavedProposalRecord | null
-  duplicateSavedProposal: (id: string) => SavedProposalRecord | null
+  proposalsLoading: boolean
+  saveCurrentProposal: () => SavedProposalRecord | Promise<SavedProposalRecord>
+  loadSavedProposal: (id: string) => SavedProposalRecord | null | Promise<SavedProposalRecord | null>
+  duplicateSavedProposal: (id: string) => SavedProposalRecord | null | Promise<SavedProposalRecord | null>
   updateSavedProposalStatus: (
     id: string,
     status: SavedProposalStatus,
-  ) => void
+  ) => void | Promise<void>
   userProposalTemplates: UserProposalTemplateRecord[]
   saveCurrentAsUserTemplate: (name: string, description: string) => void
   bumpUserTemplateUsage: (id: string) => void
@@ -55,6 +65,7 @@ interface ProposalContextValue {
 const ProposalContext = createContext<ProposalContextValue | null>(null)
 
 export function ProposalProvider({ children }: { children: ReactNode }) {
+  const apiEnabled = useApi()
   const [state, dispatch] = useReducer(proposalReducer, undefined, () => {
     const stored = loadStoredPricingConfig()
     return createInitialProposalState(
@@ -67,19 +78,51 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
     )
   })
   const [savedProposals, setSavedProposals] = useState<SavedProposalRecord[]>(() =>
-    loadSavedProposals(),
+    apiEnabled ? [] : loadSavedProposals(),
   )
+  const [proposalsLoading, setProposalsLoading] = useState(apiEnabled)
   const [userProposalTemplates, setUserProposalTemplates] = useState<
     UserProposalTemplateRecord[]
   >(() => loadUserProposalTemplates())
 
   useEffect(() => {
+    if (apiEnabled) return
     persistSavedProposals(savedProposals)
-  }, [savedProposals])
+  }, [apiEnabled, savedProposals])
 
   useEffect(() => {
     persistUserProposalTemplates(userProposalTemplates)
   }, [userProposalTemplates])
+
+  useEffect(() => {
+    if (!apiEnabled) return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [pricing, proposals] = await Promise.all([
+          fetchCurrentPricing(),
+          fetchProposals(),
+        ])
+        if (cancelled) return
+        dispatch({
+          type: 'COMMIT_PRICING_CONFIG',
+          prices: pricing.prices,
+          baseMonthlyPrice: pricing.baseMonthlyPrice,
+          savedAt: pricing.pricingConfigSavedAt,
+        })
+        setSavedProposals(sortSavedProposals(proposals))
+      } catch {
+        if (!cancelled) setSavedProposals([])
+      } finally {
+        if (!cancelled) setProposalsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiEnabled])
 
   const calculationInput = useMemo(
     () => toCalculationInputFromState(state),
@@ -88,7 +131,7 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
 
   const calculation = useMemo(() => calculateProposalState(state), [state])
 
-  const saveCurrentProposal = useCallback(() => {
+  const saveCurrentProposalLocal = useCallback(() => {
     const savedAt = Date.now()
     const meta = resolveProposalMeta(state)
     const existing = state.savedProposalId
@@ -98,7 +141,7 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
     const savedRecord: SavedProposalRecord = {
       id,
       proposalNumber: existing?.proposalNumber ?? nextProposalNumber(savedProposals),
-      status: existing?.status ?? 'rascunho',
+      status: existing?.status ?? 'draft',
       createdAt: existing?.createdAt ?? savedAt,
       updatedAt: savedAt,
       state: structuredClone({
@@ -119,20 +162,37 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       ),
     )
 
-    dispatch({
-      type: 'SET_PROPOSAL_META',
-      patch: meta,
-    })
-    dispatch({
-      type: 'MARK_PROPOSAL_SAVED',
-      id: savedRecord.id,
-      savedAt,
-    })
-
+    dispatch({ type: 'SET_PROPOSAL_META', patch: meta })
+    dispatch({ type: 'MARK_PROPOSAL_SAVED', id: savedRecord.id, savedAt })
     return savedRecord
   }, [savedProposals, state])
 
-  const loadSavedProposal = useCallback(
+  const saveCurrentProposal = useCallback(async () => {
+    if (!apiEnabled) return saveCurrentProposalLocal()
+
+    const meta = resolveProposalMeta(state)
+    const payload = structuredClone({
+      ...state,
+      meta,
+    })
+
+    const record = state.savedProposalId
+      ? await updateProposal(state.savedProposalId, payload)
+      : await createProposal(payload)
+
+    const savedAt = record.updatedAt
+    dispatch({ type: 'SET_PROPOSAL_META', patch: meta })
+    dispatch({ type: 'MARK_PROPOSAL_SAVED', id: record.id, savedAt })
+    setSavedProposals((current) =>
+      sortSavedProposals([
+        record,
+        ...current.filter((item) => item.id !== record.id),
+      ]),
+    )
+    return record
+  }, [apiEnabled, saveCurrentProposalLocal, state])
+
+  const loadSavedProposalLocal = useCallback(
     (id: string) => {
       const record =
         savedProposals.find((savedProposal) => savedProposal.id === id) ?? null
@@ -150,7 +210,34 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
     [savedProposals],
   )
 
-  const duplicateSavedProposal = useCallback(
+  const loadSavedProposal = useCallback(
+    async (id: string) => {
+      if (!apiEnabled) return loadSavedProposalLocal(id)
+
+      try {
+        const record = await fetchProposalById(id)
+        dispatch({
+          type: 'LOAD_PROPOSAL_STATE',
+          state: structuredClone({
+            ...record.state,
+            currentStep: 0,
+          }),
+        })
+        setSavedProposals((current) =>
+          sortSavedProposals([
+            record,
+            ...current.filter((item) => item.id !== record.id),
+          ]),
+        )
+        return record
+      } catch {
+        return null
+      }
+    },
+    [apiEnabled, loadSavedProposalLocal],
+  )
+
+  const duplicateSavedProposalLocal = useCallback(
     (id: string) => {
       const source =
         savedProposals.find((savedProposal) => savedProposal.id === id) ?? null
@@ -166,7 +253,7 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       const duplicatedRecord: SavedProposalRecord = {
         id: duplicatedId,
         proposalNumber: nextProposalNumber(savedProposals),
-        status: 'rascunho',
+        status: 'draft',
         createdAt: duplicatedAt,
         updatedAt: duplicatedAt,
         state: structuredClone({
@@ -180,29 +267,61 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       setSavedProposals((current) =>
         sortSavedProposals([duplicatedRecord, ...current]),
       )
-
       return duplicatedRecord
     },
     [savedProposals],
   )
 
-  const updateSavedProposalStatus = useCallback(
+  const duplicateSavedProposal = useCallback(
+    async (id: string) => {
+      if (!apiEnabled) return duplicateSavedProposalLocal(id)
+
+      try {
+        const record = await duplicateProposalApi(id)
+        setSavedProposals((current) =>
+          sortSavedProposals([record, ...current]),
+        )
+        return record
+      } catch {
+        return null
+      }
+    },
+    [apiEnabled, duplicateSavedProposalLocal],
+  )
+
+  const updateSavedProposalStatusLocal = useCallback(
     (id: string, status: SavedProposalStatus) => {
       setSavedProposals((current) =>
         sortSavedProposals(
           current.map((record) => {
             if (record.id !== id) return record
-
-            return {
-              ...record,
-              status,
-              updatedAt: Date.now(),
-            }
+            return { ...record, status, updatedAt: Date.now() }
           }),
         ),
       )
     },
     [],
+  )
+
+  const updateSavedProposalStatus = useCallback(
+    async (id: string, status: SavedProposalStatus) => {
+      if (!apiEnabled) {
+        updateSavedProposalStatusLocal(id, status)
+        return
+      }
+
+      await updateProposalStatusApi(id, status)
+      setSavedProposals((current) =>
+        sortSavedProposals(
+          current.map((record) =>
+            record.id === id
+              ? { ...record, status, updatedAt: Date.now() }
+              : record,
+          ),
+        ),
+      )
+    },
+    [apiEnabled, updateSavedProposalStatusLocal],
   )
 
   const saveCurrentAsUserTemplate = useCallback(
@@ -240,6 +359,7 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       calculation,
       calculationInput,
       savedProposals,
+      proposalsLoading,
       saveCurrentProposal,
       loadSavedProposal,
       duplicateSavedProposal,
@@ -254,6 +374,7 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
       calculation,
       calculationInput,
       savedProposals,
+      proposalsLoading,
       saveCurrentProposal,
       loadSavedProposal,
       duplicateSavedProposal,

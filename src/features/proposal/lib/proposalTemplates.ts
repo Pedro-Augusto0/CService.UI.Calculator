@@ -72,59 +72,59 @@ function sectionsFromMatter(
 
 interface TemplateDef {
   services: Record<MatterServiceKey, boolean>
-  avaliacaoTierId: string | null
+  assessmentTierId: string | null
   reports: ReportsState
   additionals: AdditionalsState
 }
 
-const DEFAULT_AVAL_TIER = DEFAULT_PRICES.matterServices.avaliacao.tiers[1]?.id ?? null
+const DEFAULT_AVAL_TIER = DEFAULT_PRICES.matterServices.assessment.tiers[1]?.id ?? null
 
 const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
   basic: {
     services: matterFlags({
-      centimetragem: true,
+      columnInches: true,
       screenshot: true,
     }),
-    avaliacaoTierId: null,
+    assessmentTierId: null,
     reports: emptyReports(),
     additionals: emptyAdditionals(),
   },
   premium: {
     services: matterFlags({
-      centimetragem: true,
-      grifo: true,
+      columnInches: true,
+      highlight: true,
       score: true,
-      ia: true,
+      ai: true,
       screenshot: true,
-      avaliacao: true,
+      assessment: true,
     }),
-    avaliacaoTierId: DEFAULT_AVAL_TIER,
+    assessmentTierId: DEFAULT_AVAL_TIER,
     reports: {
       ...emptyReports(),
-      executivoEnabled: true,
-      executivoFreq: 'semanal',
+      executiveEnabled: true,
+      executiveFrequency: 'weekly',
     },
     additionals: {
       ...emptyAdditionals(),
       apiCService: true,
-      alertasWebRealtime: true,
-      midiasSociaisEnabled: true,
-      midiasSociaisTierId:
-        DEFAULT_PRICES.additionals.midiasSociais.tiers[0]?.id ?? null,
+      webRealtimeAlerts: true,
+      socialMediaEnabled: true,
+      socialMediaTierId:
+        DEFAULT_PRICES.additionals.socialMedia.tiers[0]?.id ?? null,
     },
   },
   'tv-radio': {
     services: matterFlags({
-      centimetragem: true,
-      grifo: true,
+      columnInches: true,
+      highlight: true,
       score: true,
       screenshot: true,
     }),
-    avaliacaoTierId: null,
+    assessmentTierId: null,
     reports: {
       ...emptyReports(),
-      executivoEnabled: true,
-      executivoFreq: 'semanal',
+      executiveEnabled: true,
+      executiveFrequency: 'weekly',
     },
     additionals: {
       ...emptyAdditionals(),
@@ -136,21 +136,21 @@ const TEMPLATE_DEFS: Record<ProposalTemplateId, TemplateDef> = {
   },
   digital: {
     services: matterFlags({
-      centimetragem: true,
-      grifo: true,
+      columnInches: true,
+      highlight: true,
       score: true,
       screenshot: true,
-      ia: true,
+      ai: true,
     }),
-    avaliacaoTierId: null,
+    assessmentTierId: null,
     reports: emptyReports(),
     additionals: {
       ...emptyAdditionals(),
       apiCService: true,
-      alertasWebRealtime: true,
-      midiasSociaisEnabled: true,
-      midiasSociaisTierId:
-        DEFAULT_PRICES.additionals.midiasSociais.tiers[0]?.id ?? null,
+      webRealtimeAlerts: true,
+      socialMediaEnabled: true,
+      socialMediaTierId:
+        DEFAULT_PRICES.additionals.socialMedia.tiers[0]?.id ?? null,
       storiesInstagramEnabled: true,
       storiesInstagramTierId:
         DEFAULT_PRICES.additionals.storiesInstagram.tiers[0]?.id ?? null,
@@ -167,11 +167,11 @@ export function getBuiltinTemplateSnapshot(
   return {
     sections: sectionsFromMatter(def.services),
     globalBillingMode: 'variable',
-    avaliacaoTierId: def.avaliacaoTierId,
+    assessmentTierId: def.assessmentTierId,
     reports: { ...def.reports },
     additionals: { ...def.additionals },
-    validadeDias: initial.validadeDias,
-    activeScopeTab: 'marcas',
+    validityDays: initial.validityDays,
+    activeScopeTab: 'brands',
   }
 }
 

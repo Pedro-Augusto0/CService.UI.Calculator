@@ -19,7 +19,7 @@ import {
 import { formatCurrency } from '@/utils/currency'
 import type { SavedProposalRow } from '@/pages/saved-proposals/hooks/useSavedProposalsListing'
 import { formatCalendarEdit } from '@/pages/saved-proposals/lib/presentation'
-import { STATUS_LABELS, STATUS_TONE } from '@/pages/saved-proposals/lib/statusMeta'
+import { STATUS_LABELS, statusLabel, statusTone } from '@/pages/saved-proposals/lib/statusMeta'
 
 const SERVICES_PREVIEW_MAX = 2
 
@@ -206,9 +206,9 @@ export function SavedProposalsListSection({
                 <span className="saved-page__cell-label">Status</span>
                 <details className="saved-page__status-menu" onToggle={handleMenuToggle}>
                   <summary
-                    className={`saved-page__status-badge saved-page__status-badge--${STATUS_TONE[row.record.status]}`}
+                    className={`saved-page__status-badge saved-page__status-badge--${statusTone(row.record.status)}`}
                   >
-                    {STATUS_LABELS[row.record.status]}
+                    {statusLabel(row.record.status)}
                   </summary>
                   <div className="saved-page__menu-dropdown saved-page__menu-dropdown--status">
                     {SAVED_PROPOSAL_STATUSES.map((status) => (

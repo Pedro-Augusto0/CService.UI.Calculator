@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
-import { FIXED_PROPOSAL_VALIDADE_DIAS } from '@/features/proposal/lib/proposalReducer'
+import { FIXED_PROPOSAL_VALIDITY_DAYS } from '@/features/proposal/lib/proposalReducer'
 import { formatCurrency } from '@/utils/currency'
 import {
   MATTER_SERVICE_LABELS,
@@ -67,9 +67,9 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
   const isResumoStep = state.currentStep === 4
 
   const matterLabels = MATTER_SERVICE_KEYS.filter((k) =>
-    state.sections.marcas.services[k] ||
-    state.sections.concorrentes.services[k] ||
-    state.sections.setor.services[k],
+    state.sections.brands.services[k] ||
+    state.sections.competitors.services[k] ||
+    state.sections.sector.services[k],
   ).map((k) => MATTER_SERVICE_LABELS[k])
 
   const reportRowsQuick = useMemo(
@@ -86,37 +86,37 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
     const r = state.reports
 
     const monitoramentoLabels: string[] = [
-      a.impressoEnabled ? 'Impresso' : null,
-      a.webNacionalEnabled ? 'Web (Nacional)' : null,
-      a.webInternacionalEnabled ? 'Web (Internacional)' : null,
+      a.printEnabled ? 'Impresso' : null,
+      a.webNationalEnabled ? 'Web (Nacional)' : null,
+      a.webInternationalEnabled ? 'Web (Internacional)' : null,
       a.tvEnabled && a.tvRegion ? `TV ${REGION_LABELS[a.tvRegion]}` : null,
       a.radioEnabled && a.radioRegion ? `Rádio ${REGION_LABELS[a.radioRegion]}` : null,
-      a.midiasSociaisEnabled ? 'Mídias Sociais' : null,
+      a.socialMediaEnabled ? 'Mídias Sociais' : null,
       a.storiesInstagramEnabled ? 'Stories Instagram' : null,
     ].filter(Boolean) as string[]
 
     const adicionaisExtrasLabels: string[] = [
-      a.alertasWebRealtime ? 'Alertas Web' : null,
+      a.webRealtimeAlerts ? 'Alertas Web' : null,
       a.apiCService ? 'API CService' : null,
       a.newsletterWhatsApp ? 'Newsletter WhatsApp' : null,
-      a.newsletterExtraEnvios > 0
-        ? `${a.newsletterExtraEnvios} newsletter extra${a.newsletterExtraEnvios === 1 ? '' : 's'}`
+      a.newsletterExtraSends > 0
+        ? `${a.newsletterExtraSends} newsletter extra${a.newsletterExtraSends === 1 ? '' : 's'}`
         : null,
-      a.destinatariosExtrasEnabled ? 'Destinatários extras' : null,
-      a.curadoriaAprovacaoManual ? 'Curadoria manual' : null,
+      a.extraRecipientsEnabled ? 'Destinatários extras' : null,
+      a.manualCuration ? 'Curadoria manual' : null,
     ].filter(Boolean) as string[]
 
     const modificadoresLabels: string[] = [
-      a.plantaoFimSemana ? `Plantão (+${c.plantaoPercent}%)` : null,
-      a.aprovacaoAutomatica ? `Aprovação automática (-${c.aprovacaoAutomaticaPercent}%)` : null,
+      a.weekendOnCall ? `Plantão (+${c.onCallPercent}%)` : null,
+      a.autoApproval ? `Aprovação automática (-${c.autoApprovalDiscountPercent}%)` : null,
     ].filter(Boolean) as string[]
 
     const reportLabels: string[] = [
-      r.executivoEnabled && r.executivoFreq
-        ? `Executivo ${REPORT_FREQUENCY_LABELS[r.executivoFreq].toLowerCase()}`
+      r.executiveEnabled && r.executiveFrequency
+        ? `Executivo ${REPORT_FREQUENCY_LABELS[r.executiveFrequency].toLowerCase()}`
         : null,
-      r.estrategicoEnabled && r.estrategicoFreq
-        ? `Estratégico ${REPORT_FREQUENCY_LABELS[r.estrategicoFreq].toLowerCase()}`
+      r.strategicEnabled && r.strategicFrequency
+        ? `Estratégico ${REPORT_FREQUENCY_LABELS[r.strategicFrequency].toLowerCase()}`
         : null,
       r.biEnabled ? 'CService BI' : null,
     ].filter(Boolean) as string[]
@@ -176,36 +176,36 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
         chevron: 'right',
       },
     ]
-  }, [matterLabels, state.additionals, state.reports, c.plantaoPercent, c.aprovacaoAutomaticaPercent])
+  }, [matterLabels, state.additionals, state.reports, c.onCallPercent, c.autoApprovalDiscountPercent])
 
   const lines = [
     {
       label: 'Preço base mensal',
-      value: c.breakdownGroups.precoBaseMensal,
-      hide: c.breakdownGroups.precoBaseMensal <= 0,
+      value: c.breakdownGroups.baseMonthlyPrice,
+      hide: c.breakdownGroups.baseMonthlyPrice <= 0,
     },
     {
       label: 'Serviços por matéria',
-      value: c.breakdownGroups.servicosMateria,
+      value: c.breakdownGroups.matterServices,
       hide: false,
     },
     {
       label: 'Relatórios e BI',
-      value: c.breakdownGroups.relatoriosBi,
+      value: c.breakdownGroups.reportsBi,
       hide: false,
     },
     {
       label: 'Serviços adicionais',
-      value: c.breakdownGroups.servicosAdicionais,
+      value: c.breakdownGroups.additionalServices,
       hide: false,
     },
   ].filter((x) => !x.hide)
 
   const financeLedgerLinesResumo = [
-    { label: 'Preço base mensal', value: c.breakdownGroups.precoBaseMensal },
-    { label: 'Serviços por matéria', value: c.breakdownGroups.servicosMateria },
-    { label: 'Relatórios e BI', value: c.breakdownGroups.relatoriosBi },
-    { label: 'Serviços adicionais', value: c.breakdownGroups.servicosAdicionais },
+    { label: 'Preço base mensal', value: c.breakdownGroups.baseMonthlyPrice },
+    { label: 'Serviços por matéria', value: c.breakdownGroups.matterServices },
+    { label: 'Relatórios e BI', value: c.breakdownGroups.reportsBi },
+    { label: 'Serviços adicionais', value: c.breakdownGroups.additionalServices },
   ].filter(
     (l) => l.label !== 'Preço base mensal' || l.value > 0,
   )
@@ -235,33 +235,33 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
                   {formatCurrency(c.subtotalBeforeModifiers)}
                 </span>
               </div>
-              {state.additionals.plantaoFimSemana ? (
+              {state.additionals.weekendOnCall ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--credit">
                   <span className="summary-panel__ledger-label">
-                    Plantão incluso (+{c.plantaoPercent}%)
+                    Plantão incluso (+{c.onCallPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    + {formatCurrency(c.valorAcrescimoPlantao)}
+                    + {formatCurrency(c.onCallSurchargeAmount)}
                   </span>
                 </div>
               ) : null}
-              {state.additionals.aprovacaoAutomatica ? (
+              {state.additionals.autoApproval ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
                   <span className="summary-panel__ledger-label">
-                    Aprovação automática (−{c.aprovacaoAutomaticaPercent}%)
+                    Aprovação automática (−{c.autoApprovalDiscountPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
+                    − {formatCurrency(Math.abs(c.autoApprovalDiscountAmount))}
                   </span>
                 </div>
               ) : null}
-              {c.descontoTotalPercent > 0 ? (
+              {c.totalDiscountPercent > 0 ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
                   <span className="summary-panel__ledger-label">
-                    Desconto na proposta (−{c.descontoTotalPercent}%)
+                    Desconto na proposta (−{c.totalDiscountPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
+                    − {formatCurrency(Math.abs(c.totalDiscountAmount))}
                   </span>
                 </div>
               ) : null}
@@ -486,40 +486,40 @@ export function SummaryPanel({ resumoStepActions = null }: SummaryPanelProps) {
                   {formatCurrency(c.subtotalBeforeModifiers)}
                 </span>
               </div>
-              {state.additionals.plantaoFimSemana ? (
+              {state.additionals.weekendOnCall ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--credit">
                   <span className="summary-panel__ledger-label">
-                    Plantão (+{c.plantaoPercent}%)
+                    Plantão (+{c.onCallPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    + {formatCurrency(c.valorAcrescimoPlantao)}
+                    + {formatCurrency(c.onCallSurchargeAmount)}
                   </span>
                 </div>
               ) : null}
-              {state.additionals.aprovacaoAutomatica ? (
+              {state.additionals.autoApproval ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
                   <span className="summary-panel__ledger-label">
-                    Aprovação automática (−{c.aprovacaoAutomaticaPercent}%)
+                    Aprovação automática (−{c.autoApprovalDiscountPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
+                    − {formatCurrency(Math.abs(c.autoApprovalDiscountAmount))}
                   </span>
                 </div>
               ) : null}
-              {c.descontoTotalPercent > 0 ? (
+              {c.totalDiscountPercent > 0 ? (
                 <div className="summary-panel__ledger-row summary-panel__ledger-row--debit">
                   <span className="summary-panel__ledger-label">
-                    Desconto na proposta (−{c.descontoTotalPercent}%)
+                    Desconto na proposta (−{c.totalDiscountPercent}%)
                   </span>
                   <span className="summary-panel__ledger-value">
-                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
+                    − {formatCurrency(Math.abs(c.totalDiscountAmount))}
                   </span>
                 </div>
               ) : null}
               <div className="summary-panel__ledger-row summary-panel__ledger-row--subtotal">
                 <span className="summary-panel__ledger-label">Validade</span>
                 <span className="summary-panel__ledger-value">
-                  {FIXED_PROPOSAL_VALIDADE_DIAS} dias
+                  {FIXED_PROPOSAL_VALIDITY_DAYS} dias
                 </span>
               </div>
             </div>

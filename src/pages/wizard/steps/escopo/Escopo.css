@@ -138,6 +138,23 @@
   gap: 16px;
 }
 
+.escopo-page__client-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.escopo-page__client-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(0 82 255 / 18%);
+}
+
 /** Terceiro campo (ex.: validade) ocupa a linha inteira no formulário inicial. */
 .escopo-page__meta-grid--with-validade > :nth-child(3) {
   grid-column: 1 / -1;

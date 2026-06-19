@@ -1,5 +1,6 @@
 import { DEFAULT_PRICES, normalizePrices } from '@/domain/prices'
 import { defaultSections } from '@/domain/calculations'
+import { migrateProposalState } from '@/domain/jsonMigrate'
 import type {
   AdditionalsState,
   MatterServiceKey,
@@ -14,9 +15,9 @@ import type { ProposalAction, ProposalState } from './proposalActions'
 export const STEP_COUNT = 5
 
 /** Validade comercial fixa até reativarmos o seletor nas propostas. */
-export const FIXED_PROPOSAL_VALIDADE_DIAS = 30
+export const FIXED_PROPOSAL_VALIDITY_DAYS = 30
 
-function clampDescontoTotalPercent(value: unknown): number {
+function clampTotalDiscountPercent(value: unknown): number {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0
   return Math.min(100, Math.max(0, value))
 }
@@ -27,34 +28,34 @@ export interface ProposalStateSeed {
 }
 
 const EMPTY_REPORTS: ReportsState = {
-  executivoEnabled: false,
-  executivoFreq: null,
-  estrategicoEnabled: false,
-  estrategicoFreq: null,
+  executiveEnabled: false,
+  executiveFrequency: null,
+  strategicEnabled: false,
+  strategicFrequency: null,
   biEnabled: false,
 }
 
 const EMPTY_ADDITIONALS: AdditionalsState = {
-  impressoEnabled: false,
-  webNacionalEnabled: false,
-  webInternacionalEnabled: false,
+  printEnabled: false,
+  webNationalEnabled: false,
+  webInternationalEnabled: false,
   radioEnabled: false,
   radioRegion: null,
   tvEnabled: false,
   tvRegion: null,
-  midiasSociaisEnabled: false,
-  midiasSociaisTierId: null,
+  socialMediaEnabled: false,
+  socialMediaTierId: null,
   storiesInstagramEnabled: false,
   storiesInstagramTierId: null,
-  alertasWebRealtime: false,
+  webRealtimeAlerts: false,
   apiCService: false,
   newsletterWhatsApp: false,
-  newsletterExtraEnvios: 0,
-  destinatariosExtrasEnabled: false,
-  destinatariosExtrasTierId: null,
-  plantaoFimSemana: false,
-  curadoriaAprovacaoManual: false,
-  aprovacaoAutomatica: false,
+  newsletterExtraSends: 0,
+  extraRecipientsEnabled: false,
+  extraRecipientsTierId: null,
+  weekendOnCall: false,
+  manualCuration: false,
+  autoApproval: false,
 }
 
 export function emptyReports(): ReportsState {
@@ -71,37 +72,42 @@ type LegacyAdditionalsInput = Partial<AdditionalsState> & {
   webRegion?: RegionKey | null
 }
 
-/** Mescla dados persistidos (incl. formato legado com região em impresso/web). */
+/** Mescla dados persistidos (incl. formato legado com região em print/web). */
 export function coerceLoadedAdditionals(raw: unknown): AdditionalsState {
+  const migrated = migrateProposalState({ additionals: raw }) as {
+    additionals: LegacyAdditionalsInput
+  }
   const e = emptyAdditionals()
-  if (!raw || typeof raw !== 'object') return e
-  const r = raw as LegacyAdditionalsInput
-  const webNacional =
-    typeof r.webNacionalEnabled === 'boolean'
-      ? r.webNacionalEnabled
+  const r = migrated.additionals
+  if (!r || typeof r !== 'object') return e
+
+  const webNational =
+    typeof r.webNationalEnabled === 'boolean'
+      ? r.webNationalEnabled
       : Boolean(r.webEnabled === true && r.webRegion != null)
+
   return {
     ...e,
-    impressoEnabled: Boolean(r.impressoEnabled),
-    webNacionalEnabled: webNacional,
-    webInternacionalEnabled: Boolean(r.webInternacionalEnabled),
+    printEnabled: Boolean(r.printEnabled),
+    webNationalEnabled: webNational,
+    webInternationalEnabled: Boolean(r.webInternationalEnabled),
     radioEnabled: Boolean(r.radioEnabled),
     radioRegion: r.radioRegion ?? null,
     tvEnabled: Boolean(r.tvEnabled),
     tvRegion: r.tvRegion ?? null,
-    midiasSociaisEnabled: Boolean(r.midiasSociaisEnabled),
-    midiasSociaisTierId: r.midiasSociaisTierId ?? null,
+    socialMediaEnabled: Boolean(r.socialMediaEnabled),
+    socialMediaTierId: r.socialMediaTierId ?? null,
     storiesInstagramEnabled: Boolean(r.storiesInstagramEnabled),
     storiesInstagramTierId: r.storiesInstagramTierId ?? null,
-    alertasWebRealtime: Boolean(r.alertasWebRealtime),
+    webRealtimeAlerts: Boolean(r.webRealtimeAlerts),
     apiCService: Boolean(r.apiCService),
     newsletterWhatsApp: Boolean(r.newsletterWhatsApp),
-    newsletterExtraEnvios: Math.max(0, Math.floor(Number(r.newsletterExtraEnvios) || 0)),
-    destinatariosExtrasEnabled: Boolean(r.destinatariosExtrasEnabled),
-    destinatariosExtrasTierId: r.destinatariosExtrasTierId ?? null,
-    plantaoFimSemana: Boolean(r.plantaoFimSemana),
-    curadoriaAprovacaoManual: Boolean(r.curadoriaAprovacaoManual),
-    aprovacaoAutomatica: Boolean(r.aprovacaoAutomatica),
+    newsletterExtraSends: Math.max(0, Math.floor(Number(r.newsletterExtraSends) || 0)),
+    extraRecipientsEnabled: Boolean(r.extraRecipientsEnabled),
+    extraRecipientsTierId: r.extraRecipientsTierId ?? null,
+    weekendOnCall: Boolean(r.weekendOnCall),
+    manualCuration: Boolean(r.manualCuration),
+    autoApproval: Boolean(r.autoApproval),
   }
 }
 
@@ -114,18 +120,18 @@ export function createInitialProposalState(
     meta: {
       clientName: '',
       proposalName: '',
+      clientId: null,
     },
     sections: defaultSections(),
     globalBillingMode: 'variable',
-    avaliacaoTierId: null,
+    assessmentTierId: null,
     reports: emptyReports(),
     additionals: emptyAdditionals(),
-    validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS,
-    precoBaseMensal: 0,
+    validityDays: FIXED_PROPOSAL_VALIDITY_DAYS,
+    baseMonthlyPrice: 0,
     prices,
-    activeScopeTab: 'marcas',
-    descontoTotalPercent: 0,
-    /** 2 = assistente com 5 etapas; ausente/<2 trata como fluxo legado de 4 etapas ao carregar. */
+    activeScopeTab: 'brands',
+    totalDiscountPercent: 0,
     wizardVersion: 2,
     savedProposalId: null,
     lastSavedAt: null,
@@ -164,7 +170,9 @@ export function proposalReducer(
       const raw = structuredClone(action.state) as ProposalState & {
         applyServicesToAll?: boolean
       }
-      const { applyServicesToAll: _legacyApplyAll, ...rawRest } = raw
+      const { applyServicesToAll: _legacyApplyAll, ...rawRest } = migrateProposalState(
+        raw as unknown as Record<string, unknown>,
+      ) as unknown as ProposalState & { applyServicesToAll?: boolean }
       void _legacyApplyAll
       const legacyWizard = (rawRest.wizardVersion ?? 1) < 2
       let currentStep = rawRest.currentStep
@@ -175,11 +183,15 @@ export function proposalReducer(
         ...rawRest,
         currentStep,
         wizardVersion: 2,
+        meta: {
+          ...rawRest.meta,
+          clientId: rawRest.meta?.clientId ?? null,
+        },
         prices: normalizePrices(structuredClone(rawRest.prices)),
         additionals: coerceLoadedAdditionals(structuredClone(rawRest.additionals)),
-        validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS,
-        precoBaseMensal: 0,
-        descontoTotalPercent: clampDescontoTotalPercent(rawRest.descontoTotalPercent),
+        validityDays: FIXED_PROPOSAL_VALIDITY_DAYS,
+        baseMonthlyPrice: 0,
+        totalDiscountPercent: clampTotalDiscountPercent(rawRest.totalDiscountPercent),
       }
     }
     case 'RESET_PROPOSAL':
@@ -222,9 +234,9 @@ export function proposalReducer(
         nextValue,
       )
       const next: ProposalState = { ...state, sections }
-      if (action.service === 'avaliacao' && !nextValue) {
-        const anyOn = SECTION_KEYS.some((k) => sections[k].services.avaliacao)
-        if (!anyOn) next.avaliacaoTierId = null
+      if (action.service === 'assessment' && !nextValue) {
+        const anyOn = SECTION_KEYS.some((k) => sections[k].services.assessment)
+        if (!anyOn) next.assessmentTierId = null
       }
       return next
     }
@@ -232,37 +244,37 @@ export function proposalReducer(
       return { ...state, activeScopeTab: action.section }
     case 'SET_GLOBAL_BILLING_MODE':
       return { ...state, globalBillingMode: action.mode }
-    case 'SET_AVALIACAO_TIER':
-      return { ...state, avaliacaoTierId: action.tierId }
+    case 'SET_ASSESSMENT_TIER':
+      return { ...state, assessmentTierId: action.tierId }
     case 'SET_REPORTS':
       return { ...state, reports: { ...state.reports, ...action.patch } }
-    case 'TOGGLE_REPORT_EXECUTIVO':
+    case 'TOGGLE_REPORT_EXECUTIVE':
       return {
         ...state,
         reports: {
           ...state.reports,
-          executivoEnabled: action.enabled,
-          executivoFreq: action.enabled ? state.reports.executivoFreq : null,
+          executiveEnabled: action.enabled,
+          executiveFrequency: action.enabled ? state.reports.executiveFrequency : null,
         },
       }
-    case 'SET_REPORT_EXECUTIVO_FREQ':
+    case 'SET_REPORT_EXECUTIVE_FREQUENCY':
       return {
         ...state,
-        reports: { ...state.reports, executivoFreq: action.freq },
+        reports: { ...state.reports, executiveFrequency: action.freq },
       }
-    case 'TOGGLE_REPORT_ESTRATEGICO':
+    case 'TOGGLE_REPORT_STRATEGIC':
       return {
         ...state,
         reports: {
           ...state.reports,
-          estrategicoEnabled: action.enabled,
-          estrategicoFreq: action.enabled ? state.reports.estrategicoFreq : null,
+          strategicEnabled: action.enabled,
+          strategicFrequency: action.enabled ? state.reports.strategicFrequency : null,
         },
       }
-    case 'SET_REPORT_ESTRATEGICO_FREQ':
+    case 'SET_REPORT_STRATEGIC_FREQUENCY':
       return {
         ...state,
-        reports: { ...state.reports, estrategicoFreq: action.freq },
+        reports: { ...state.reports, strategicFrequency: action.freq },
       }
     case 'TOGGLE_BI':
       return { ...state, reports: { ...state.reports, biEnabled: action.enabled } }
@@ -271,28 +283,28 @@ export function proposalReducer(
         ...state,
         additionals: { ...state.additionals, ...action.patch },
       }
-    case 'TOGGLE_IMPRESSO':
+    case 'TOGGLE_PRINT':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          impressoEnabled: action.enabled,
+          printEnabled: action.enabled,
         },
       }
-    case 'TOGGLE_WEB_NACIONAL':
+    case 'TOGGLE_WEB_NATIONAL':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          webNacionalEnabled: action.enabled,
+          webNationalEnabled: action.enabled,
         },
       }
-    case 'TOGGLE_WEB_INTERNACIONAL':
+    case 'TOGGLE_WEB_INTERNATIONAL':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          webInternacionalEnabled: action.enabled,
+          webInternationalEnabled: action.enabled,
         },
       }
     case 'TOGGLE_RADIO':
@@ -323,21 +335,21 @@ export function proposalReducer(
         ...state,
         additionals: { ...state.additionals, tvRegion: action.region },
       }
-    case 'TOGGLE_MIDIAS_SOCIAIS':
+    case 'TOGGLE_SOCIAL_MEDIA':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          midiasSociaisEnabled: action.enabled,
-          midiasSociaisTierId: action.enabled
-            ? state.additionals.midiasSociaisTierId
+          socialMediaEnabled: action.enabled,
+          socialMediaTierId: action.enabled
+            ? state.additionals.socialMediaTierId
             : null,
         },
       }
-    case 'SET_MIDIAS_SOCIAIS_TIER':
+    case 'SET_SOCIAL_MEDIA_TIER':
       return {
         ...state,
-        additionals: { ...state.additionals, midiasSociaisTierId: action.tierId },
+        additionals: { ...state.additionals, socialMediaTierId: action.tierId },
       }
     case 'TOGGLE_STORIES_INSTAGRAM':
       return {
@@ -358,37 +370,37 @@ export function proposalReducer(
           storiesInstagramTierId: action.tierId,
         },
       }
-    case 'TOGGLE_DESTINATARIOS_EXTRAS':
+    case 'TOGGLE_EXTRA_RECIPIENTS':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          destinatariosExtrasEnabled: action.enabled,
-          destinatariosExtrasTierId: action.enabled
-            ? state.additionals.destinatariosExtrasTierId
+          extraRecipientsEnabled: action.enabled,
+          extraRecipientsTierId: action.enabled
+            ? state.additionals.extraRecipientsTierId
             : null,
         },
       }
-    case 'SET_DESTINATARIOS_EXTRAS_TIER':
+    case 'SET_EXTRA_RECIPIENTS_TIER':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          destinatariosExtrasTierId: action.tierId,
+          extraRecipientsTierId: action.tierId,
         },
       }
-    case 'SET_NEWSLETTER_EXTRA_ENVIOS':
+    case 'SET_NEWSLETTER_EXTRA_SENDS':
       return {
         ...state,
         additionals: {
           ...state.additionals,
-          newsletterExtraEnvios: Math.max(0, Math.floor(action.value)),
+          newsletterExtraSends: Math.max(0, Math.floor(action.value)),
         },
       }
-    case 'SET_VALIDADE_DIAS':
-      return { ...state, validadeDias: FIXED_PROPOSAL_VALIDADE_DIAS }
-    case 'SET_PRECO_BASE_MENSAL':
-      return { ...state, precoBaseMensal: 0 }
+    case 'SET_VALIDITY_DAYS':
+      return { ...state, validityDays: FIXED_PROPOSAL_VALIDITY_DAYS }
+    case 'SET_BASE_MONTHLY_PRICE':
+      return { ...state, baseMonthlyPrice: 0 }
     case 'SET_PRICES':
       return {
         ...state,
@@ -399,7 +411,7 @@ export function proposalReducer(
       return {
         ...state,
         prices: normalizePrices(structuredClone(action.prices)),
-        precoBaseMensal: 0,
+        baseMonthlyPrice: action.baseMonthlyPrice ?? state.baseMonthlyPrice,
         pricingConfigSavedAt: action.savedAt ?? Date.now(),
       }
     case 'MARK_PROPOSAL_SAVED':
@@ -408,10 +420,10 @@ export function proposalReducer(
         savedProposalId: action.id,
         lastSavedAt: action.savedAt,
       }
-    case 'SET_DESCONTO_TOTAL_PERCENT':
+    case 'SET_TOTAL_DISCOUNT_PERCENT':
       return {
         ...state,
-        descontoTotalPercent: clampDescontoTotalPercent(action.percent),
+        totalDiscountPercent: clampTotalDiscountPercent(action.percent),
       }
     default:
       return state

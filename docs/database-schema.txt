@@ -1,0 +1,204 @@
+---- users ---- tabela de usuários
+id - identificador único do usuário
+email - e-mail de login (único)
+name - nome exibido na interface
+password_hash - senha criptografada
+is_active - se a conta está ativa (false = bloqueado)
+created_at - data de criação da conta
+created_by - usuário que criou esta conta (admin)
+is_admin - administrador (preços, usuários, operação)
+is_master_admin - administrador master (acesso total, inclusive outros admins)
+
+---- pricing_config_versions ---- tabela de versões da configuração de preços
+id - identificador desta versão
+prices_json - catálogo completo de preços (preço base mensal, serviços, relatórios, adicionais, faixas)
+created_at - data de criação do registro
+created_by - usuário que cadastrou o registro
+
+---- clients ---- tabela de clientes
+id - identificador do cliente
+name - nome do cliente
+is_active - se o cliente está ativo
+created_by - usuário que cadastrou o cliente
+created_at - data de cadastro
+
+---- proposals ---- tabela de propostas
+id - identificador da proposta
+status - situação (rascunho, enviada, aprovada, expirada)
+client_id - vínculo com cliente cadastrado (pode ser vazio)
+name - título da proposta
+content_json - JSON (escolhas: escopo, serviços ligados, volumes, relatórios, adicionais; sem preços)
+pricing_config_version_id - referência à versão de preços; todos os preços dos serviços vêm desta tabela
+created_at - data de criação
+updated_at - data da última alteração
+created_by - usuário que criou
+updated_by - usuário que alterou por último
+
+================================================================================
+EXEMPLOS JSON (chaves em inglês — mesmo contrato do app / TypeScript)
+================================================================================
+
+---- exemplo: pricing_config_versions.prices_json ----
+
+{
+  "baseMonthlyPrice": 1500,
+  "prices": {
+    "validityOptions": [30, 60, 90],
+    "matterServices": {
+      "columnInches": { "mode": "both", "fixedPrice": 200, "variablePrice": 1.2 },
+      "highlight": { "mode": "fixed", "fixedPrice": 150, "variablePrice": 0 },
+      "score": { "mode": "variable", "fixedPrice": 0, "variablePrice": 0.5 },
+      "ai": { "mode": "both", "fixedPrice": 400, "variablePrice": 2 },
+      "screenshot": { "mode": "variable", "fixedPrice": 0, "variablePrice": 1 },
+      "assessment": {
+        "mode": "both",
+        "tiers": [
+          { "id": "aval-1", "label": "Até 2", "fixedPrice": 100, "variablePrice": 1 },
+          { "id": "aval-2", "label": "Até 5", "fixedPrice": 250, "variablePrice": 2 }
+        ]
+      }
+    },
+    "reports": {
+      "executive": {
+        "byFrequency": {
+          "weekly": 1000, "biweekly": 800, "monthly": 600,
+          "quarterly": 500, "semiannual": 400, "annual": 300
+        }
+      },
+      "strategic": {
+        "byFrequency": {
+          "weekly": 900, "biweekly": 700, "monthly": 500,
+          "quarterly": 450, "semiannual": 350, "annual": 250
+        }
+      },
+      "bi": { "setupPrice": 2000, "monthlyMaintenance": 500 }
+    },
+    "additionals": {
+      "print": 120,
+      "web": { "national": 80, "international": 150 },
+      "radio": { "spRj": 200, "national": 400 },
+      "tv": { "spRj": 300, "national": 600 },
+      "socialMedia": {
+        "tiers": [
+          { "id": "ms-1", "label": "Até 10", "upTo": 10, "price": 50 },
+          { "id": "ms-2", "label": "Até 50", "upTo": 50, "price": 120 }
+        ]
+      },
+      "storiesInstagram": {
+        "tiers": [
+          { "id": "sg-1", "label": "Até 5", "upTo": 5, "price": 40 }
+        ]
+      },
+      "webRealtimeAlerts": 90,
+      "apiCService": 200,
+      "newsletterWhatsApp": 60,
+      "newsletterExtraSend": 15,
+      "extraRecipients": {
+        "tiers": [
+          { "id": "de-1", "label": "Até 20", "upTo": 20, "price": 30 }
+        ]
+      },
+      "onCallPercent": 10,
+      "manualCurationFee": 0,
+      "autoApprovalDiscountPercent": 5
+    }
+  }
+}
+
+Notas:
+  - mode: "fixed" | "variable" | "both" (config do admin por serviço)
+  - baseMonthlyPrice: preço base padrão desta versão (wrapper raiz)
+  - validityOptions: dias que o comercial pode escolher na proposta
+  - tiers: id estável; na proposta o content_json referencia tier por id
+
+---- exemplo: proposals.content_json ----
+
+{
+  "clientName": "Acme Brasil",
+  "sections": {
+    "brands": {
+      "keywords": ["Acme", "Produto X"],
+      "volume": 5000,
+      "services": {
+        "columnInches": true,
+        "highlight": true,
+        "score": false,
+        "ai": true,
+        "screenshot": true,
+        "assessment": true
+      }
+    },
+    "competitors": {
+      "keywords": ["Concorrente A"],
+      "volume": 2000,
+      "services": {
+        "columnInches": true,
+        "highlight": false,
+        "score": true,
+        "ai": false,
+        "screenshot": true,
+        "assessment": false
+      }
+    },
+    "sector": {
+      "keywords": [],
+      "volume": 0,
+      "services": {
+        "columnInches": false,
+        "highlight": false,
+        "score": false,
+        "ai": false,
+        "screenshot": false,
+        "assessment": false
+      }
+    }
+  },
+  "globalBillingMode": "variable",
+  "assessmentTierId": "aval-2",
+  "reports": {
+    "executiveEnabled": true,
+    "executiveFrequency": "weekly",
+    "strategicEnabled": false,
+    "strategicFrequency": null,
+    "biEnabled": false
+  },
+  "additionals": {
+    "printEnabled": false,
+    "webNationalEnabled": true,
+    "webInternationalEnabled": false,
+    "radioEnabled": false,
+    "radioRegion": null,
+    "tvEnabled": false,
+    "tvRegion": null,
+    "socialMediaEnabled": true,
+    "socialMediaTierId": "ms-1",
+    "storiesInstagramEnabled": false,
+    "storiesInstagramTierId": null,
+    "webRealtimeAlerts": true,
+    "apiCService": false,
+    "newsletterWhatsApp": false,
+    "newsletterExtraSends": 0,
+    "extraRecipientsEnabled": false,
+    "extraRecipientsTierId": null,
+    "weekendOnCall": false,
+    "manualCuration": false,
+    "autoApproval": true
+  },
+  "baseMonthlyPrice": 1500,
+  "validityDays": 30,
+  "totalDiscountPercent": 5,
+  "activeScopeTab": "brands",
+  "currentStep": 4
+}
+
+Notas (proposals.content_json):
+  - sem objeto "prices"; preços vêm de pricing_config_versions via pricing_config_version_id
+  - clientName: quando client_id for vazio; com client_id pode omitir ou espelhar clients.name
+  - proposals.name (coluna) = título; clientName = nome do cliente no wizard/HTML
+  - assessmentTierId, socialMediaTierId, etc. = ids das faixas em prices_json da mesma versão
+  - globalBillingMode: "fixed" | "variable" (toggle do resumo)
+  - radioRegion / tvRegion: "spRj" | "national" quando o adicional estiver ligado
+  - executiveFrequency / strategicFrequency: weekly | biweekly | monthly | quarterly | semiannual | annual
+  - baseMonthlyPrice: preço base desta proposta (lê default de prices_json.baseMonthlyPrice)
+  - currentStep: etapa do wizard (0 a 4); opcional em rascunho
+  - registros legados em português são migrados automaticamente pelo app ao carregar

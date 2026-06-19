@@ -1,7 +1,7 @@
 import {
   CheckCircle2,
-  LayoutGrid,
   Shield,
+  UserRound,
   Users as UsersIcon,
 } from 'lucide-react'
 
@@ -10,7 +10,7 @@ export function UsersSummaryCards({
 }: {
   stats: {
     total: number
-    groupsTotal: number
+    regularUsers: number
     admins: number
     active: number
   }
@@ -37,13 +37,13 @@ export function UsersSummaryCards({
           className="users-page__card-icon users-page__card-icon--groups"
           aria-hidden
         >
-          <LayoutGrid size={22} strokeWidth={2} />
+          <UserRound size={22} strokeWidth={2} />
         </div>
         <div className="users-page__card-body">
-          <div className="users-page__card-label">Grupos de acesso</div>
-          <div className="users-page__card-value">{stats.groupsTotal}</div>
+          <div className="users-page__card-label">Usuários comuns</div>
+          <div className="users-page__card-value">{stats.regularUsers}</div>
           <div className="users-page__card-hint">
-            Perfis com permissões agrupadas
+            Sem perfil de administrador
           </div>
         </div>
       </article>

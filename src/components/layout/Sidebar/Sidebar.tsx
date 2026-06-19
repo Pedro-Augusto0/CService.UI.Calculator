@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  Building2,
   ChevronDown,
   CirclePlus,
   FileText,
@@ -7,9 +8,7 @@ import {
   type LucideIcon,
   LogOut,
   Settings,
-  Shield,
   UserRound,
-  Users,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import logoClipping from '@/assets/logocs-aberto.png'
@@ -66,39 +65,38 @@ export function Sidebar({
     },
     {
       label: 'Clientes',
-      icon: Users,
+      icon: Building2,
+      isActive: activeRoute === 'clients',
+      onClick: () => onNavigate('clients'),
     },
     {
       label: 'Modelos de proposta',
       icon: FolderOpen,
-      isActive: activeRoute === 'templates',
-      onClick: () => onNavigate('templates'),
-    },
-    // Temporário: configurações visível para todos (antes só em adminItems).
-    {
-      label: 'Configurações',
-      icon: Settings,
-      isActive: activeRoute === 'settings',
-      onClick: () => onNavigate('settings'),
     },
   ]
 
-  const adminItems: SidebarNavItem[] = user?.isAdmin
-    ? [
-        {
-          label: 'Usuários',
-          icon: UserRound,
-          isActive: activeRoute === 'users',
-          onClick: () => onNavigate('users'),
-        },
-        {
-          label: 'Grupos de acesso',
-          icon: Shield,
-          isActive: activeRoute === 'groups',
-          onClick: () => onNavigate('groups'),
-        },
-      ]
-    : []
+  const adminItems: SidebarNavItem[] = [
+    ...(user?.isMasterAdmin
+      ? [
+          {
+            label: 'Configurações',
+            icon: Settings,
+            isActive: activeRoute === 'settings',
+            onClick: () => onNavigate('settings'),
+          },
+        ]
+      : []),
+    ...(user?.isAdmin
+      ? [
+          {
+            label: 'Usuários',
+            icon: UserRound,
+            isActive: activeRoute === 'users',
+            onClick: () => onNavigate('users'),
+          },
+        ]
+      : []),
+  ]
 
   function renderNavButton({
     label,

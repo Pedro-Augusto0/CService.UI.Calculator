@@ -22,7 +22,7 @@ import { MATTER_SERVICE_KEYS, SECTION_KEYS } from '@/domain/types'
 import type { MatterServiceKey } from '@/domain/types'
 import { formatCurrency } from '@/utils/currency'
 import { useProposal } from '@/features/proposal/hooks/useProposal'
-import { FIXED_PROPOSAL_VALIDADE_DIAS } from '@/features/proposal/lib/proposalReducer'
+import { FIXED_PROPOSAL_VALIDITY_DAYS } from '@/features/proposal/lib/proposalReducer'
 import {
   buildAdicionaisExtrasRows,
   buildMonitoramentosRows,
@@ -158,15 +158,15 @@ export function ResumoProposta({
   const matterRows = useMemo(() => {
     const vol = c.totalVolume
     const prices = state.prices
-    const volAvaliacao = volumeSumForService(state.sections, 'avaliacao')
+    const volAvaliacao = volumeSumForService(state.sections, 'assessment')
     return MATTER_SERVICE_KEYS.filter((k) =>
       matterServiceSelected(state.sections, k),
     ).map((k) => {
       const total = c.matterServiceValues[k]
-      if (k === 'avaliacao') {
-        const conf = prices.matterServices.avaliacao
+      if (k === 'assessment') {
+        const conf = prices.matterServices.assessment
         const tier =
-          conf.tiers.find((t) => t.id === state.avaliacaoTierId) ?? conf.tiers[0]
+          conf.tiers.find((t) => t.id === state.assessmentTierId) ?? conf.tiers[0]
         const mode = effectiveMode(conf.mode, state.globalBillingMode)
         return {
           key: k,
@@ -196,7 +196,7 @@ export function ResumoProposta({
         total,
       }
     })
-  }, [state.sections, state.prices, state.globalBillingMode, state.avaliacaoTierId, c])
+  }, [state.sections, state.prices, state.globalBillingMode, state.assessmentTierId, c])
 
   const coverageBlocks = SECTION_KEYS.map((sk) => ({
     key: sk,
@@ -205,9 +205,9 @@ export function ResumoProposta({
     volume: state.sections[sk].volume,
   }))
 
-  const marcasN = state.sections.marcas.keywords.length
-  const concN = state.sections.concorrentes.keywords.length
-  const setorTxt = setorResumoLine(state.sections.setor.keywords)
+  const marcasN = state.sections.brands.keywords.length
+  const concN = state.sections.competitors.keywords.length
+  const setorTxt = setorResumoLine(state.sections.sector.keywords)
 
   const commercialColumns = [
     {
@@ -216,13 +216,13 @@ export function ResumoProposta({
     },
     {
       label: 'Validade',
-      value: `${FIXED_PROPOSAL_VALIDADE_DIAS} dias`,
+      value: `${FIXED_PROPOSAL_VALIDITY_DAYS} dias`,
     },
-    ...(state.descontoTotalPercent > 0
+    ...(state.totalDiscountPercent > 0
       ? [
           {
             label: 'Desconto total na proposta',
-            value: `${state.descontoTotalPercent}%`,
+            value: `${state.totalDiscountPercent}%`,
           },
         ]
       : []),
@@ -238,7 +238,7 @@ export function ResumoProposta({
     : 'Ainda não salva no histórico local.'
 
   const modoLabel = state.globalBillingMode === 'fixed' ? 'Fixo' : 'Variável'
-  const validadeLabel = `${FIXED_PROPOSAL_VALIDADE_DIAS} dias`
+  const validadeLabel = `${FIXED_PROPOSAL_VALIDITY_DAYS} dias`
 
   return (
     <div className="page-etapa resumo-page">
@@ -461,7 +461,7 @@ export function ResumoProposta({
 
         <ResumoCollapseSection
           title="Monitoramentos"
-          subtitle="Canais de mídia da proposta: impresso, web, broadcast e redes."
+          subtitle="Canais de mídia da proposta: print, web, broadcast e redes."
           icon={<Radar size={18} strokeWidth={2} />}
           iconClassName="resumo-page__section-icon--teal"
           open={detailOpen.monitoramentos}
@@ -622,17 +622,17 @@ export function ResumoProposta({
               <span>Subtotal (serviços + relatórios + adicionais)</span>
               <strong>{formatCurrency(c.subtotalBeforeModifiers)}</strong>
             </div>
-            {c.valorAcrescimoPlantao > 0 ? (
+            {c.onCallSurchargeAmount > 0 ? (
               <div className="resumo-page__bd-row resumo-page__bd-row--credit">
-                <span>Plantão fins de semana / feriados (+{c.plantaoPercent}%)</span>
-                <strong>+ {formatCurrency(c.valorAcrescimoPlantao)}</strong>
+                <span>Plantão fins de semana / feriados (+{c.onCallPercent}%)</span>
+                <strong>+ {formatCurrency(c.onCallSurchargeAmount)}</strong>
               </div>
             ) : null}
-            {c.valorDescontoAprovacaoAutomatica < 0 ? (
+            {c.autoApprovalDiscountAmount < 0 ? (
               <div className="resumo-page__bd-row resumo-page__bd-row--debit">
-                <span>Aprovação automática (−{c.aprovacaoAutomaticaPercent}%)</span>
+                <span>Aprovação automática (−{c.autoApprovalDiscountPercent}%)</span>
                 <strong>
-                  − {formatCurrency(Math.abs(c.valorDescontoAprovacaoAutomatica))}
+                  − {formatCurrency(Math.abs(c.autoApprovalDiscountAmount))}
                 </strong>
               </div>
             ) : null}
@@ -641,22 +641,22 @@ export function ResumoProposta({
               <strong>
                 {formatCurrency(
                   c.subtotalBeforeModifiers +
-                  c.valorAcrescimoPlantao +
-                  c.valorDescontoAprovacaoAutomatica,
+                  c.onCallSurchargeAmount +
+                  c.autoApprovalDiscountAmount,
                 )}
               </strong>
             </div>
-            {c.breakdownGroups.precoBaseMensal > 0 ? (
+            {c.breakdownGroups.baseMonthlyPrice > 0 ? (
               <div className="resumo-page__bd-row">
                 <span>Preço base mensal (pacote)</span>
                 <strong>
-                  + {formatCurrency(c.breakdownGroups.precoBaseMensal)}
+                  + {formatCurrency(c.breakdownGroups.baseMonthlyPrice)}
                 </strong>
               </div>
             ) : null}
             <div className="resumo-page__bd-row resumo-page__bd-row--base">
               <span>Base para desconto comercial</span>
-              <strong>{formatCurrency(c.valorAntesDescontoComercial)}</strong>
+              <strong>{formatCurrency(c.amountBeforeCommercialDiscount)}</strong>
             </div>
 
             <div className="resumo-page__discount-panel">
@@ -696,14 +696,14 @@ export function ResumoProposta({
                     inputMode="decimal"
                     autoComplete="off"
                     value={
-                      Number.isFinite(state.descontoTotalPercent)
-                        ? state.descontoTotalPercent
+                      Number.isFinite(state.totalDiscountPercent)
+                        ? state.totalDiscountPercent
                         : 0
                     }
                     onChange={(e) => {
                       const v = Number(e.target.value)
                       dispatch({
-                        type: 'SET_DESCONTO_TOTAL_PERCENT',
+                        type: 'SET_TOTAL_DISCOUNT_PERCENT',
                         percent: Number.isFinite(v) ? v : 0,
                       })
                     }}
@@ -714,7 +714,7 @@ export function ResumoProposta({
                 </div>
               </div>
 
-              {c.descontoTotalPercent > 0 ? (
+              {c.totalDiscountPercent > 0 ? (
                 <div
                   className="resumo-page__discount-preview"
                   role="status"
@@ -724,9 +724,9 @@ export function ResumoProposta({
                     Impacto no investimento mensal
                   </span>
                   <strong className="resumo-page__discount-preview-value">
-                    − {formatCurrency(Math.abs(c.valorDescontoTotal))}
+                    − {formatCurrency(Math.abs(c.totalDiscountAmount))}
                     <span className="resumo-page__discount-preview-pct">
-                      ({c.descontoTotalPercent}%)
+                      ({c.totalDiscountPercent}%)
                     </span>
                   </strong>
                 </div>

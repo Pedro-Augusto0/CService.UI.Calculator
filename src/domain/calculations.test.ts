@@ -6,12 +6,12 @@ import type { CalculationInput } from './types'
 function basePrices(): Prices {
   return {
     matterServices: {
-      centimetragem: { mode: 'both', fixedPrice: 200, variablePrice: 1 },
-      grifo: { mode: 'fixed', fixedPrice: 150, variablePrice: 99 },
+      columnInches: { mode: 'both', fixedPrice: 200, variablePrice: 1 },
+      highlight: { mode: 'fixed', fixedPrice: 150, variablePrice: 99 },
       score: { mode: 'variable', fixedPrice: 99, variablePrice: 0.5 },
-      ia: { mode: 'both', fixedPrice: 400, variablePrice: 2 },
+      ai: { mode: 'both', fixedPrice: 400, variablePrice: 2 },
       screenshot: { mode: 'variable', fixedPrice: 99, variablePrice: 1 },
-      avaliacao: {
+      assessment: {
         mode: 'both',
         tiers: [
           { id: 't2', label: 'Até 2', fixedPrice: 100, variablePrice: 1 },
@@ -21,34 +21,34 @@ function basePrices(): Prices {
       },
     },
     reports: {
-      executivo: {
+      executive: {
         byFrequency: {
-          semanal: 1000,
-          quinzenal: 800,
-          mensal: 600,
-          trimestral: 500,
-          semestral: 400,
-          anual: 300,
+          weekly: 1000,
+          biweekly: 800,
+          monthly: 600,
+          quarterly: 500,
+          semiannual: 400,
+          annual: 300,
         },
       },
-      estrategico: {
+      strategic: {
         byFrequency: {
-          semanal: 900,
-          quinzenal: 700,
-          mensal: 500,
-          trimestral: 450,
-          semestral: 350,
-          anual: 250,
+          weekly: 900,
+          biweekly: 700,
+          monthly: 500,
+          quarterly: 450,
+          semiannual: 350,
+          annual: 250,
         },
       },
       bi: { setupPrice: 2000, monthlyMaintenance: 500 },
     },
     additionals: {
-      impresso: 120,
-      web: { nacional: 180, internacional: 400 },
-      radio: { spRj: 100, nacional: 300 },
-      tv: { spRj: 200, nacional: 600 },
-      midiasSociais: {
+      print: 120,
+      web: { national: 180, international: 400 },
+      radio: { spRj: 100, national: 300 },
+      tv: { spRj: 200, national: 600 },
+      socialMedia: {
         tiers: [
           { id: 'ms-100', label: 'Até 100', upTo: 100, price: 100 },
           { id: 'ms-250', label: 'Até 250', upTo: 250, price: 220 },
@@ -60,21 +60,21 @@ function basePrices(): Prices {
           { id: 'sg-250', label: 'Até 250', upTo: 250, price: 180 },
         ],
       },
-      alertasWebRealtime: 150,
+      webRealtimeAlerts: 150,
       apiCService: 250,
       newsletterWhatsApp: 90,
-      newsletterExtraEnvio: 20,
-      destinatariosExtras: {
+      newsletterExtraSend: 20,
+      extraRecipients: {
         tiers: [
           { id: 'de-10', label: '+10', upTo: 10, price: 40 },
           { id: 'de-25', label: '+25', upTo: 25, price: 90 },
         ],
       },
-      plantaoPercent: 25,
-      curadoriaAprovacaoManual: 120,
-      aprovacaoAutomaticaPercent: 10,
+      onCallPercent: 25,
+      manualCurationFee: 120,
+      autoApprovalDiscountPercent: 10,
     },
-    validadeOptions: [15, 30, 60],
+    validityOptions: [15, 30, 60],
   }
 }
 
@@ -82,39 +82,39 @@ function baseInput(): CalculationInput {
   return {
     sections: defaultSections(),
     globalBillingMode: 'variable',
-    avaliacaoTierId: null,
+    assessmentTierId: null,
     reports: {
-      executivoEnabled: false,
-      executivoFreq: null,
-      estrategicoEnabled: false,
-      estrategicoFreq: null,
+      executiveEnabled: false,
+      executiveFrequency: null,
+      strategicEnabled: false,
+      strategicFrequency: null,
       biEnabled: false,
     },
     additionals: {
-      impressoEnabled: false,
-      webNacionalEnabled: false,
-      webInternacionalEnabled: false,
+      printEnabled: false,
+      webNationalEnabled: false,
+      webInternationalEnabled: false,
       radioEnabled: false,
       radioRegion: null,
       tvEnabled: false,
       tvRegion: null,
-      midiasSociaisEnabled: false,
-      midiasSociaisTierId: null,
+      socialMediaEnabled: false,
+      socialMediaTierId: null,
       storiesInstagramEnabled: false,
       storiesInstagramTierId: null,
-      alertasWebRealtime: false,
+      webRealtimeAlerts: false,
       apiCService: false,
       newsletterWhatsApp: false,
-      newsletterExtraEnvios: 0,
-      destinatariosExtrasEnabled: false,
-      destinatariosExtrasTierId: null,
-      plantaoFimSemana: false,
-      curadoriaAprovacaoManual: false,
-      aprovacaoAutomatica: false,
+      newsletterExtraSends: 0,
+      extraRecipientsEnabled: false,
+      extraRecipientsTierId: null,
+      weekendOnCall: false,
+      manualCuration: false,
+      autoApproval: false,
     },
-    precoBaseMensal: 0,
-    validadeDias: 30,
-    descontoTotalPercent: 0,
+    baseMonthlyPrice: 0,
+    validityDays: 30,
+    totalDiscountPercent: 0,
   }
 }
 
@@ -136,9 +136,9 @@ describe('effectiveMode', () => {
 })
 
 describe('updateCalculations', () => {
-  it('retorna apenas precoBaseMensal quando nada está selecionado', () => {
+  it('retorna apenas baseMonthlyPrice quando nada está selecionado', () => {
     const input = baseInput()
-    input.precoBaseMensal = 1500
+    input.baseMonthlyPrice = 1500
     const r = updateCalculations(input, basePrices())
     expect(r.finalPrice).toBe(1500)
     expect(r.matterServicesTotal).toBe(0)
@@ -149,77 +149,77 @@ describe('updateCalculations', () => {
 
   it('serviço com modo "variable" usa preço por volume', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 100
-    input.sections.marcas.services.score = true
+    input.sections.brands.volume = 100
+    input.sections.brands.services.score = true
     const r = updateCalculations(input, basePrices())
     expect(r.matterServiceValues.score).toBe(100 * 0.5)
   })
 
   it('serviço com modo "fixed" sempre usa preço fixo, ignorando toggle', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 999
-    input.sections.marcas.services.grifo = true
+    input.sections.brands.volume = 999
+    input.sections.brands.services.highlight = true
     input.globalBillingMode = 'variable'
     const r1 = updateCalculations(input, basePrices())
-    expect(r1.matterServiceValues.grifo).toBe(150)
+    expect(r1.matterServiceValues.highlight).toBe(150)
 
     input.globalBillingMode = 'fixed'
     const r2 = updateCalculations(input, basePrices())
-    expect(r2.matterServiceValues.grifo).toBe(150)
+    expect(r2.matterServiceValues.highlight).toBe(150)
   })
 
   it('serviço com modo "both" responde ao toggle global', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 100
-    input.sections.marcas.services.ia = true
+    input.sections.brands.volume = 100
+    input.sections.brands.services.ai = true
 
     input.globalBillingMode = 'fixed'
-    expect(updateCalculations(input, basePrices()).matterServiceValues.ia).toBe(400)
+    expect(updateCalculations(input, basePrices()).matterServiceValues.ai).toBe(400)
 
     input.globalBillingMode = 'variable'
-    expect(updateCalculations(input, basePrices()).matterServiceValues.ia).toBe(100 * 2)
+    expect(updateCalculations(input, basePrices()).matterServiceValues.ai).toBe(100 * 2)
   })
 
   it('Avaliação requer tier selecionada e aplica modo correto', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 50
-    input.sections.marcas.services.avaliacao = true
+    input.sections.brands.volume = 50
+    input.sections.brands.services.assessment = true
 
-    input.avaliacaoTierId = null
-    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(0)
+    input.assessmentTierId = null
+    expect(updateCalculations(input, basePrices()).matterServiceValues.assessment).toBe(0)
 
-    input.avaliacaoTierId = 't5'
+    input.assessmentTierId = 't5'
     input.globalBillingMode = 'fixed'
-    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(250)
+    expect(updateCalculations(input, basePrices()).matterServiceValues.assessment).toBe(250)
 
     input.globalBillingMode = 'variable'
-    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(50 * 2)
+    expect(updateCalculations(input, basePrices()).matterServiceValues.assessment).toBe(50 * 2)
   })
 
   it('Avaliação variável usa só volume das seções em que está ligada', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.concorrentes.volume = 20
-    input.sections.setor.volume = 30
-    input.sections.marcas.services.avaliacao = true
-    input.avaliacaoTierId = 't5'
+    input.sections.brands.volume = 10
+    input.sections.competitors.volume = 20
+    input.sections.sector.volume = 30
+    input.sections.brands.services.assessment = true
+    input.assessmentTierId = 't5'
     input.globalBillingMode = 'variable'
-    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(
+    expect(updateCalculations(input, basePrices()).matterServiceValues.assessment).toBe(
       10 * 2,
     )
 
-    input.sections.concorrentes.services.avaliacao = true
-    expect(updateCalculations(input, basePrices()).matterServiceValues.avaliacao).toBe(
+    input.sections.competitors.services.assessment = true
+    expect(updateCalculations(input, basePrices()).matterServiceValues.assessment).toBe(
       30 * 2,
     )
   })
 
   it('volume é soma de todas as seções', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.concorrentes.volume = 20
-    input.sections.setor.volume = 30
-    input.sections.marcas.services.score = true
+    input.sections.brands.volume = 10
+    input.sections.competitors.volume = 20
+    input.sections.sector.volume = 30
+    input.sections.brands.services.score = true
     const r = updateCalculations(input, basePrices())
     expect(r.totalVolume).toBe(60)
     expect(r.matterServiceValues.score).toBe(60 * 0.5)
@@ -227,20 +227,20 @@ describe('updateCalculations', () => {
 
   it('relatórios e BI cobrados conforme frequência e flags', () => {
     const input = baseInput()
-    input.reports.executivoEnabled = true
-    input.reports.executivoFreq = 'mensal'
-    input.reports.estrategicoEnabled = true
-    input.reports.estrategicoFreq = 'semanal'
+    input.reports.executiveEnabled = true
+    input.reports.executiveFrequency = 'monthly'
+    input.reports.strategicEnabled = true
+    input.reports.strategicFrequency = 'weekly'
     input.reports.biEnabled = true
     const r = updateCalculations(input, basePrices())
     expect(r.reportsTotal).toBe(600 + 900 + 2000 + 500)
   })
 
-  it('impresso e web nacional/internacional somam independentemente', () => {
+  it('print e web nacional/internacional somam independentemente', () => {
     const input = baseInput()
-    input.additionals.impressoEnabled = true
-    input.additionals.webNacionalEnabled = true
-    input.additionals.webInternacionalEnabled = true
+    input.additionals.printEnabled = true
+    input.additionals.webNationalEnabled = true
+    input.additionals.webInternationalEnabled = true
     expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(120 + 180 + 400)
   })
 
@@ -253,42 +253,42 @@ describe('updateCalculations', () => {
     input.additionals.radioRegion = 'spRj'
     expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(100)
 
-    input.additionals.radioRegion = 'nacional'
+    input.additionals.radioRegion = 'national'
     expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(300)
   })
 
   it('mídias sociais cobra preço da faixa selecionada', () => {
     const input = baseInput()
-    input.additionals.midiasSociaisEnabled = true
-    input.additionals.midiasSociaisTierId = 'ms-250'
+    input.additionals.socialMediaEnabled = true
+    input.additionals.socialMediaTierId = 'ms-250'
     expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(220)
   })
 
   it('newsletter adicional cobra fixo por envio extra', () => {
     const input = baseInput()
-    input.additionals.newsletterExtraEnvios = 3
+    input.additionals.newsletterExtraSends = 3
     expect(updateCalculations(input, basePrices()).additionalsTotal).toBe(3 * 20)
   })
 
-  it('plantão aplica + plantaoPercent% sobre subtotal', () => {
+  it('plantão aplica + onCallPercent% sobre subtotal', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.marcas.services.score = true
-    input.additionals.plantaoFimSemana = true
+    input.sections.brands.volume = 10
+    input.sections.brands.services.score = true
+    input.additionals.weekendOnCall = true
 
     const prices = basePrices()
     const r = updateCalculations(input, prices)
     expect(r.factorPlantao).toBe(1.25)
-    expect(r.valorAcrescimoPlantao).toBeCloseTo(10 * 0.5 * 0.25)
+    expect(r.onCallSurchargeAmount).toBeCloseTo(10 * 0.5 * 0.25)
   })
 
   it('aprovação automática aplica desconto sobre total já com plantão', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.marcas.services.score = true
-    input.additionals.plantaoFimSemana = true
-    input.additionals.aprovacaoAutomatica = true
-    input.precoBaseMensal = 1000
+    input.sections.brands.volume = 10
+    input.sections.brands.services.score = true
+    input.additionals.weekendOnCall = true
+    input.additionals.autoApproval = true
+    input.baseMonthlyPrice = 1000
 
     const prices = basePrices()
     const r = updateCalculations(input, prices)
@@ -299,31 +299,31 @@ describe('updateCalculations', () => {
 
   it('preço base mensal não é afetado pelos modificadores percentuais', () => {
     const input = baseInput()
-    input.precoBaseMensal = 1000
-    input.additionals.plantaoFimSemana = true
+    input.baseMonthlyPrice = 1000
+    input.additionals.weekendOnCall = true
     const r = updateCalculations(input, basePrices())
     expect(r.finalPrice).toBe(1000)
   })
 
   it('desconto total comercial aplica sobre investimento após ajustes catalogados e preço base', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.marcas.services.score = true
-    input.precoBaseMensal = 1000
-    input.descontoTotalPercent = 20
+    input.sections.brands.volume = 10
+    input.sections.brands.services.score = true
+    input.baseMonthlyPrice = 1000
+    input.totalDiscountPercent = 20
 
     const r = updateCalculations(input, basePrices())
     const variavel = 10 * 0.5
-    expect(r.valorAntesDescontoComercial).toBeCloseTo(variavel + 1000)
+    expect(r.amountBeforeCommercialDiscount).toBeCloseTo(variavel + 1000)
     expect(r.finalPrice).toBeCloseTo((variavel + 1000) * 0.8)
-    expect(r.valorDescontoTotal).toBeLessThan(0)
+    expect(r.totalDiscountAmount).toBeLessThan(0)
   })
 
   it('selectedMatterLabels lista apenas serviços com valor > 0', () => {
     const input = baseInput()
-    input.sections.marcas.volume = 10
-    input.sections.marcas.services.score = true
-    input.sections.marcas.services.grifo = true
+    input.sections.brands.volume = 10
+    input.sections.brands.services.score = true
+    input.sections.brands.services.highlight = true
     const r = updateCalculations(input, basePrices())
     expect(r.selectedMatterLabels.length).toBe(2)
   })

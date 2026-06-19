@@ -43,11 +43,11 @@ function RegionButtons({
       </button>
       <button
         type="button"
-        className={`add-page__region ${region === 'nacional' ? 'add-page__region--on' : ''}`}
+        className={`add-page__region ${region === 'national' ? 'add-page__region--on' : ''}`}
         disabled={disabled}
-        onClick={() => pick('nacional')}
+        onClick={() => pick('national')}
       >
-        {REGION_LABELS.nacional}
+        {REGION_LABELS.national}
       </button>
     </div>
   )
@@ -135,21 +135,21 @@ export function TiposMidia() {
   const a = state.additionals
   const prices = state.prices
 
-  const webAny = a.webNacionalEnabled || a.webInternacionalEnabled
+  const webAny = a.webNationalEnabled || a.webInternationalEnabled
 
   function setWebMaster(on: boolean) {
     if (!on) {
       dispatch({
         type: 'SET_ADDITIONALS',
         patch: {
-          webNacionalEnabled: false,
-          webInternacionalEnabled: false,
+          webNationalEnabled: false,
+          webInternationalEnabled: false,
         },
       })
       return
     }
-    if (!a.webNacionalEnabled && !a.webInternacionalEnabled) {
-      dispatch({ type: 'TOGGLE_WEB_NACIONAL', enabled: true })
+    if (!a.webNationalEnabled && !a.webInternationalEnabled) {
+      dispatch({ type: 'TOGGLE_WEB_NATIONAL', enabled: true })
     }
   }
 
@@ -164,9 +164,9 @@ export function TiposMidia() {
           icon={Newspaper}
           title="Impresso"
           description="Valor mensal único (tabela de preços)."
-          enabled={a.impressoEnabled}
-          onEnabledChange={(v) => dispatch({ type: 'TOGGLE_IMPRESSO', enabled: v })}
-          toggleId="midia-impresso"
+          enabled={a.printEnabled}
+          onEnabledChange={(v) => dispatch({ type: 'TOGGLE_PRINT', enabled: v })}
+          toggleId="midia-print"
           hideFooterWhenOff
         >
           <></>
@@ -200,11 +200,11 @@ export function TiposMidia() {
                 <input
                   type="checkbox"
                   className="tipos-midia-card__check-input"
-                  checked={a.webNacionalEnabled}
+                  checked={a.webNationalEnabled}
                   disabled={!webAny}
                   onChange={(e) =>
                     dispatch({
-                      type: 'TOGGLE_WEB_NACIONAL',
+                      type: 'TOGGLE_WEB_NATIONAL',
                       enabled: e.target.checked,
                     })
                   }
@@ -215,11 +215,11 @@ export function TiposMidia() {
                 <input
                   type="checkbox"
                   className="tipos-midia-card__check-input"
-                  checked={a.webInternacionalEnabled}
+                  checked={a.webInternationalEnabled}
                   disabled={!webAny}
                   onChange={(e) =>
                     dispatch({
-                      type: 'TOGGLE_WEB_INTERNACIONAL',
+                      type: 'TOGGLE_WEB_INTERNATIONAL',
                       enabled: e.target.checked,
                     })
                   }
@@ -264,9 +264,9 @@ export function TiposMidia() {
           icon={ThumbsUp}
           title="Mídias sociais"
           description="Selecione a faixa por quantidade de posts."
-          enabled={a.midiasSociaisEnabled}
+          enabled={a.socialMediaEnabled}
           onEnabledChange={(v) =>
-            dispatch({ type: 'TOGGLE_MIDIAS_SOCIAIS', enabled: v })
+            dispatch({ type: 'TOGGLE_SOCIAL_MEDIA', enabled: v })
           }
           toggleId="midia-ms"
         >
@@ -274,17 +274,17 @@ export function TiposMidia() {
             dense
             id="midia-ms-tier"
             label="Faixa (posts)"
-            disabled={!a.midiasSociaisEnabled}
-            value={a.midiasSociaisTierId ?? ''}
+            disabled={!a.socialMediaEnabled}
+            value={a.socialMediaTierId ?? ''}
             onChange={(e) =>
               dispatch({
-                type: 'SET_MIDIAS_SOCIAIS_TIER',
+                type: 'SET_SOCIAL_MEDIA_TIER',
                 tierId: e.target.value || null,
               })
             }
           >
             <option value="">Selecione…</option>
-            {prices.additionals.midiasSociais.tiers.map((t) => (
+            {prices.additionals.socialMedia.tiers.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.label}
               </option>

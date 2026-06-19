@@ -1,4 +1,4 @@
-/** Hash usado para deep-link da configuração de preços (apenas admins). */
+/** Hash usado para deep-link da configuração de preços (apenas master-admin). */
 export const CONFIGURACAO_PRECOS_HASH = '#configuracao-precos'
 
 export function readHashConfigPrecos(): boolean {

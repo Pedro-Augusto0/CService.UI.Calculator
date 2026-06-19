@@ -127,15 +127,15 @@ function buildMatterDetails(calc: CalculationResult): InvestmentDetailItem[] {
 
 function buildReportsLabels(reports: ReportsState): InvestmentDetailItem[] {
   const items: InvestmentDetailItem[] = []
-  if (reports.executivoEnabled && reports.executivoFreq) {
+  if (reports.executiveEnabled && reports.executiveFrequency) {
     items.push({
-      label: `Relatório Executivo (${REPORT_FREQUENCY_LABELS[reports.executivoFreq]})`,
+      label: `Relatório Executivo (${REPORT_FREQUENCY_LABELS[reports.executiveFrequency]})`,
       value: '',
     })
   }
-  if (reports.estrategicoEnabled && reports.estrategicoFreq) {
+  if (reports.strategicEnabled && reports.strategicFrequency) {
     items.push({
-      label: `Relatório Estratégico (${REPORT_FREQUENCY_LABELS[reports.estrategicoFreq]})`,
+      label: `Relatório Estratégico (${REPORT_FREQUENCY_LABELS[reports.strategicFrequency]})`,
       value: '',
     })
   }
@@ -148,13 +148,13 @@ function buildReportsLabels(reports: ReportsState): InvestmentDetailItem[] {
 function buildAdditionalsLabels(additionals: AdditionalsState): InvestmentDetailItem[] {
   const a = additionals
   const items: InvestmentDetailItem[] = []
-  if (a.impressoEnabled) {
+  if (a.printEnabled) {
     items.push({ label: 'Impresso', value: '' })
   }
-  if (a.webNacionalEnabled) {
+  if (a.webNationalEnabled) {
     items.push({ label: 'Web (Nacional)', value: '' })
   }
-  if (a.webInternacionalEnabled) {
+  if (a.webInternationalEnabled) {
     items.push({ label: 'Web (Internacional)', value: '' })
   }
   if (a.radioEnabled && a.radioRegion) {
@@ -163,19 +163,19 @@ function buildAdditionalsLabels(additionals: AdditionalsState): InvestmentDetail
   if (a.tvEnabled && a.tvRegion) {
     items.push({ label: `TV ${REGION_LABELS[a.tvRegion]}`, value: '' })
   }
-  if (a.midiasSociaisEnabled) items.push({ label: 'Mídias Sociais', value: '' })
+  if (a.socialMediaEnabled) items.push({ label: 'Mídias Sociais', value: '' })
   if (a.storiesInstagramEnabled) items.push({ label: 'Stories Instagram', value: '' })
-  if (a.alertasWebRealtime) items.push({ label: 'Alertas Web em Tempo Real', value: '' })
+  if (a.webRealtimeAlerts) items.push({ label: 'Alertas Web em Tempo Real', value: '' })
   if (a.apiCService) items.push({ label: 'Integração via API CService', value: '' })
   if (a.newsletterWhatsApp) items.push({ label: 'Newsletter via WhatsApp', value: '' })
-  if (a.newsletterExtraEnvios > 0) {
+  if (a.newsletterExtraSends > 0) {
     items.push({
-      label: `Newsletter Adicional (${a.newsletterExtraEnvios}x)`,
+      label: `Newsletter Adicional (${a.newsletterExtraSends}x)`,
       value: '',
     })
   }
-  if (a.destinatariosExtrasEnabled) items.push({ label: 'Destinatários Adicionais', value: '' })
-  if (a.curadoriaAprovacaoManual) items.push({ label: 'Curadoria e Aprovação Manual', value: '' })
+  if (a.extraRecipientsEnabled) items.push({ label: 'Destinatários Adicionais', value: '' })
+  if (a.manualCuration) items.push({ label: 'Curadoria e Aprovação Manual', value: '' })
   return items
 }
 
@@ -199,21 +199,21 @@ function buildDistributionRows(input: CalculationInput): DistributionRow[] {
   const r = input.reports
   const a = input.additionals
   const freqParts: string[] = []
-  if (r.executivoEnabled && r.executivoFreq) {
-    freqParts.push(`Relatório Executivo (${REPORT_FREQUENCY_LABELS[r.executivoFreq]})`)
+  if (r.executiveEnabled && r.executiveFrequency) {
+    freqParts.push(`Relatório Executivo (${REPORT_FREQUENCY_LABELS[r.executiveFrequency]})`)
   }
-  if (r.estrategicoEnabled && r.estrategicoFreq) {
-    freqParts.push(`Relatório Estratégico (${REPORT_FREQUENCY_LABELS[r.estrategicoFreq]})`)
+  if (r.strategicEnabled && r.strategicFrequency) {
+    freqParts.push(`Relatório Estratégico (${REPORT_FREQUENCY_LABELS[r.strategicFrequency]})`)
   }
   if (a.newsletterWhatsApp) freqParts.push('Newsletter por WhatsApp conforme configuração')
-  if (a.alertasWebRealtime) freqParts.push('Alertas web em tempo real')
+  if (a.webRealtimeAlerts) freqParts.push('Alertas web em tempo real')
   const freq =
     freqParts.length > 0
       ? freqParts.join(' · ')
       : 'Definido conforme escopo contratado e rotinas da plataforma'
 
   let dest = 'Quadro padrão de destinatários do pacote.'
-  if (a.destinatariosExtrasEnabled) dest += ' Inclusão de destinatários adicionais contratada.'
+  if (a.extraRecipientsEnabled) dest += ' Inclusão de destinatários adicionais contratada.'
 
   const formats: string[] = ['Relatórios e alertas em PDF e HTML']
   if (a.newsletterWhatsApp) formats.push('envios por WhatsApp')
@@ -292,9 +292,9 @@ function scopeCategoryIcon(kind: 'building' | 'people' | 'target'): string {
 }
 
 const SCOPE_ICON_BY_SECTION: Record<SectionKey, 'building' | 'people' | 'target'> = {
-  marcas: 'building',
-  concorrentes: 'people',
-  setor: 'target',
+  brands: 'building',
+  competitors: 'people',
+  sector: 'target',
 }
 
 /** Ícones da seção "Por que escolher" (contorno azul) */
@@ -378,7 +378,7 @@ function buildCompositionBlocks(
     lines: [
       {
         label: 'Preço base mensal',
-        value: formatCurrency(calc.breakdownGroups.precoBaseMensal),
+        value: formatCurrency(calc.breakdownGroups.baseMonthlyPrice),
       },
     ],
   })
@@ -392,56 +392,56 @@ function buildCompositionBlocks(
   }
 
   const addLabels = buildAdditionalsLabels(input.additionals)
-  if (calc.breakdownGroups.servicosAdicionais > 0) {
+  if (calc.breakdownGroups.additionalServices > 0) {
     const lines: CompositionLine[] = addLabels.map((r) => ({ label: r.label, value: '' }))
     lines.push({
       label: 'Total serviços adicionais',
-      value: formatCurrency(calc.breakdownGroups.servicosAdicionais),
+      value: formatCurrency(calc.breakdownGroups.additionalServices),
     })
     blocks.push({ sectionTitle: 'Serviços adicionais', lines })
   }
 
   const reportLabels = buildReportsLabels(input.reports)
-  if (calc.breakdownGroups.relatoriosBi > 0) {
+  if (calc.breakdownGroups.reportsBi > 0) {
     const lines: CompositionLine[] = reportLabels.map((r) => ({ label: r.label, value: '' }))
     lines.push({
       label: 'Total relatórios e BI',
-      value: formatCurrency(calc.breakdownGroups.relatoriosBi),
+      value: formatCurrency(calc.breakdownGroups.reportsBi),
     })
     blocks.push({ sectionTitle: 'Relatórios e BI', lines })
   }
 
-  if (calc.valorAcrescimoPlantao > 0) {
+  if (calc.onCallSurchargeAmount > 0) {
     blocks.push({
       sectionTitle: null,
       lines: [
         {
-          label: `Acréscimos · Plantão (+${calc.plantaoPercent}%)`,
-          value: `+ ${formatCurrency(calc.valorAcrescimoPlantao)}`,
+          label: `Acréscimos · Plantão (+${calc.onCallPercent}%)`,
+          value: `+ ${formatCurrency(calc.onCallSurchargeAmount)}`,
           rowClass: 'comp-line--increase',
         },
       ],
     })
   }
-  if (calc.valorDescontoAprovacaoAutomatica < 0) {
+  if (calc.autoApprovalDiscountAmount < 0) {
     blocks.push({
       sectionTitle: null,
       lines: [
         {
-          label: `Descontos · Aprovação automática (−${calc.aprovacaoAutomaticaPercent}%)`,
-          value: `− ${formatCurrency(Math.abs(calc.valorDescontoAprovacaoAutomatica))}`,
+          label: `Descontos · Aprovação automática (−${calc.autoApprovalDiscountPercent}%)`,
+          value: `− ${formatCurrency(Math.abs(calc.autoApprovalDiscountAmount))}`,
           rowClass: 'comp-line--discount',
         },
       ],
     })
   }
-  if (calc.valorDescontoTotal < 0 && calc.descontoTotalPercent > 0) {
+  if (calc.totalDiscountAmount < 0 && calc.totalDiscountPercent > 0) {
     blocks.push({
       sectionTitle: null,
       lines: [
         {
-          label: `Descontos · Negociação na proposta (−${calc.descontoTotalPercent}%)`,
-          value: `− ${formatCurrency(Math.abs(calc.valorDescontoTotal))}`,
+          label: `Descontos · Negociação na proposta (−${calc.totalDiscountPercent}%)`,
+          value: `− ${formatCurrency(Math.abs(calc.totalDiscountAmount))}`,
           rowClass: 'comp-line--discount',
         },
       ],
@@ -747,7 +747,7 @@ export function buildProposalHtml(
       text-align: center;
     }
 
-    /* Resumo executivo */
+    /* Resumo executive */
     .exec-section {
       padding: 28px 34px 15px;
     }
@@ -1374,7 +1374,7 @@ export function buildProposalHtml(
         <div>
           <div class="exec-head">
             <svg class="exec-doc-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.75" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M10 13h8M10 17h8M10 9h4" stroke="currentColor" stroke-width="1.75" fill="none" stroke-linecap="round"/></svg>
-            <h2 class="exec-title">Resumo executivo</h2>
+            <h2 class="exec-title">Resumo executive</h2>
           </div>
           <p class="exec-text">
             Esta proposta consolida o escopo de monitoramento de marcas, concorrentes e tendências de setor,
@@ -1421,9 +1421,9 @@ export function buildProposalHtml(
     <section class="content-section">
       <h2 class="section-heading section-heading--escopo">Escopo do monitoramento</h2>
       <div class="scope-grid">
-        ${buildScopeCard('marcas', input, 'brand')}
-        ${buildScopeCard('concorrentes', input, 'magenta')}
-        ${buildScopeCard('setor', input, 'cyan')}
+        ${buildScopeCard('brands', input, 'brand')}
+        ${buildScopeCard('competitors', input, 'magenta')}
+        ${buildScopeCard('sector', input, 'cyan')}
       </div>
     </section>
 

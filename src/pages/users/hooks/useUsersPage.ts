@@ -1,42 +1,86 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useApi } from '@/features/api/config'
+import { ApiError } from '@/features/api/client'
+import {
+  createUserApi,
+  deleteUserApi,
+  fetchUsers,
+  roleToFlags,
+  updateUserApi,
+} from '@/features/api/usersApi'
 import { useAuth } from '@/features/auth/AuthContext'
+import { createInternalRegistrationField } from '@/features/auth/api/internalRegistration'
+import { hashPassword } from '@/features/auth/api/passwordHash'
 import type { StoredUser } from '@/features/auth/types'
-import { loadAccessGroups } from '@/features/access-groups/accessGroupStorage'
-import { loadUsers, saveUsers } from '@/features/auth/api/userStorage'
-import { withUserGroupIds } from '@/features/auth/groupIds'
+import { findUserByEmail, loadUsers, saveUsers } from '@/features/auth/api/userStorage'
+import type { CreateUserInput } from '@/pages/users/components/CreateUserModal'
+import type { EditUserInput } from '@/pages/users/components/EditUserModal'
 import { isActiveInWindow, type RoleFilter } from '@/pages/users/lib/usersPageLib'
+
+function isPrivilegedUser(user: StoredUser): boolean {
+  return user.isAdmin || Boolean(user.isMasterAdmin)
+}
 
 export function useUsersPage() {
   const { user: sessionUser, refreshSessionUser } = useAuth()
-  const accessGroups = loadAccessGroups()
-  const [rows, setRows] = useState<StoredUser[]>(() => loadUsers())
+  const apiEnabled = useApi()
+  const [rows, setRows] = useState<StoredUser[]>(() =>
+    apiEnabled ? [] : loadUsers(),
+  )
+  const [loading, setLoading] = useState(apiEnabled)
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createBusy, setCreateBusy] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [editUser, setEditUser] = useState<StoredUser | null>(null)
+  const [editBusy, setEditBusy] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  const canManageUsers = Boolean(sessionUser?.isMasterAdmin)
+
+  const reload = useCallback(async () => {
+    if (apiEnabled) {
+      setLoading(true)
+      try {
+        setRows(await fetchUsers())
+      } catch {
+        setRows([])
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      setRows(loadUsers())
+    }
+    refreshSessionUser()
+  }, [apiEnabled, refreshSessionUser])
+
+  useEffect(() => {
+    if (!apiEnabled) return
+    void reload()
+  }, [apiEnabled, reload])
 
   useEffect(() => {
     setSelectedIds(new Set())
   }, [query, roleFilter])
 
-  const reload = useCallback(() => {
-    setRows(loadUsers())
-    refreshSessionUser()
-  }, [refreshSessionUser])
-
   const stats = useMemo(() => {
     const t = Date.now()
     const total = rows.length
-    const admins = rows.filter((u) => u.isAdmin).length
-    const active = rows.filter((u) => isActiveInWindow(u, t)).length
-    const groupsTotal = accessGroups.length
-    return { total, admins, active, groupsTotal }
-  }, [rows, accessGroups.length])
+    const admins = rows.filter((u) => isPrivilegedUser(u)).length
+    const regularUsers = total - admins
+    const active = rows.filter((u) =>
+      u.isActive === false ? false : isActiveInWindow(u, t),
+    ).length
+    return { total, admins, regularUsers, active }
+  }, [rows])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return rows.filter((u) => {
-      if (roleFilter === 'admin' && !u.isAdmin) return false
-      if (roleFilter === 'user' && u.isAdmin) return false
+      if (roleFilter === 'admin' && !isPrivilegedUser(u)) return false
+      if (roleFilter === 'user' && isPrivilegedUser(u)) return false
       if (!q) return true
       return (
         u.name.toLowerCase().includes(q) ||
@@ -46,7 +90,7 @@ export function useUsersPage() {
   }, [rows, query, roleFilter])
 
   const adminCount = useMemo(
-    () => rows.filter((u) => u.isAdmin).length,
+    () => rows.filter((u) => isPrivilegedUser(u)).length,
     [rows],
   )
 
@@ -57,43 +101,16 @@ export function useUsersPage() {
 
   const persist = useCallback(
     (next: StoredUser[]) => {
-      saveUsers(next)
-      reload()
+      if (!apiEnabled) saveUsers(next)
+      void reload()
       setSelectedIds(new Set())
     },
-    [reload],
-  )
-
-  const handleToggleAdmin = useCallback(
-    (target: StoredUser, nextAdmin: boolean) => {
-      if (!sessionUser) return
-      if (target.isAdmin === nextAdmin) return
-
-      if (target.isAdmin && !nextAdmin && adminCount <= 1) {
-        window.alert(
-          'É necessário manter pelo menos um administrador na plataforma.',
-        )
-        return
-      }
-
-      const next = rows.map((u) => {
-        if (u.id !== target.id) return u
-        const groupIdsNext = nextAdmin
-          ? ['grp-administrador']
-          : ['grp-leitura']
-        return {
-          ...withUserGroupIds(u, groupIdsNext),
-          isAdmin: nextAdmin,
-        }
-      })
-      persist(next)
-    },
-    [sessionUser, adminCount, rows, persist],
+    [apiEnabled, reload],
   )
 
   const handleRemove = useCallback(
-    (target: StoredUser) => {
-      if (!sessionUser) return
+    async (target: StoredUser) => {
+      if (!sessionUser?.isMasterAdmin) return
       if (target.id === sessionUser.id) {
         window.alert('Não é possível remover o seu próprio usuário.')
         return
@@ -105,10 +122,25 @@ export function useUsersPage() {
       ) {
         return
       }
+
+      if (apiEnabled) {
+        try {
+          await deleteUserApi(target.id)
+          await reload()
+        } catch (error) {
+          const message =
+            error instanceof ApiError
+              ? error.message
+              : 'Não foi possível remover o usuário.'
+          window.alert(message)
+        }
+        return
+      }
+
       const next = rows.filter((u) => u.id !== target.id)
       persist(next)
     },
-    [sessionUser, rows, persist],
+    [sessionUser, rows, persist, apiEnabled, reload],
   )
 
   const toggleSelectAllFiltered = useCallback(() => {
@@ -128,9 +160,166 @@ export function useUsersPage() {
     })
   }, [])
 
+  const openCreateModal = useCallback(() => {
+    setCreateError(null)
+    setCreateOpen(true)
+  }, [])
+
+  const closeCreateModal = useCallback(() => {
+    if (createBusy) return
+    setCreateOpen(false)
+    setCreateError(null)
+  }, [createBusy])
+
+  const openEditModal = useCallback((target: StoredUser) => {
+    setEditError(null)
+    setEditUser(target)
+  }, [])
+
+  const closeEditModal = useCallback(() => {
+    if (editBusy) return
+    setEditUser(null)
+    setEditError(null)
+  }, [editBusy])
+
+  const handleCreateUser = useCallback(
+    async (input: CreateUserInput) => {
+      if (!sessionUser?.isMasterAdmin) return
+
+      setCreateBusy(true)
+      setCreateError(null)
+
+      try {
+        if (apiEnabled) {
+          await createUserApi(input)
+        } else {
+          const trimmedEmail = input.email.trim()
+          const users = loadUsers()
+          if (findUserByEmail(users, trimmedEmail)) {
+            setCreateError('Este e-mail já está cadastrado.')
+            return
+          }
+
+          const { isAdmin, isMasterAdmin } = roleToFlags(input.role)
+          const record: StoredUser = {
+            id:
+              typeof crypto !== 'undefined' && 'randomUUID' in crypto
+                ? crypto.randomUUID()
+                : `usr_${Date.now()}`,
+            name: input.name.trim(),
+            email: trimmedEmail,
+            passwordHash: await hashPassword(input.password),
+            isAdmin,
+            isMasterAdmin,
+            isActive: true,
+            internalField: createInternalRegistrationField(),
+            createdAt: Date.now(),
+          }
+          saveUsers([...users, record])
+        }
+
+        setCreateOpen(false)
+        await reload()
+      } catch (error) {
+        const message =
+          error instanceof ApiError
+            ? (error.errors?.email?.[0] ?? error.message)
+            : 'Não foi possível criar o usuário.'
+        setCreateError(message)
+      } finally {
+        setCreateBusy(false)
+      }
+    },
+    [sessionUser, apiEnabled, reload],
+  )
+
+  const handleEditUser = useCallback(
+    async (input: EditUserInput) => {
+      if (!sessionUser?.isMasterAdmin || !editUser) return
+
+      const wasPrivileged = isPrivilegedUser(editUser)
+      const nextFlags = roleToFlags(input.role)
+      const willBePrivileged = nextFlags.isAdmin || nextFlags.isMasterAdmin
+
+      if (wasPrivileged && !willBePrivileged && adminCount <= 1) {
+        setEditError(
+          'É necessário manter pelo menos um administrador na plataforma.',
+        )
+        return
+      }
+
+      if (
+        wasPrivileged &&
+        !input.isActive &&
+        adminCount <= 1 &&
+        editUser.isActive !== false
+      ) {
+        setEditError(
+          'É necessário manter pelo menos um administrador ativo na plataforma.',
+        )
+        return
+      }
+
+      setEditBusy(true)
+      setEditError(null)
+
+      try {
+        if (apiEnabled) {
+          await updateUserApi(editUser.id, input)
+        } else {
+          const users = loadUsers()
+          const next = await Promise.all(
+            users.map(async (u) => {
+              if (u.id !== editUser.id) return u
+
+              const updated: StoredUser = {
+                ...u,
+                name: input.name.trim(),
+                isAdmin: nextFlags.isAdmin,
+                isMasterAdmin: nextFlags.isMasterAdmin,
+                isActive: input.isActive,
+              }
+
+              if (input.password) {
+                updated.passwordHash = await hashPassword(input.password)
+              }
+
+              return updated
+            }),
+          )
+          saveUsers(next)
+        }
+
+        setEditUser(null)
+        await reload()
+      } catch (error) {
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : 'Não foi possível atualizar o usuário.'
+        setEditError(message)
+      } finally {
+        setEditBusy(false)
+      }
+    },
+    [sessionUser, editUser, adminCount, apiEnabled, reload],
+  )
+
   return {
     sessionUser,
-    accessGroups,
+    canManageUsers,
+    createOpen,
+    createBusy,
+    createError,
+    openCreateModal,
+    closeCreateModal,
+    handleCreateUser,
+    editUser,
+    editBusy,
+    editError,
+    openEditModal,
+    closeEditModal,
+    handleEditUser,
     query,
     setQuery,
     roleFilter,
@@ -141,7 +330,7 @@ export function useUsersPage() {
     selectedIds,
     allFilteredSelected,
     someFilteredSelected,
-    handleToggleAdmin,
+    loading,
     handleRemove,
     toggleSelectAllFiltered,
     toggleRowSelected,

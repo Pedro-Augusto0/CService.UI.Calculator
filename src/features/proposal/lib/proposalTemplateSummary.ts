@@ -14,7 +14,7 @@ export interface TemplateDescription {
 export function describeTemplateSnapshot(
   snapshot: ProposalTemplateSnapshot,
 ): TemplateDescription {
-  const sec = snapshot.sections.marcas
+  const sec = snapshot.sections.brands
   const activeServices = MATTER_SERVICE_KEYS.filter((k) => sec.services[k])
   const labels = activeServices.map((k) => MATTER_SERVICE_LABELS[k])
 
@@ -28,11 +28,11 @@ export function describeTemplateSnapshot(
 
   const r = snapshot.reports
   const reportItems: string[] = []
-  if (r.executivoEnabled && r.executivoFreq) {
-    reportItems.push(`Executivo ${REPORT_FREQUENCY_LABELS[r.executivoFreq].toLowerCase()}`)
+  if (r.executiveEnabled && r.executiveFrequency) {
+    reportItems.push(`Executivo ${REPORT_FREQUENCY_LABELS[r.executiveFrequency].toLowerCase()}`)
   }
-  if (r.estrategicoEnabled && r.estrategicoFreq) {
-    reportItems.push(`Estratégico ${REPORT_FREQUENCY_LABELS[r.estrategicoFreq].toLowerCase()}`)
+  if (r.strategicEnabled && r.strategicFrequency) {
+    reportItems.push(`Estratégico ${REPORT_FREQUENCY_LABELS[r.strategicFrequency].toLowerCase()}`)
   }
   if (r.biEnabled) reportItems.push('CService BI')
   if (reportItems.length) {
@@ -41,17 +41,17 @@ export function describeTemplateSnapshot(
 
   const a = snapshot.additionals
   const extras: string[] = []
-  if (a.impressoEnabled) extras.push('Impresso')
-  if (a.webNacionalEnabled) extras.push('Web (Nacional)')
-  if (a.webInternacionalEnabled) extras.push('Web (Internacional)')
+  if (a.printEnabled) extras.push('Impresso')
+  if (a.webNationalEnabled) extras.push('Web (Nacional)')
+  if (a.webInternationalEnabled) extras.push('Web (Internacional)')
   if (a.radioEnabled && a.radioRegion) extras.push(`Rádio ${REGION_LABELS[a.radioRegion]}`)
   if (a.tvEnabled && a.tvRegion) extras.push(`TV ${REGION_LABELS[a.tvRegion]}`)
-  if (a.midiasSociaisEnabled) extras.push('Mídias sociais')
+  if (a.socialMediaEnabled) extras.push('Mídias sociais')
   if (a.storiesInstagramEnabled) extras.push('Stories Instagram')
-  if (a.alertasWebRealtime) extras.push('Alertas web')
+  if (a.webRealtimeAlerts) extras.push('Alertas web')
   if (a.apiCService) extras.push('API CService')
   if (a.newsletterWhatsApp) extras.push('Newsletter WhatsApp')
-  if (a.curadoriaAprovacaoManual) extras.push('Curadoria manual')
+  if (a.manualCuration) extras.push('Curadoria manual')
   if (extras.length) {
     lines.push(`Adicionais: ${extras.join(', ')}.`)
   }
@@ -65,7 +65,7 @@ export function describeTemplateSnapshot(
 export function matterServiceLabelsFromSnapshot(
   snapshot: ProposalTemplateSnapshot,
 ): string[] {
-  const sec = snapshot.sections.marcas
+  const sec = snapshot.sections.brands
   return MATTER_SERVICE_KEYS.filter((k) => sec.services[k]).map(
     (k) => MATTER_SERVICE_LABELS[k],
   )

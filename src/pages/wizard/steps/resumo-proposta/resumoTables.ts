@@ -22,21 +22,21 @@ export function buildReportRows(
   prices: Prices['reports'],
 ): PricedRow[] {
   const rows: PricedRow[] = []
-  if (reports.executivoEnabled && reports.executivoFreq) {
-    const price = prices.executivo.byFrequency[reports.executivoFreq] ?? 0
+  if (reports.executiveEnabled && reports.executiveFrequency) {
+    const price = prices.executive.byFrequency[reports.executiveFrequency] ?? 0
     rows.push({
-      key: 'executivo',
-      label: 'Relatório executivo',
-      detail: REPORT_FREQUENCY_LABELS[reports.executivoFreq],
+      key: 'executive',
+      label: 'Relatório executive',
+      detail: REPORT_FREQUENCY_LABELS[reports.executiveFrequency],
       value: price,
     })
   }
-  if (reports.estrategicoEnabled && reports.estrategicoFreq) {
-    const price = prices.estrategico.byFrequency[reports.estrategicoFreq] ?? 0
+  if (reports.strategicEnabled && reports.strategicFrequency) {
+    const price = prices.strategic.byFrequency[reports.strategicFrequency] ?? 0
     rows.push({
-      key: 'estrategico',
+      key: 'strategic',
       label: 'Relatório estratégico',
-      detail: REPORT_FREQUENCY_LABELS[reports.estrategicoFreq],
+      detail: REPORT_FREQUENCY_LABELS[reports.strategicFrequency],
       value: price,
     })
   }
@@ -62,28 +62,28 @@ export function buildMonitoramentosRows(
   const p = prices
   const rows: PricedRow[] = []
 
-  if (a.impressoEnabled) {
+  if (a.printEnabled) {
     rows.push({
-      key: 'impresso',
+      key: 'print',
       label: 'Impresso',
       detail: 'Valor mensal',
-      value: p.impresso,
+      value: p.print,
     })
   }
-  if (a.webNacionalEnabled) {
+  if (a.webNationalEnabled) {
     rows.push({
       key: 'webNacional',
       label: 'Web',
       detail: 'Nacional',
-      value: p.web.nacional,
+      value: p.web.national,
     })
   }
-  if (a.webInternacionalEnabled) {
+  if (a.webInternationalEnabled) {
     rows.push({
       key: 'webInternacional',
       label: 'Web',
       detail: 'Internacional',
-      value: p.web.internacional,
+      value: p.web.international,
     })
   }
   if (a.radioEnabled && a.radioRegion) {
@@ -102,11 +102,11 @@ export function buildMonitoramentosRows(
       value: p.tv[a.tvRegion],
     })
   }
-  if (a.midiasSociaisEnabled) {
-    const tier = findTier(p.midiasSociais.tiers, a.midiasSociaisTierId)
+  if (a.socialMediaEnabled) {
+    const tier = findTier(p.socialMedia.tiers, a.socialMediaTierId)
     if (tier) {
       rows.push({
-        key: 'midiasSociais',
+        key: 'socialMedia',
         label: 'Mídias sociais',
         detail: tier.label,
         value: tier.price,
@@ -137,12 +137,12 @@ export function buildAdicionaisExtrasRows(
   const p = prices
   const rows: PricedRow[] = []
 
-  if (a.alertasWebRealtime) {
+  if (a.webRealtimeAlerts) {
     rows.push({
-      key: 'alertasWeb',
+      key: 'webRealtimeAlerts',
       label: 'Alertas Web',
       detail: 'Tempo real',
-      value: p.alertasWebRealtime,
+      value: p.webRealtimeAlerts,
     })
   }
   if (a.apiCService) {
@@ -161,16 +161,16 @@ export function buildAdicionaisExtrasRows(
       value: p.newsletterWhatsApp,
     })
   }
-  if (a.newsletterExtraEnvios > 0) {
+  if (a.newsletterExtraSends > 0) {
     rows.push({
       key: 'newsletterExtra',
       label: 'Envios extras de newsletter',
-      detail: `${a.newsletterExtraEnvios} × unitário`,
-      value: a.newsletterExtraEnvios * p.newsletterExtraEnvio,
+      detail: `${a.newsletterExtraSends} × unitário`,
+      value: a.newsletterExtraSends * p.newsletterExtraSend,
     })
   }
-  if (a.destinatariosExtrasEnabled) {
-    const tier = findTier(p.destinatariosExtras.tiers, a.destinatariosExtrasTierId)
+  if (a.extraRecipientsEnabled) {
+    const tier = findTier(p.extraRecipients.tiers, a.extraRecipientsTierId)
     if (tier) {
       rows.push({
         key: 'destinatarios',
@@ -180,12 +180,12 @@ export function buildAdicionaisExtrasRows(
       })
     }
   }
-  if (a.curadoriaAprovacaoManual) {
+  if (a.manualCuration) {
     rows.push({
       key: 'curadoria',
       label: 'Curadoria / aprovação manual',
       detail: 'Serviço',
-      value: p.curadoriaAprovacaoManual,
+      value: p.manualCurationFee,
     })
   }
 

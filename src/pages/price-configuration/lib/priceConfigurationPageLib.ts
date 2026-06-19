@@ -9,7 +9,7 @@ import type { ConfigTabId } from '@/features/pricing-config/types'
 
 export const TAB_PANEL_INFO: Record<ConfigTabId, string> = {
   monitoramentos:
-    'Valores dos monitoramentos por canal: impresso, web, internacional, rádio, TV e faixas de redes sociais.',
+    'Valores dos monitoramentos por canal: print, web, internacional, rádio, TV e faixas de redes sociais.',
   matter:
     'Para cada serviço, escolha o modo de cobrança (fixo, variável ou ambos) e configure os valores. O comercial usa estes valores na proposta sem editar.',
   reports:

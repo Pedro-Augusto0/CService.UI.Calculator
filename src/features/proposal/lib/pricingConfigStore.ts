@@ -1,4 +1,5 @@
 import type { Prices } from '@/domain/prices'
+import { migrateStoredPricingConfig } from '@/domain/jsonMigrate'
 import { normalizePrices } from '@/domain/prices'
 
 /** Persistência da tabela de preços global (admin), independente do rascunho da proposta. */
@@ -6,7 +7,7 @@ const STORAGE_KEY = 'cservice.ui.calculator.pricing-config.v1'
 
 export interface StoredPricingConfig {
   prices: Prices
-  precoBaseMensal: number
+  baseMonthlyPrice: number
   pricingConfigSavedAt: number
 }
 
@@ -18,8 +19,8 @@ function isStoredPricingConfig(value: unknown): value is StoredPricingConfig {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
   return (
-    typeof v.precoBaseMensal === 'number' &&
-    Number.isFinite(v.precoBaseMensal) &&
+    typeof v.baseMonthlyPrice === 'number' &&
+    Number.isFinite(v.baseMonthlyPrice) &&
     typeof v.pricingConfigSavedAt === 'number' &&
     Number.isFinite(v.pricingConfigSavedAt) &&
     v.prices !== null &&
@@ -35,11 +36,14 @@ export function loadStoredPricingConfig(): StoredPricingConfig | null {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
-    if (!isStoredPricingConfig(parsed)) return null
+    const migrated = migrateStoredPricingConfig(
+      (parsed ?? {}) as Record<string, unknown>,
+    )
+    if (!isStoredPricingConfig(migrated)) return null
     return {
-      prices: normalizePrices(structuredClone(parsed.prices as Prices)),
-      precoBaseMensal: parsed.precoBaseMensal,
-      pricingConfigSavedAt: parsed.pricingConfigSavedAt,
+      prices: normalizePrices(structuredClone(migrated.prices as Prices)),
+      baseMonthlyPrice: migrated.baseMonthlyPrice,
+      pricingConfigSavedAt: migrated.pricingConfigSavedAt,
     }
   } catch {
     return null

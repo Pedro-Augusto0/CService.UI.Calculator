@@ -4,10 +4,9 @@ export interface StoredUser {
   email: string
   passwordHash: string
   isAdmin: boolean
-  /** Grupos de acesso (união das permissões de cada um). Preferir sobre `groupId`. */
-  groupIds?: string[]
-  /** Legado (um único grupo); migrado para `groupIds` ao carregar. */
-  groupId?: string
+  isMasterAdmin?: boolean
+  /** Conta ativa no sistema (API). Ausente em dados locais legados. */
+  isActive?: boolean
   /** Preenchido apenas pelo sistema; nunca exibido em cadastro ou perfil. */
   internalField: string
   createdAt: number
@@ -20,6 +19,7 @@ export interface AuthUser {
   name: string
   email: string
   isAdmin: boolean
+  isMasterAdmin?: boolean
   internalField: string
 }
 

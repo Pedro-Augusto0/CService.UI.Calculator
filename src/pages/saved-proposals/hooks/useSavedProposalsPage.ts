@@ -13,7 +13,7 @@ import { formatCurrency } from '@/utils/currency'
 import { downloadHtmlDocument, proposalFilename } from '@/utils/downloadHtml'
 import { formatEditedAt } from '@/pages/saved-proposals/lib/presentation'
 import { closeOpenMenus, closeParentDetails } from '@/pages/saved-proposals/lib/dom'
-import { STATUS_LABELS } from '@/pages/saved-proposals/lib/statusMeta'
+import { statusLabel } from '@/pages/saved-proposals/lib/statusMeta'
 import { useSavedProposalsListing } from '@/pages/saved-proposals/hooks/useSavedProposalsListing'
 
 export interface SavedProposalsPageCallbacks {
@@ -124,7 +124,7 @@ export function useSavedProposalsPage({
       formatProposalNumber(row.record.proposalNumber),
       row.clientName,
       row.proposalName,
-      STATUS_LABELS[row.record.status],
+      statusLabel(row.record.status),
       formatCurrency(row.finalPrice),
       `${row.totalVolume} noticias/mes`,
       formatEditedAt(row.record.updatedAt),

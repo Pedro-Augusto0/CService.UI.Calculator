@@ -1,25 +1,8 @@
-import {
-  normalizeUserGroupIds,
-  withUserGroupIds,
-} from '@/features/auth/groupIds'
 import type { AuthSessionPayload, StoredUser } from '../types'
 
 const USERS_KEY = 'cservice_auth_users'
 const SESSION_LOCAL_KEY = 'cservice_auth_session'
 const SESSION_SESSION_KEY = 'cservice_auth_session_tab'
-
-function migrateStoredUserPayload(u: StoredUser): StoredUser {
-  const base = { ...u }
-  if (
-    base.groupId !== undefined &&
-    base.groupId !== null &&
-    String(base.groupId).trim() === ''
-  ) {
-    delete base.groupId
-  }
-  const ids = normalizeUserGroupIds(base)
-  return withUserGroupIds(base, ids)
-}
 
 export function loadUsers(): StoredUser[] {
   try {
@@ -27,17 +10,7 @@ export function loadUsers(): StoredUser[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    let needsSave = false
-    const migrated = parsed.map((u) => {
-      const before = JSON.stringify(u)
-      const nu = migrateStoredUserPayload(u as StoredUser)
-      if (before !== JSON.stringify(nu)) needsSave = true
-      return nu
-    })
-    if (needsSave) {
-      localStorage.setItem(USERS_KEY, JSON.stringify(migrated))
-    }
-    return migrated
+    return parsed as StoredUser[]
   } catch {
     return []
   }

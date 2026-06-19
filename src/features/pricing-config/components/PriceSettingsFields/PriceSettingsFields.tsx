@@ -29,7 +29,7 @@ import {
   BILLING_MODE_LABELS,
   MATTER_SERVICE_LABELS,
   REPORT_FREQUENCY_LABELS,
-  type AvaliacaoTier,
+  type AssessmentTier,
   type MatterServiceConfig,
   type Prices,
   type RangeTier,
@@ -48,25 +48,25 @@ import './PriceSettingsFields.css'
 const CARD_TONES = ['blue', 'green', 'orange'] as const
 
 const SERVICE_ICONS: Record<MatterServiceKey, LucideIcon> = {
-  centimetragem: FileText,
-  grifo: Highlighter,
+  columnInches: FileText,
+  highlight: Highlighter,
   score: Gauge,
-  ia: Sparkles,
+  ai: Sparkles,
   screenshot: Camera,
-  avaliacao: ClipboardCheck,
+  assessment: ClipboardCheck,
 }
 
 const SERVICE_DESCRIPTIONS: Record<MatterServiceKey, string> = {
-  centimetragem:
+  columnInches:
     'Centimetragem ou valoração editorial — preço fixo, por volume ou ambos.',
-  grifo:
+  highlight:
     'Destaque tipográfico em trechos relevantes — preço fixo, por volume ou ambos.',
   score:
     'Pontuação de relevância da matéria — preço fixo, por volume ou ambos.',
-  ia: 'Enriquecimento por IA (relevância, sentimento, contexto) — preço fixo, por volume ou ambos.',
+  ai: 'Enriquecimento por IA (relevância, sentimento, contexto) — preço fixo, por volume ou ambos.',
   screenshot:
     'Captura visual da publicação — preço fixo, por volume ou ambos.',
-  avaliacao:
+  assessment:
     'Classificação customizada — preço por faixa (rótulo, fixo e por volume), com modo fixo, variável ou ambos.',
 }
 
@@ -178,7 +178,7 @@ interface PriceSettingsFieldsProps {
   section: 'matter' | 'reports' | 'monitoramentos' | 'additionals'
 }
 
-function newAvaliacaoTier(): AvaliacaoTier {
+function newAssessmentTier(): AssessmentTier {
   return {
     id: `aval-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
     label: 'Nova faixa',
@@ -215,7 +215,7 @@ function MatterSection({
   const matter = draft.matterServices
   let tone = 0
 
-  function updateMatter<K extends Exclude<MatterServiceKey, 'avaliacao'>>(
+  function updateMatter<K extends Exclude<MatterServiceKey, 'assessment'>>(
     key: K,
     next: MatterServiceConfig,
   ) {
@@ -228,20 +228,20 @@ function MatterSection({
   function updateAvaliacaoMode(mode: BillingMode) {
     patch('matterServices', {
       ...matter,
-      avaliacao: { ...matter.avaliacao, mode },
+      assessment: { ...matter.assessment, mode },
     })
   }
 
-  function updateAvaliacaoTiers(tiers: AvaliacaoTier[]) {
+  function updateAssessmentTiers(tiers: AssessmentTier[]) {
     patch('matterServices', {
       ...matter,
-      avaliacao: { ...matter.avaliacao, tiers },
+      assessment: { ...matter.assessment, tiers },
     })
   }
 
   return (
     <>
-      {MATTER_SERVICE_KEYS.filter((k) => k !== 'avaliacao').map((k) => {
+      {MATTER_SERVICE_KEYS.filter((k) => k !== 'assessment').map((k) => {
         const Icon = SERVICE_ICONS[k]
         const idx = tone++
         const config = matter[k] as MatterServiceConfig
@@ -256,7 +256,7 @@ function MatterSection({
             <ModeBillingFields
               idPrefix={`config-matter-${k}`}
               config={config}
-              onChange={(next) => updateMatter(k as Exclude<MatterServiceKey, 'avaliacao'>, next)}
+              onChange={(next) => updateMatter(k as Exclude<MatterServiceKey, 'assessment'>, next)}
             />
           </PriceConfigCard>
         )
@@ -269,10 +269,10 @@ function MatterSection({
           </div>
           <div className="config-base-card__copy">
             <h3 className="config-base-card__title">
-              {MATTER_SERVICE_LABELS.avaliacao}
+              {MATTER_SERVICE_LABELS.assessment}
             </h3>
             <p className="config-base-card__desc">
-              {SERVICE_DESCRIPTIONS.avaliacao}
+              {SERVICE_DESCRIPTIONS.assessment}
             </p>
           </div>
         </div>
@@ -281,7 +281,7 @@ function MatterSection({
             dense
             id="config-aval-mode"
             label="Modo de cobrança (aplicado a todas as faixas)"
-            value={matter.avaliacao.mode}
+            value={matter.assessment.mode}
             onChange={(e) => updateAvaliacaoMode(e.target.value as BillingMode)}
           >
             {BILLING_MODE_OPTIONS.map((m) => (
@@ -292,12 +292,12 @@ function MatterSection({
           </SelectField>
         </div>
         <div className="matter-card__tiers">
-          <TierEditor<AvaliacaoTier>
+          <TierEditor<AssessmentTier>
             title=""
             description="Combinações de rótulo, valor fixo e valor por volume que o comercial escolhe na proposta."
-            tiers={matter.avaliacao.tiers}
-            onChange={updateAvaliacaoTiers}
-            createTier={newAvaliacaoTier}
+            tiers={matter.assessment.tiers}
+            onChange={updateAssessmentTiers}
+            createTier={newAssessmentTier}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
               { key: 'fixedPrice', label: 'Valor fixo (R$)', type: 'decimal' },
@@ -328,12 +328,12 @@ function ReportsSection({
         Icon={FileBarChart}
         title="Relatório Executivo CService (PowerPoint)"
         description="Preço por frequência de entrega. O comercial seleciona a frequência contratada na proposta."
-        prices={reports.executivo.byFrequency}
+        prices={reports.executive.byFrequency}
         idPrefix="config-rep-exec"
         onChange={(next) =>
           patch('reports', {
             ...reports,
-            executivo: { byFrequency: next },
+            executive: { byFrequency: next },
           })
         }
       />
@@ -341,13 +341,13 @@ function ReportsSection({
         toneIndex={tone++}
         Icon={FileBarChart}
         title="Relatório Estratégico de Mídia (HTML)"
-        description="Preço por frequência de entrega. Mesma lógica do relatório executivo, formato HTML."
-        prices={reports.estrategico.byFrequency}
+        description="Preço por frequência de entrega. Mesma lógica do relatório executive, formato HTML."
+        prices={reports.strategic.byFrequency}
         idPrefix="config-rep-estr"
         onChange={(next) =>
           patch('reports', {
             ...reports,
-            estrategico: { byFrequency: next },
+            strategic: { byFrequency: next },
           })
         }
       />
@@ -458,10 +458,10 @@ function MonitoramentosSection({
       >
         <div className="matter-card__mode-fields">
           <PtDecimalField
-            id="config-impresso"
+            id="config-print"
             label="Valor (R$)"
-            value={a.impresso}
-            onCommit={(n) => update('impresso', n)}
+            value={a.print}
+            onCommit={(n) => update('print', n)}
           />
         </div>
       </PriceConfigCard>
@@ -476,14 +476,14 @@ function MonitoramentosSection({
           <PtDecimalField
             id="config-web-nacional"
             label="Nacional (R$)"
-            value={a.web.nacional}
-            onCommit={(n) => update('web', { ...a.web, nacional: n })}
+            value={a.web.national}
+            onCommit={(n) => update('web', { ...a.web, national: n })}
           />
           <PtDecimalField
             id="config-web-internacional"
             label="Internacional (R$)"
-            value={a.web.internacional}
-            onCommit={(n) => update('web', { ...a.web, internacional: n })}
+            value={a.web.international}
+            onCommit={(n) => update('web', { ...a.web, international: n })}
           />
         </div>
       </PriceConfigCard>
@@ -504,8 +504,8 @@ function MonitoramentosSection({
           <PtDecimalField
             id="config-radio-nac"
             label="Nacional (R$)"
-            value={a.radio.nacional}
-            onCommit={(n) => update('radio', { ...a.radio, nacional: n })}
+            value={a.radio.national}
+            onCommit={(n) => update('radio', { ...a.radio, national: n })}
           />
         </div>
       </PriceConfigCard>
@@ -526,8 +526,8 @@ function MonitoramentosSection({
           <PtDecimalField
             id="config-tv-nac"
             label="Nacional (R$)"
-            value={a.tv.nacional}
-            onCommit={(n) => update('tv', { ...a.tv, nacional: n })}
+            value={a.tv.national}
+            onCommit={(n) => update('tv', { ...a.tv, national: n })}
           />
         </div>
       </PriceConfigCard>
@@ -548,8 +548,8 @@ function MonitoramentosSection({
           <TierEditor<RangeTier>
             title=""
             description="Use o rótulo para descrever o que cada faixa cobre (ex.: pacote básico, expansão)."
-            tiers={a.midiasSociais.tiers}
-            onChange={(tiers) => update('midiasSociais', { tiers })}
+            tiers={a.socialMedia.tiers}
+            onChange={(tiers) => update('socialMedia', { tiers })}
             createTier={() => newRangeTier('ms')}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
@@ -614,8 +614,8 @@ function AdditionalsSection({
         <PtDecimalField
           id="config-alertas-web-realtime"
           label="Valor (R$)"
-          value={a.alertasWebRealtime}
-          onCommit={(n) => update('alertasWebRealtime', n)}
+          value={a.webRealtimeAlerts}
+          onCommit={(n) => update('webRealtimeAlerts', n)}
         />
       </PriceConfigCard>
 
@@ -657,8 +657,8 @@ function AdditionalsSection({
         <PtDecimalField
           id="config-news-extra"
           label="Valor por envio extra (R$)"
-          value={a.newsletterExtraEnvio}
-          onCommit={(n) => update('newsletterExtraEnvio', n)}
+          value={a.newsletterExtraSend}
+          onCommit={(n) => update('newsletterExtraSend', n)}
         />
       </PriceConfigCard>
       <PriceConfigCard
@@ -670,8 +670,8 @@ function AdditionalsSection({
         <PtDecimalField
           id="config-curadoria"
           label="Valor (R$)"
-          value={a.curadoriaAprovacaoManual}
-          onCommit={(n) => update('curadoriaAprovacaoManual', n)}
+          value={a.manualCurationFee}
+          onCommit={(n) => update('manualCurationFee', n)}
         />
       </PriceConfigCard>
       <article className="config-base-card config-base-card--stacked config-base-card--with-tiers">
@@ -690,8 +690,8 @@ function AdditionalsSection({
           <TierEditor<RangeTier>
             title=""
             description="O comercial escolhe a faixa em combo."
-            tiers={a.destinatariosExtras.tiers}
-            onChange={(tiers) => update('destinatariosExtras', { tiers })}
+            tiers={a.extraRecipients.tiers}
+            onChange={(tiers) => update('extraRecipients', { tiers })}
             createTier={() => newRangeTier('de')}
             columns={[
               { key: 'label', label: 'Rótulo', type: 'text' },
@@ -710,8 +710,8 @@ function AdditionalsSection({
         <PtDecimalField
           id="config-plantao"
           label="Acréscimo (%)"
-          value={a.plantaoPercent}
-          onCommit={(n) => update('plantaoPercent', n)}
+          value={a.onCallPercent}
+          onCommit={(n) => update('onCallPercent', n)}
         />
       </PriceConfigCard>
 
@@ -726,8 +726,8 @@ function AdditionalsSection({
         <PtDecimalField
           id="config-aprov"
           label="Desconto (%)"
-          value={a.aprovacaoAutomaticaPercent}
-          onCommit={(n) => update('aprovacaoAutomaticaPercent', n)}
+          value={a.autoApprovalDiscountPercent}
+          onCommit={(n) => update('autoApprovalDiscountPercent', n)}
         />
       </PriceConfigCard>
     </>

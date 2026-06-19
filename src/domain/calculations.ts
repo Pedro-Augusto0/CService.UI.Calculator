@@ -43,14 +43,14 @@ function additionalsBucket(
   const p = prices.additionals
   let total = 0
 
-  if (a.impressoEnabled) {
-    total += p.impresso
+  if (a.printEnabled) {
+    total += p.print
   }
-  if (a.webNacionalEnabled) {
-    total += p.web.nacional
+  if (a.webNationalEnabled) {
+    total += p.web.national
   }
-  if (a.webInternacionalEnabled) {
-    total += p.web.internacional
+  if (a.webInternationalEnabled) {
+    total += p.web.international
   }
   if (a.radioEnabled && a.radioRegion) {
     total += p.radio[a.radioRegion]
@@ -58,36 +58,36 @@ function additionalsBucket(
   if (a.tvEnabled && a.tvRegion) {
     total += p.tv[a.tvRegion]
   }
-  if (a.midiasSociaisEnabled) {
-    const tier = findTier(p.midiasSociais.tiers, a.midiasSociaisTierId)
+  if (a.socialMediaEnabled) {
+    const tier = findTier(p.socialMedia.tiers, a.socialMediaTierId)
     if (tier) total += tier.price
   }
   if (a.storiesInstagramEnabled) {
     const tier = findTier(p.storiesInstagram.tiers, a.storiesInstagramTierId)
     if (tier) total += tier.price
   }
-  if (a.alertasWebRealtime) total += p.alertasWebRealtime
+  if (a.webRealtimeAlerts) total += p.webRealtimeAlerts
   if (a.apiCService) total += p.apiCService
   if (a.newsletterWhatsApp) total += p.newsletterWhatsApp
-  if (a.newsletterExtraEnvios > 0) {
-    total += a.newsletterExtraEnvios * p.newsletterExtraEnvio
+  if (a.newsletterExtraSends > 0) {
+    total += a.newsletterExtraSends * p.newsletterExtraSend
   }
-  if (a.destinatariosExtrasEnabled) {
-    const tier = findTier(p.destinatariosExtras.tiers, a.destinatariosExtrasTierId)
+  if (a.extraRecipientsEnabled) {
+    const tier = findTier(p.extraRecipients.tiers, a.extraRecipientsTierId)
     if (tier) total += tier.price
   }
-  if (a.curadoriaAprovacaoManual) total += p.curadoriaAprovacaoManual
+  if (a.manualCuration) total += p.manualCurationFee
 
   return total
 }
 
 function reportsBucket(reports: ReportsState, prices: Prices): number {
   let total = 0
-  if (reports.executivoEnabled && reports.executivoFreq) {
-    total += prices.reports.executivo.byFrequency[reports.executivoFreq] ?? 0
+  if (reports.executiveEnabled && reports.executiveFrequency) {
+    total += prices.reports.executive.byFrequency[reports.executiveFrequency] ?? 0
   }
-  if (reports.estrategicoEnabled && reports.estrategicoFreq) {
-    total += prices.reports.estrategico.byFrequency[reports.estrategicoFreq] ?? 0
+  if (reports.strategicEnabled && reports.strategicFrequency) {
+    total += prices.reports.strategic.byFrequency[reports.strategicFrequency] ?? 0
   }
   if (reports.biEnabled) {
     total += prices.reports.bi.setupPrice + prices.reports.bi.monthlyMaintenance
@@ -124,10 +124,10 @@ export function volumeSumForService(
  *  2. Soma Relatórios + BI.
  *  3. Soma Adicionais (fixos, faixas e fixo por envio extra de newsletter).
  *  4. Subtotal = matterServices + reports + additionals.
- *  5. Acréscimo Plantão de Finais de Semana/Feriados: × (1 + plantaoPercent/100).
- *  6. Desconto Aprovação Automática: × (1 - aprovacaoAutomaticaPercent/100).
+ *  5. Acréscimo Plantão de Finais de Semana/Feriados: × (1 + onCallPercent/100).
+ *  6. Desconto Aprovação Automática: × (1 - autoApprovalDiscountPercent/100).
  *  7. Preço Base Mensal é somado ao final (mínimo garantido do pacote).
- *  8. Desconto total comercial (na proposta): × (1 - descontoTotalPercent/100) sobre o valor do passo 7.
+ *  8. Desconto total comercial (na proposta): × (1 - totalDiscountPercent/100) sobre o valor do passo 7.
  */
 export function updateCalculations(
   input: CalculationInput,
@@ -151,17 +151,17 @@ export function updateCalculations(
   }
 
   for (const svc of selectedSet) {
-    if (svc === 'avaliacao') {
-      const conf = prices.matterServices.avaliacao
+    if (svc === 'assessment') {
+      const conf = prices.matterServices.assessment
       const tier =
-        conf.tiers.find((t) => t.id === input.avaliacaoTierId) ?? null
+        conf.tiers.find((t) => t.id === input.assessmentTierId) ?? null
       if (!tier) continue
       const mode = effectiveMode(conf.mode, input.globalBillingMode)
-      const volAval = volumeSumForService(input.sections, 'avaliacao')
+      const volAval = volumeSumForService(input.sections, 'assessment')
       if (mode === 'fixed') {
-        matterServiceValues.avaliacao += tier.fixedPrice
+        matterServiceValues.assessment += tier.fixedPrice
       } else {
-        matterServiceValues.avaliacao += tier.variablePrice * volAval
+        matterServiceValues.assessment += tier.variablePrice * volAval
       }
       continue
     }
@@ -186,32 +186,32 @@ export function updateCalculations(
   const subtotalBeforeModifiers =
     matterServicesTotal + reportsTotal + additionalsTotal
 
-  const plantaoPercent = Math.max(0, prices.additionals.plantaoPercent)
-  const aprovPercent = Math.max(0, prices.additionals.aprovacaoAutomaticaPercent)
+  const onCallPercent = Math.max(0, prices.additionals.onCallPercent)
+  const aprovPercent = Math.max(0, prices.additionals.autoApprovalDiscountPercent)
 
-  const factorPlantao = input.additionals.plantaoFimSemana
-    ? 1 + plantaoPercent / 100
+  const factorPlantao = input.additionals.weekendOnCall
+    ? 1 + onCallPercent / 100
     : 1
-  const factorAprovacao = input.additionals.aprovacaoAutomatica
+  const factorAprovacao = input.additionals.autoApproval
     ? Math.max(0, 1 - aprovPercent / 100)
     : 1
 
   const afterPlantao = subtotalBeforeModifiers * factorPlantao
   const afterAprovacao = afterPlantao * factorAprovacao
 
-  const valorAcrescimoPlantao = afterPlantao - subtotalBeforeModifiers
-  const valorDescontoAprovacaoAutomatica = afterAprovacao - afterPlantao
+  const onCallSurchargeAmount = afterPlantao - subtotalBeforeModifiers
+  const autoApprovalDiscountAmount = afterAprovacao - afterPlantao
 
-  const precoBaseMensal = Math.max(0, Number(input.precoBaseMensal) || 0)
-  const valorAntesDescontoComercial = afterAprovacao + precoBaseMensal
+  const baseMonthlyPrice = Math.max(0, Number(input.baseMonthlyPrice) || 0)
+  const amountBeforeCommercialDiscount = afterAprovacao + baseMonthlyPrice
 
-  const descontoTotalPercent = Math.min(
+  const totalDiscountPercent = Math.min(
     100,
-    Math.max(0, Number(input.descontoTotalPercent) || 0),
+    Math.max(0, Number(input.totalDiscountPercent) || 0),
   )
-  const factorDescontoTotal = 1 - descontoTotalPercent / 100
-  const finalPrice = valorAntesDescontoComercial * factorDescontoTotal
-  const valorDescontoTotal = finalPrice - valorAntesDescontoComercial
+  const factorDescontoTotal = 1 - totalDiscountPercent / 100
+  const finalPrice = amountBeforeCommercialDiscount * factorDescontoTotal
+  const totalDiscountAmount = finalPrice - amountBeforeCommercialDiscount
 
   const hasActiveServices =
     matterServicesTotal > 0 || reportsTotal > 0 || additionalsTotal > 0
@@ -225,23 +225,23 @@ export function updateCalculations(
     reportsTotal,
     additionalsTotal,
     subtotalBeforeModifiers,
-    plantaoPercent,
-    aprovacaoAutomaticaPercent: aprovPercent,
+    onCallPercent,
+    autoApprovalDiscountPercent: aprovPercent,
     factorPlantao,
     factorAprovacaoAutomatica: factorAprovacao,
-    valorAcrescimoPlantao,
-    valorDescontoAprovacaoAutomatica,
-    valorAntesDescontoComercial,
-    descontoTotalPercent,
-    valorDescontoTotal,
+    onCallSurchargeAmount,
+    autoApprovalDiscountAmount,
+    amountBeforeCommercialDiscount,
+    totalDiscountPercent,
+    totalDiscountAmount,
     finalPrice,
     globalBillingMode: input.globalBillingMode,
     selectedMatterLabels: selectedMatterLabels(matterServiceValues),
     breakdownGroups: {
-      precoBaseMensal,
-      servicosMateria: matterServicesTotal,
-      relatoriosBi: reportsTotal,
-      servicosAdicionais: additionalsTotal,
+      baseMonthlyPrice,
+      matterServices: matterServicesTotal,
+      reportsBi: reportsTotal,
+      additionalServices: additionalsTotal,
     },
   }
 }
@@ -259,8 +259,8 @@ export function defaultSections(): Record<SectionKey, {
     services: { ...emptyServices },
   })
   return {
-    marcas: make(),
-    concorrentes: make(),
-    setor: make(),
+    brands: make(),
+    competitors: make(),
+    sector: make(),
   }
 }

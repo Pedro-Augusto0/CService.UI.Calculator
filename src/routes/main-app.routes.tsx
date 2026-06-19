@@ -18,9 +18,9 @@ import type { Prices } from '@/domain/prices'
 import { AppShell } from '@/components/layout/AppShell'
 import { Stepper } from '@/components/ui/Stepper'
 import { PriceConfiguration } from '@/pages/price-configuration'
+import { Clients } from '@/pages/clients'
 import { ProposalTemplates } from '@/pages/proposal-templates'
 import { SavedProposals } from '@/pages/saved-proposals'
-import { AccessGroups } from '@/pages/access-groups'
 import { Users } from '@/pages/users'
 import { WizardPage } from '@/pages/wizard'
 import type { MainAppRoute } from '@/routes/main-app.types'
@@ -72,15 +72,13 @@ export function MainAppRoutes() {
 
   const navigateMain = useCallback(
     (r: MainAppRoute) => {
-      /* Temporário: settings não exige admin — reativar quando voltar o gate.
-      if (r === 'settings' && !user?.isAdmin) {
+      if (r === 'settings' && !user?.isMasterAdmin) {
         setAccessBanner(
           'Você não tem permissão para acessar a configuração de preços.',
         )
         window.setTimeout(() => setAccessBanner(null), 6500)
         return
       }
-      */
       if (r === 'users' && !user?.isAdmin) {
         setAccessBanner(
           'Você não tem permissão para acessar o gerenciamento de usuários.',
@@ -88,29 +86,15 @@ export function MainAppRoutes() {
         window.setTimeout(() => setAccessBanner(null), 6500)
         return
       }
-      if (r === 'groups' && !user?.isAdmin) {
-        setAccessBanner(
-          'Você não tem permissão para acessar grupos de acesso.',
-        )
-        window.setTimeout(() => setAccessBanner(null), 6500)
-        return
-      }
-      if (r === 'permissions' && !user?.isAdmin) {
-        setAccessBanner(
-          'Você não tem permissão para acessar o catálogo de permissões.',
-        )
-        window.setTimeout(() => setAccessBanner(null), 6500)
-        return
-      }
+      if (r === 'templates') return
       setAccessBanner(null)
       setRoute(r)
     },
     [user],
   )
 
-  /* Temporário: não redirecionar não-admins da tela settings.
   useEffect(() => {
-    if (route === 'settings' && user && !user.isAdmin) {
+    if (route === 'settings' && user && !user.isMasterAdmin) {
       clearUrlHash()
       setRoute('wizard')
       setAccessBanner(
@@ -119,7 +103,6 @@ export function MainAppRoutes() {
       window.setTimeout(() => setAccessBanner(null), 6500)
     }
   }, [route, user])
-  */
 
   useEffect(() => {
     if (route === 'users' && user && !user.isAdmin) {
@@ -132,30 +115,12 @@ export function MainAppRoutes() {
   }, [route, user])
 
   useEffect(() => {
-    if (route === 'groups' && user && !user.isAdmin) {
-      setRoute('wizard')
-      setAccessBanner(
-        'Você não tem permissão para acessar grupos de acesso.',
-      )
-      window.setTimeout(() => setAccessBanner(null), 6500)
-    }
-  }, [route, user])
-
-  useEffect(() => {
-    if (route === 'permissions' && user && !user.isAdmin) {
-      setRoute('wizard')
-      setAccessBanner(
-        'Você não tem permissão para acessar o catálogo de permissões.',
-      )
-      window.setTimeout(() => setAccessBanner(null), 6500)
-    }
-  }, [route, user])
+    if (route === 'templates') setRoute('wizard')
+  }, [route])
 
   useEffect(() => {
     if (!readHashConfigPrecos()) return
-    setRoute('settings')
-    /* Temporário: deep link sem exigir admin.
-    if (user?.isAdmin) {
+    if (user?.isMasterAdmin) {
       setRoute('settings')
     } else {
       clearUrlHash()
@@ -164,15 +129,12 @@ export function MainAppRoutes() {
       )
       window.setTimeout(() => setAccessBanner(null), 6500)
     }
-    */
   }, [user])
 
   useEffect(() => {
     const onHash = () => {
       if (!readHashConfigPrecos()) return
-      setRoute('settings')
-      /* Temporário: hash #config-precos sem exigir admin.
-      if (user?.isAdmin) {
+      if (user?.isMasterAdmin) {
         setRoute('settings')
         return
       }
@@ -181,22 +143,15 @@ export function MainAppRoutes() {
         'Você não tem permissão para acessar a configuração de preços.',
       )
       window.setTimeout(() => setAccessBanner(null), 6500)
-      */
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [user])
 
   useEffect(() => {
-    // Temporário: qualquer usuário em settings pode manter o hash (antes só admin).
-    if (route === 'settings') {
+    if (route === 'settings' && user?.isMasterAdmin) {
       setHashConfigPrecos()
     }
-    /*
-    if (route === 'settings' && user?.isAdmin) {
-      setHashConfigPrecos()
-    }
-    */
   }, [route, user])
 
   useEffect(() => {
@@ -267,8 +222,8 @@ export function MainAppRoutes() {
     setRoute('wizard')
   }
 
-  function handleOpenSavedProposal(proposalId: string) {
-    const proposal = loadSavedProposal(proposalId)
+  async function handleOpenSavedProposal(proposalId: string) {
+    const proposal = await Promise.resolve(loadSavedProposal(proposalId))
     if (!proposal) return
 
     setRoute('wizard')
@@ -301,8 +256,8 @@ export function MainAppRoutes() {
               resumoStepActions={
                 step === 4
                   ? {
-                      onSaveProposal: () => {
-                        saveCurrentProposal()
+                      onSaveProposal: async () => {
+                        await Promise.resolve(saveCurrentProposal())
                         handleSaveComplete()
                       },
                       onDownload: () =>
@@ -334,6 +289,8 @@ export function MainAppRoutes() {
             onOpenProposal={handleOpenSavedProposal}
             onPreviewProposal={handleOpenPreview}
           />
+        ) : route === 'clients' ? (
+          <Clients />
         ) : route === 'templates' ? (
           <ProposalTemplates
             onNovoModelo={handleNovaProposta}
@@ -341,8 +298,6 @@ export function MainAppRoutes() {
           />
         ) : route === 'users' ? (
           <Users />
-        ) : route === 'groups' ? (
-          <AccessGroups />
         ) : (
           <WizardPage
             onDownload={handleDownload}

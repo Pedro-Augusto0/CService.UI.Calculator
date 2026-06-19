@@ -7,7 +7,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  UserRound,
 } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import backgroundPng from '@/assets/background.png'
@@ -96,7 +95,6 @@ interface LoginFormProps {
   setShowLoginPassword: (v: boolean | ((p: boolean) => boolean)) => void
   busy: boolean
   onSubmit: (e: React.FormEvent) => void
-  onSwitchToRegister: () => void
 }
 
 export function LoginForm({
@@ -110,7 +108,6 @@ export function LoginForm({
   setShowLoginPassword,
   busy,
   onSubmit,
-  onSwitchToRegister,
 }: LoginFormProps) {
   return (
     <form onSubmit={onSubmit} noValidate>
@@ -179,126 +176,6 @@ export function LoginForm({
       <button type="submit" className="auth-submit" disabled={busy}>
         <ArrowRightCircle size={20} strokeWidth={2} aria-hidden />
         Entrar na plataforma
-      </button>
-
-      <div className="auth-sep">ou</div>
-
-      <button
-        type="button"
-        className="auth-secondary"
-        onClick={onSwitchToRegister}
-      >
-        Criar conta
-      </button>
-    </form>
-  )
-}
-
-interface RegisterFormProps {
-  regName: string
-  setRegName: (v: string) => void
-  regEmail: string
-  setRegEmail: (v: string) => void
-  regPassword: string
-  setRegPassword: (v: string) => void
-  showRegPassword: boolean
-  setShowRegPassword: (v: boolean | ((p: boolean) => boolean)) => void
-  busy: boolean
-  onSubmit: (e: React.FormEvent) => void
-  onSwitchToLogin: () => void
-}
-
-export function RegisterForm({
-  regName,
-  setRegName,
-  regEmail,
-  setRegEmail,
-  regPassword,
-  setRegPassword,
-  showRegPassword,
-  setShowRegPassword,
-  busy,
-  onSubmit,
-  onSwitchToLogin,
-}: RegisterFormProps) {
-  return (
-    <form onSubmit={onSubmit} noValidate>
-      <div className="auth-field">
-        <label className="auth-label" htmlFor="auth-reg-name">
-          Nome
-        </label>
-        <div className="auth-input-shell">
-          <UserRound size={18} strokeWidth={1.8} aria-hidden />
-          <input
-            id="auth-reg-name"
-            type="text"
-            autoComplete="name"
-            placeholder="Seu nome completo"
-            value={regName}
-            onChange={(ev) => setRegName(ev.target.value)}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="auth-field">
-        <label className="auth-label" htmlFor="auth-reg-email">
-          E-mail
-        </label>
-        <div className="auth-input-shell">
-          <Mail size={18} strokeWidth={1.8} aria-hidden />
-          <input
-            id="auth-reg-email"
-            type="email"
-            autoComplete="email"
-            placeholder="seu@email.com"
-            value={regEmail}
-            onChange={(ev) => setRegEmail(ev.target.value)}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="auth-field">
-        <label className="auth-label" htmlFor="auth-reg-password">
-          Senha
-        </label>
-        <div className="auth-input-shell">
-          <Lock size={18} strokeWidth={1.8} aria-hidden />
-          <input
-            id="auth-reg-password"
-            type={showRegPassword ? 'text' : 'password'}
-            autoComplete="new-password"
-            placeholder="Crie uma senha forte"
-            value={regPassword}
-            onChange={(ev) => setRegPassword(ev.target.value)}
-            required
-            minLength={6}
-          />
-          <button
-            type="button"
-            className="auth-input-toggle"
-            onClick={() => setShowRegPassword((v) => !v)}
-            aria-label={showRegPassword ? 'Ocultar senha' : 'Mostrar senha'}
-          >
-            {showRegPassword ? (
-              <EyeOff size={18} strokeWidth={1.8} />
-            ) : (
-              <Eye size={18} strokeWidth={1.8} />
-            )}
-          </button>
-        </div>
-      </div>
-
-      <div className="auth-row-options auth-row-options--solo">
-        <button type="button" className="auth-link" onClick={onSwitchToLogin}>
-          Voltar ao login
-        </button>
-      </div>
-
-      <button type="submit" className="auth-submit" disabled={busy}>
-        <ArrowRightCircle size={20} strokeWidth={2} aria-hidden />
-        Cadastrar
       </button>
     </form>
   )

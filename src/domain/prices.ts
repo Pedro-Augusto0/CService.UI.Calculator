@@ -5,6 +5,7 @@ import type {
   SectionKey,
 } from './types'
 import { REPORT_FREQUENCIES } from './types'
+import { deepRemapKeys, migratePrices } from './jsonMigrate'
 
 /** Configuração de preço de um Serviço por Matéria (item 5). */
 export interface MatterServiceConfig {
@@ -14,16 +15,16 @@ export interface MatterServiceConfig {
 }
 
 /** Faixa de preço para Avaliação (rótulo exibido no combo + valores fixo/variável). */
-export interface AvaliacaoTier {
+export interface AssessmentTier {
   id: string
   label: string
   fixedPrice: number
   variablePrice: number
 }
 
-export interface AvaliacaoConfig {
+export interface AssessmentConfig {
   mode: BillingMode
-  tiers: AvaliacaoTier[]
+  tiers: AssessmentTier[]
 }
 
 /** Faixa genérica para Mídias Sociais, Stories e Destinatários Adicionais. */
@@ -44,46 +45,46 @@ export interface BiPrices {
 }
 
 export interface ReportsPrices {
-  executivo: ReportFrequencyPrices
-  estrategico: ReportFrequencyPrices
+  executive: ReportFrequencyPrices
+  strategic: ReportFrequencyPrices
   bi: BiPrices
 }
 
 export interface AdditionalsPrices {
-  /** Valor mensal único do monitoramento impresso. */
-  impresso: number
+  /** Valor mensal único do monitoramento print. */
+  print: number
   /** Web: nacional e internacional (preços separados; na proposta podem ser ambos ligados). */
-  web: { nacional: number; internacional: number }
-  radio: { spRj: number; nacional: number }
-  tv: { spRj: number; nacional: number }
-  midiasSociais: { tiers: RangeTier[] }
+  web: { national: number; international: number }
+  radio: { spRj: number; national: number }
+  tv: { spRj: number; national: number }
+  socialMedia: { tiers: RangeTier[] }
   storiesInstagram: { tiers: RangeTier[] }
-  alertasWebRealtime: number
+  webRealtimeAlerts: number
   apiCService: number
   newsletterWhatsApp: number
-  newsletterExtraEnvio: number
-  destinatariosExtras: { tiers: RangeTier[] }
+  newsletterExtraSend: number
+  extraRecipients: { tiers: RangeTier[] }
   /** Percentual configurável aplicado como acréscimo sobre o total (item 7.11). */
-  plantaoPercent: number
-  curadoriaAprovacaoManual: number
+  onCallPercent: number
+  manualCurationFee: number
   /** Percentual configurável aplicado como desconto sobre o total (item 7.13). */
-  aprovacaoAutomaticaPercent: number
+  autoApprovalDiscountPercent: number
 }
 
 /** Catálogo completo de preços configurável pelo administrador. */
 export interface Prices {
   matterServices: {
-    centimetragem: MatterServiceConfig
-    grifo: MatterServiceConfig
+    columnInches: MatterServiceConfig
+    highlight: MatterServiceConfig
     score: MatterServiceConfig
-    ia: MatterServiceConfig
+    ai: MatterServiceConfig
     screenshot: MatterServiceConfig
-    avaliacao: AvaliacaoConfig
+    assessment: AssessmentConfig
   }
   reports: ReportsPrices
   additionals: AdditionalsPrices
   /** Opções de validade em dias que o comercial pode escolher (item 8). */
-  validadeOptions: number[]
+  validityOptions: number[]
 }
 
 function makeMatter(
@@ -102,12 +103,12 @@ function zeroReportFrequencies(): ReportFrequencyPrices {
 
 export const DEFAULT_PRICES: Prices = {
   matterServices: {
-    centimetragem: makeMatter('both', 0, 0),
-    grifo: makeMatter('both', 0, 0),
+    columnInches: makeMatter('both', 0, 0),
+    highlight: makeMatter('both', 0, 0),
     score: makeMatter('both', 0, 0),
-    ia: makeMatter('both', 0, 0),
+    ai: makeMatter('both', 0, 0),
     screenshot: makeMatter('both', 0, 0),
-    avaliacao: {
+    assessment: {
       mode: 'both',
       tiers: [
         {
@@ -126,16 +127,16 @@ export const DEFAULT_PRICES: Prices = {
     },
   },
   reports: {
-    executivo: zeroReportFrequencies(),
-    estrategico: zeroReportFrequencies(),
+    executive: zeroReportFrequencies(),
+    strategic: zeroReportFrequencies(),
     bi: { setupPrice: 0, monthlyMaintenance: 0 },
   },
   additionals: {
-    impresso: 0,
-    web: { nacional: 0, internacional: 0 },
-    radio: { spRj: 0, nacional: 0 },
-    tv: { spRj: 0, nacional: 0 },
-    midiasSociais: {
+    print: 0,
+    web: { national: 0, international: 0 },
+    radio: { spRj: 0, national: 0 },
+    tv: { spRj: 0, national: 0 },
+    socialMedia: {
       tiers: [
         { id: 'ms-ex-1', label: 'Exemplo 1', upTo: 0, price: 0 },
         { id: 'ms-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
@@ -147,62 +148,62 @@ export const DEFAULT_PRICES: Prices = {
         { id: 'sg-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
       ],
     },
-    alertasWebRealtime: 0,
+    webRealtimeAlerts: 0,
     apiCService: 0,
     newsletterWhatsApp: 0,
-    newsletterExtraEnvio: 0,
-    destinatariosExtras: {
+    newsletterExtraSend: 0,
+    extraRecipients: {
       tiers: [
         { id: 'de-ex-1', label: 'Exemplo 1', upTo: 0, price: 0 },
         { id: 'de-ex-2', label: 'Exemplo 2', upTo: 0, price: 0 },
       ],
     },
-    plantaoPercent: 0,
-    curadoriaAprovacaoManual: 0,
-    aprovacaoAutomaticaPercent: 0,
+    onCallPercent: 0,
+    manualCurationFee: 0,
+    autoApprovalDiscountPercent: 0,
   },
-  validadeOptions: [30],
+  validityOptions: [30],
 }
 
 /** Preço base mensal inicial (item 4). */
-export const DEFAULT_PRECO_BASE_MENSAL = 0
+export const DEFAULT_BASE_MONTHLY_PRICE = 0
 
 export const MATTER_SERVICE_LABELS: Record<MatterServiceKey, string> = {
-  centimetragem: 'Centimetragem',
-  grifo: 'Grifo',
+  columnInches: 'Centimetragem',
+  highlight: 'Grifo',
   score: 'Score',
-  ia: 'IA',
+  ai: 'IA',
   screenshot: 'Screenshot',
-  avaliacao: 'Avaliação',
+  assessment: 'Avaliação',
 }
 
 export const MATTER_SERVICE_SHORT_LABELS: Record<MatterServiceKey, string> = {
-  centimetragem: 'Centimetragem',
-  grifo: 'Grifo',
+  columnInches: 'Centimetragem',
+  highlight: 'Grifo',
   score: 'Score',
-  ia: 'IA',
+  ai: 'IA',
   screenshot: 'Screenshot',
-  avaliacao: 'Avaliação',
+  assessment: 'Avaliação',
 }
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
-  marcas: 'Marcas',
-  concorrentes: 'Concorrentes',
-  setor: 'Setor',
+  brands: 'Marcas',
+  competitors: 'Concorrentes',
+  sector: 'Setor',
 }
 
 export const REPORT_FREQUENCY_LABELS: Record<ReportFrequency, string> = {
-  semanal: 'Semanal',
-  quinzenal: 'Quinzenal',
-  mensal: 'Mensal',
-  trimestral: 'Trimestral',
-  semestral: 'Semestral',
-  anual: 'Anual',
+  weekly: 'Semanal',
+  biweekly: 'Quinzenal',
+  monthly: 'Mensal',
+  quarterly: 'Trimestral',
+  semiannual: 'Semestral',
+  annual: 'Anual',
 }
 
-export const REGION_LABELS: Record<'spRj' | 'nacional', string> = {
+export const REGION_LABELS: Record<'spRj' | 'national', string> = {
   spRj: 'SP + RJ',
-  nacional: 'Nacional',
+  national: 'Nacional',
 }
 
 export const BILLING_MODE_LABELS: Record<BillingMode, string> = {
@@ -218,78 +219,106 @@ export function normalizeAdditionalsPrices(
   const d = DEFAULT_PRICES.additionals
   if (!a || typeof a !== 'object') return { ...d }
 
-  const raw = a as Record<string, unknown>
+  const remapped = deepRemapKeys(a) as Record<string, unknown>
+  const raw = remapped
+
   const legacyWebIntl =
     typeof raw.webInternacional === 'number' && Number.isFinite(raw.webInternacional)
       ? raw.webInternacional
       : undefined
 
-  let impresso = d.impresso
-  if (typeof raw.impresso === 'number' && Number.isFinite(raw.impresso)) {
-    impresso = raw.impresso
-  } else if (raw.impresso && typeof raw.impresso === 'object') {
-    const o = raw.impresso as { spRj?: number; nacional?: number }
-    impresso = Number(o.nacional ?? o.spRj ?? d.impresso)
+  let print = d.print
+  if (typeof raw.print === 'number' && Number.isFinite(raw.print)) {
+    print = raw.print
+  } else if (raw.print && typeof raw.print === 'object') {
+    const o = raw.print as { spRj?: number; national?: number }
+    print = Number(o.national ?? o.spRj ?? d.print)
   }
 
   let web = { ...d.web }
   if (raw.web && typeof raw.web === 'object') {
     const w = raw.web as Record<string, unknown>
-    if ('internacional' in w && 'nacional' in w) {
+    if ('international' in w && 'national' in w) {
       web = {
-        nacional: Number(w.nacional ?? d.web.nacional),
-        internacional: Number(w.internacional ?? d.web.internacional),
+        national: Number(w.national ?? d.web.national),
+        international: Number(w.international ?? d.web.international),
       }
     } else {
-      const o = raw.web as { spRj?: number; nacional?: number }
+      const o = raw.web as { spRj?: number; national?: number }
       web = {
-        nacional: Number(o.nacional ?? o.spRj ?? d.web.nacional),
-        internacional: Number(legacyWebIntl ?? d.web.internacional),
+        national: Number(o.national ?? o.spRj ?? d.web.national),
+        international: Number(legacyWebIntl ?? d.web.international),
       }
     }
   } else if (legacyWebIntl !== undefined) {
-    web = { ...d.web, internacional: legacyWebIntl }
+    web = { ...d.web, international: legacyWebIntl }
   }
 
-  const x = { ...d, ...raw }
+  const x = { ...d, ...raw } as AdditionalsPrices
   return {
     ...x,
-    impresso,
+    print,
     web,
     radio: { ...d.radio, ...(raw.radio as AdditionalsPrices['radio'] | undefined) },
     tv: { ...d.tv, ...(raw.tv as AdditionalsPrices['tv'] | undefined) },
-    midiasSociais: {
+    socialMedia: {
       tiers:
-        (a as AdditionalsPrices).midiasSociais?.tiers ?? d.midiasSociais.tiers,
+        (a as AdditionalsPrices).socialMedia?.tiers ?? d.socialMedia.tiers,
     },
     storiesInstagram: {
       tiers:
         (a as AdditionalsPrices).storiesInstagram?.tiers ?? d.storiesInstagram.tiers,
     },
-    destinatariosExtras: {
+    extraRecipients: {
       tiers:
-        (a as AdditionalsPrices).destinatariosExtras?.tiers ??
-        d.destinatariosExtras.tiers,
+        (a as AdditionalsPrices).extraRecipients?.tiers ??
+        d.extraRecipients.tiers,
     },
-    alertasWebRealtime: Number(x.alertasWebRealtime ?? d.alertasWebRealtime),
+    webRealtimeAlerts: Number(x.webRealtimeAlerts ?? d.webRealtimeAlerts),
     apiCService: Number(x.apiCService ?? d.apiCService),
     newsletterWhatsApp: Number(x.newsletterWhatsApp ?? d.newsletterWhatsApp),
-    newsletterExtraEnvio: Number(x.newsletterExtraEnvio ?? d.newsletterExtraEnvio),
-    plantaoPercent: Number(x.plantaoPercent ?? d.plantaoPercent),
-    curadoriaAprovacaoManual: Number(
-      x.curadoriaAprovacaoManual ?? d.curadoriaAprovacaoManual,
+    newsletterExtraSend: Number(x.newsletterExtraSend ?? d.newsletterExtraSend),
+    onCallPercent: Number(x.onCallPercent ?? d.onCallPercent),
+    manualCurationFee: Number(
+      x.manualCurationFee ?? d.manualCurationFee,
     ),
-    aprovacaoAutomaticaPercent: Number(
-      x.aprovacaoAutomaticaPercent ?? d.aprovacaoAutomaticaPercent,
+    autoApprovalDiscountPercent: Number(
+      x.autoApprovalDiscountPercent ?? d.autoApprovalDiscountPercent,
     ),
   }
 }
 
-export function normalizePrices(p: Prices): Prices {
+function looksLikeLegacyPrices(p: Record<string, unknown>): boolean {
+  const ms = p.matterServices
+  if (ms && typeof ms === 'object') {
+    if ('centimetragem' in ms || 'grifo' in ms || 'avaliacao' in ms || 'ia' in ms) {
+      return true
+    }
+  }
+  const reports = p.reports
+  if (reports && typeof reports === 'object' && 'executivo' in reports) {
+    return true
+  }
+  const additionals = p.additionals
+  if (
+    additionals &&
+    typeof additionals === 'object' &&
+    ('impresso' in additionals || 'midiasSociais' in additionals)
+  ) {
+    return true
+  }
+  return false
+}
+
+export function normalizePrices(p: Prices | Record<string, unknown>): Prices {
+  let base = p as Prices
+  if (p && typeof p === 'object' && looksLikeLegacyPrices(p as Record<string, unknown>)) {
+    base = migratePrices(p)
+  }
   return {
-    ...p,
+    ...base,
     additionals: normalizeAdditionalsPrices(
-      p.additionals as unknown as Record<string, unknown>,
+      base.additionals as unknown as Record<string, unknown>,
     ),
   }
 }
